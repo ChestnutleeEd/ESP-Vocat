@@ -1,0 +1,92 @@
+﻿schema: spec-driven
+context: |
+  Project: ESP-VoCat embodied desktop cat assistant.
+  Target hardware: ESP-VoCat PCB V1.0 only.
+  MCU: ESP32-S3, 32 MiB octal Flash at 1.8 V, 16 MiB PSRAM.
+  Firmware environment: ESP-IDF v5.5.4 on Windows 11.
+  Repository includes ESP32 firmware, a lightweight Windows companion application,
+  project-created cat/audio assets, host tools, specifications, and tests.
+  Product priority:
+  1. Responsive and believable local cat experience.
+  2. Information display and reliable reminders.
+  3. Fixed Mandarin voice commands.
+  4. Safe rotating-base embodiment after hardware verification.
+  5. Open-ended AI conversation only in a later stage.
+  Required reading order before planning or implementation:
+  1. PROJECT_CONSTITUTION.md
+  2. docs/HARDWARE_PROFILE.md
+  3. docs/PRODUCT_SPEC_DRAFT.md
+  4. docs/DECISION_LOG.md
+  5. docs/SYSTEM_ARCHITECTURE_DRAFT.md
+  6. AGENTS.md
+  7. The current OpenSpec change artifacts.
+  Hardware evidence levels:
+  - CONFIRMED: verified on the current physical device.
+  - STRONGLY SUPPORTED: supported by closely matching source, not yet physically verified.
+  - UNVERIFIED: must not be treated as safe hardware fact.
+  Absolute constraints:
+  - Never guess GPIO assignments.
+  - Never mix PCB V1.0 and PCB V1.2 definitions.
+  - Never modify eFuses, Flash voltage, Secure Boot, Flash Encryption,
+    download mode, USB Serial/JTAG, JTAG state, or security keys.
+  - Never run erase_flash or a full-device erase.
+  - Never modify immutable recovery backups.
+  - Never store ChatGPT cookies, reusable account sessions, passwords,
+    or unnecessary private tokens on the ESP32.
+  - Never claim untested hardware behavior is verified.
+  Current implementation authorization:
+  - Documentation, host-side inspection, Git, and OpenSpec setup are authorized.
+  - Formal firmware implementation has not yet begun.
+  - Device Flash writes, Flash erasure, motor activation, audio activation,
+    microphone testing, partition redesign, and power-control writes are not authorized.
+  Required initial development sequence:
+  1. Compile ESP-IDF Hello World without flashing.
+  2. Specify and implement a PCB V1.0 smoke-test firmware.
+  3. Review binaries, offsets, partition layout, GPIOs, and recovery assets.
+  4. Obtain explicit user approval for the exact first Flash write.
+  5. Verify serial, display, screen touch, and top touch.
+  6. Restore the original 32 MiB Xiaozhi image.
+  7. Verify successful recovery.
+  8. Only then begin formal custom-cat firmware flashing.
+  Engineering principles:
+  - Work in small independently testable increments.
+  - Keep build, artifact inspection, Flash, monitor, and restore as separate actions.
+  - Compilation is not proof of hardware correctness.
+  - Preserve offline cat, touch, local sound, cached information, and reminder behavior.
+  - External weather and Codex data are supplied asynchronously by the companion app.
+  - Smooth animation, touch responsiveness, reminder reliability, and hardware safety
+    take priority over feature count.
+rules:
+  proposal:
+    - State the user-visible or engineering problem before proposing implementation.
+    - Include an explicit Scope section.
+    - Include an explicit Non-goals section.
+    - Identify affected firmware, companion-app, documentation, asset, and test areas.
+    - Identify hardware evidence as CONFIRMED, STRONGLY SUPPORTED, or UNVERIFIED.
+    - State whether the change involves build, device connection, Flash write, erase, motor, audio, microphone, or power control.
+    - Do not combine unrelated features into one change.
+    - Do not authorize hardware execution merely by proposing it.
+  specs:
+    - Specify observable and verifiable behavior rather than internal implementation detail.
+    - Use clear requirements with at least one scenario for each requirement.
+    - Include offline, failure, timeout, stale-data, and recovery behavior where relevant.
+    - Do not describe STRONGLY SUPPORTED or UNVERIFIED hardware behavior as confirmed.
+    - Define acceptance criteria that can be checked by host tests, build inspection, or controlled hardware tests.
+    - Keep device responsibilities and Windows companion responsibilities explicit.
+  design:
+    - Read all mandatory project documents before selecting an approach.
+    - List assumptions, unresolved hardware facts, affected files, and dependency choices.
+    - Preserve module boundaries between board support, drivers, services, product behavior, and companion code.
+    - Include memory, Flash, PSRAM, frame-time, task-blocking, and watchdog considerations where relevant.
+    - Include failure isolation, offline fallback, rollback, and recovery considerations.
+    - Separate configure, build, inspect, connect, Flash, monitor, and restore operations.
+    - Do not introduce arbitrary GPIO, raw motor, eFuse, full-erase, or unrestricted USB commands.
+    - Prefer the smallest safe experiment when hardware behavior remains uncertain.
+  tasks:
+    - Break work into small ordered tasks with independently checkable results.
+    - Put documentation and host-side verification before device execution.
+    - Keep build, binary inspection, device connection, Flash, monitoring, and restoration as separate tasks.
+    - Mark every hardware command as READ-ONLY, REBOOT, WRITE, ERASE, or IRREVERSIBLE.
+    - Require explicit user approval before any WRITE, ERASE, motor, audio, microphone, or power-control task.
+    - Include relevant tests, acceptance checks, documentation updates, and actual-result recording.
+    - Never use successful compilation as the only completion criterion for hardware behavior.
