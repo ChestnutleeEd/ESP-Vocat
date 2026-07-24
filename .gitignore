@@ -1,0 +1,117 @@
+﻿# ------------------------------------------------------------
+# Operating system and editors
+# ------------------------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+.history/
+# ------------------------------------------------------------
+# Logs and temporary files
+# ------------------------------------------------------------
+*.log
+*.tmp
+*.temp
+*.bak
+*.cache
+tmp/
+temp/
+logs/
+# ------------------------------------------------------------
+# Secrets and local configuration
+# ------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.secret
+*.secrets
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+private/
+local-config/
+# ------------------------------------------------------------
+# ESP-IDF build and generated files
+# ------------------------------------------------------------
+firmware/build/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/dependencies.lock
+firmware/managed_components/
+firmware/.cache/
+firmware/.pytest_cache/
+# Keep portable defaults when created later
+!firmware/sdkconfig.defaults
+!firmware/sdkconfig.defaults.*
+# ------------------------------------------------------------
+# Python
+# ------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+# ------------------------------------------------------------
+# Node.js
+# ------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+coverage/
+# ------------------------------------------------------------
+# .NET / Windows companion application
+# ------------------------------------------------------------
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+# ------------------------------------------------------------
+# Rust
+# ------------------------------------------------------------
+target/
+# ------------------------------------------------------------
+# Local companion data and generated media
+# ------------------------------------------------------------
+companion-app/data/
+companion-app/cache/
+companion-app/generated-audio/
+companion-app/*.db
+companion-app/*.sqlite
+companion-app/*.sqlite3
+# ------------------------------------------------------------
+# Generated firmware and binary artifacts
+# ------------------------------------------------------------
+*.bin
+*.elf
+*.map
+*.hex
+*.uf2
+*.img
+# Allow intentionally versioned project assets if later needed
+!assets/**/*.bin
+# ------------------------------------------------------------
+# Recovery and private device data must never enter this repo
+# ------------------------------------------------------------
+ESP-VoCat_Backup/
+backup/
+backups/
+recovery/
+*nvs*.bin
+*full_flash*.bin
+*full-flash*.bin
+*efuse*.txt
