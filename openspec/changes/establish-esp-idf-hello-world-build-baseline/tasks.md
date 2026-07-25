@@ -19,15 +19,15 @@
 
 ## 4. Host-only configure, build, and inspection
 
-- [ ] 4.1 **[WRITE — ignored generated files only]** From `firmware/`, run `idf.py set-target esp32s3` or the reviewed equivalent configure operation as a standalone command, allowing output only under previously confirmed ignored paths; preserve the real error and stop before build if configure fails.
-- [ ] 4.2 **[READ-ONLY]** Inspect generated configuration and build metadata to confirm the selected compile target is `esp32s3`; treat generated `sdkconfig` as unverified build configuration and stop if the target is inconsistent.
-- [ ] 4.3 **[WRITE — ignored generated files only]** Run a standalone host-only `idf.py build` from `firmware/` with no device attached or required and with no Flash or monitor target; preserve the real output and stop subsequent build claims if it fails.
-- [ ] 4.4 **[READ-ONLY]** Inspect only host-side build metadata, artifact names, and artifact sizes needed to audit compilation; do not inspect a device, infer board settings, authorize a binary for Flash, or claim runtime/hardware correctness.
+- [x] 4.1 **[WRITE — ignored generated files only]** From `firmware/`, run `idf.py set-target esp32s3` or the reviewed equivalent configure operation as a standalone command, allowing output only under previously confirmed ignored paths; preserve the real error and stop before build if configure fails.
+- [x] 4.2 **[READ-ONLY]** Inspect generated configuration and build metadata to confirm the selected compile target is `esp32s3`; treat generated `sdkconfig` as unverified build configuration and stop if the target is inconsistent.
+- [x] 4.3 **[WRITE — ignored generated files only]** Run a standalone host-only `idf.py build` from `firmware/` with no device attached or required and with no Flash or monitor target; preserve the real output and stop subsequent build claims if it fails.
+- [x] 4.4 **[READ-ONLY]** Inspect only host-side build metadata, artifact names, and artifact sizes needed to audit compilation; do not inspect a device, infer board settings, authorize a binary for Flash, or claim runtime/hardware correctness.
 
 ## 5. Result recording and final review
 
-- [ ] 5.1 **[READ-ONLY]** Re-run Git ignore checks and Git status after the build; confirm generated configuration, binary, ELF, map, and build-system outputs are ignored and stop without staging, committing, deleting, or relocating files if an unexpected generated path appears.
-- [ ] 5.2 **[WRITE]** Create `tests/build/esp-idf-hello-world-build-baseline.md` with the actual date and Git context, activation entry, resolved tool paths and versions, exact configure/build commands, exit results, target evidence, inspected artifact metadata, ignore checks, failures if any, and the truthful completion state.
-- [ ] 5.3 **[READ-ONLY]** Perform the final scope and safety audit and report Git status, explicitly stating that no device was enumerated or connected, no `esptool` or Flash/eFuse/erase/restore operation ran, generated binaries have no Flash authorization, compilation is not hardware verification, and PCB V1.0 smoke testing remains a separate OpenSpec Change.
+- [x] 5.1 **[READ-ONLY]** Re-run Git ignore checks and Git status after the build; confirm generated configuration, binary, ELF, map, and build-system outputs are ignored and stop without staging, committing, deleting, or relocating files if an unexpected generated path appears.
+- [x] 5.2 **[WRITE]** Create `tests/build/esp-idf-hello-world-build-baseline.md` with the actual date and Git context, activation entry, resolved tool paths and versions, exact configure/build commands, exit results, target evidence, inspected artifact metadata, ignore checks, failures if any, and the truthful completion state.
+- [x] 5.3 **[READ-ONLY]** Perform the final scope and safety audit and report Git status, explicitly stating that no device was enumerated or connected, no `esptool` or Flash/eFuse/erase/restore operation ran, generated binaries have no Flash authorization, compilation is not hardware verification, and PCB V1.0 smoke testing remains a separate OpenSpec Change.
 
 No task in this Change authorizes a Git commit, push, merge, archive, device connection, Flash operation, or hardware test.
