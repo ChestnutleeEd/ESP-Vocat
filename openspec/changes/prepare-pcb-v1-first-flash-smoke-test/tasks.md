@@ -14,7 +14,7 @@
 
 ## 3. Board-configuration decision
 
-- [ ] 3.1 **[READ-ONLY]** Locate traceable device-test evidence for physical Flash capacity/interface/voltage and PSRAM mode/size, then reconcile it with the original bootloader/app declarations of DIO, 80 MHz, and 16 MB; stop if reconciliation is incomplete.
+- [x] 3.1 **[READ-ONLY]** Locate traceable device-test evidence for physical Flash capacity/interface/voltage and PSRAM mode/size, then reconcile it with the original bootloader/app declarations of DIO, 80 MHz, and 16 MB; stop if reconciliation is incomplete.
 - [x] 3.2 **[WRITE]** Record a PCB V1.0 configuration allowlist containing only reviewed ESP32-S3, serial, Flash, and optional PSRAM inputs, with every peripheral, GPIO, network, storage-mutation, OTA, and security feature defaulted off.
 - [x] 3.3 **[READ-ONLY]** Make and record the PSRAM gate decision; keep PSRAM disabled unless exact mode, size, clock, voltage domain, and ESP-IDF v5.5.4 options are all supported.
 - [ ] 3.4 **[READ-ONLY]** Decide whether one app-only write can be compatible with the preserved original bootloader and partition layout; stop rather than proposing a bootloader, partition-table, OTA-layout, or unused-tail change.

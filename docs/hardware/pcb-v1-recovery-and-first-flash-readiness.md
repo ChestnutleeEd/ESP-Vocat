@@ -1,7 +1,7 @@
 # ESP-VoCat PCB V1.0 Recovery and First-Flash Readiness
 
 - Assessment date: 2026-07-25
-- Device operations performed: none
+- Device operations recorded: separately authorized `chip_id` and `flash_id` on `COM7`; no device was accessed during this host-side audit/update
 - Current decision: **NO-GO**
 
 ## 1. Current Known Recovery Assets
@@ -75,11 +75,11 @@ Before any custom Flash:
 1. Maintain the verified D: and E: cross-volume recovery redundancy; do not describe it as separate physical-disk redundancy without additional evidence.
 2. Recalculate size and SHA-256 for every recovery image.
 3. Confirm the image belongs to the exact device being authorized.
-4. Confirm exact target chip and PCB V1.0 identity.
+4. Reconfirm exact target chip and PCB V1.0 identity for the future operation; the completed read-only query confirms ESP32-S3 QFN56 revision v0.2 only for its recorded event.
 5. Resolve the Flash/PSRAM board-configuration evidence gate.
 6. Verify the unique partition interpretation and the custom image's compatibility.
 7. Prepare a host-only recovery procedure and review all decision points.
-8. Confirm the exact current port; do not assume historical COM7.
+8. Confirm the exact current port for the future operation; `COM7` was confirmed for the completed read-only queries but must not be treated as permanent.
 9. Review the exact recovery image, full range, risk, and observation plan.
 10. Obtain a separate explicit authorization before any recovery write.
 
@@ -128,10 +128,11 @@ No exact custom image, target slot, offset, or write length has yet been built o
 
 - The custom smoke-test firmware does not exist yet.
 - No custom image hash, effective size, offset, or range has been reviewed.
-- The original image headers declare DIO/80 MHz/16 MB while prior repository records say 32 MiB Octal/1.8 V.
-- Exact Flash and optional PSRAM configuration are unresolved.
+- The original image headers declare DIO/80 MHz/16 MB while the completed query reports 32 MB and an Octal eFuse selector; exact image/boot/configuration mapping is unresolved.
+- The completed query's installed-tool voltage text says 3.3 V, but the helper cannot uniquely decode the raw voltage-bit pattern and the prior repository record says 1.8 V.
+- Embedded 16 MB PSRAM capacity is confirmed for the query, but PSRAM mode/clock/options remain unresolved and initialization stays disabled.
 - A host-only recovery rehearsal is complete, but it performed no device action and grants no recovery or Flash authorization.
-- The exact current device and port are not reviewed.
+- The exact device and `COM7` were reviewed for the completed read-only queries only; any future operation requires a fresh identity/port review.
 - No explicit operation-specific authorization exists.
 
 OpenSpec artifacts can prepare implementation and a command structure; they cannot authorize execution.
@@ -142,8 +143,8 @@ Current result: **NO-GO**.
 
 The gate becomes reviewable only when all of the following are true:
 
-- [ ] exact PCB V1.0 device identified;
-- [ ] exact current port identified without assuming COM7;
+- [ ] exact PCB V1.0 device re-identified for the future First Flash packet; the completed read-only query event does not satisfy this future-operation gate;
+- [ ] exact current port reviewed for the future First Flash packet; `COM7` was confirmed only for the completed read-only query event;
 - [x] D: and E: cross-volume recovery assets present;
 - [x] all four full-image files are 33554432 bytes and match the expected SHA-256;
 - [x] partition layout remains uniquely verified;
@@ -214,6 +215,6 @@ Host-only rehearsal result: **COMPLETE for procedure review only**. It proves re
 
 ## 15. Configuration and Device-Read Gate
 
-The Flash/PSRAM decision remains unresolved. The Firmware Implementation Gate is **CLOSED**. The next allowable proposal is the separately authorized read-only evidence collection described in `docs/hardware/pcb-v1-device-readonly-inspection-plan.md`.
+The authorized `chip_id` and `flash_id` inspection is complete and recorded in `docs/hardware/pcb-v1-device-readonly-inspection-result.md`. It confirmed the query-time device and port, 32 MB Flash identification, the Octal Flash-type eFuse selector, and embedded 16 MB PSRAM package fields. It also exposed an unresolved conflict: the installed tool printed 3.3 V, its source cannot uniquely decode the underlying masked eFuse bit pattern, and prior repository records say 1.8 V.
 
-The inspection must use `<REVIEWED_PORT>` until the user explicitly supplies and authorizes an exact current port. It must not include `read_flash`, Flash write, erase, recovery, eFuse write, firmware build, monitor, or peripheral activity. Device-read-only authorization, if later granted, will not authorize firmware implementation or First Flash.
+The Flash/PSRAM decision therefore remains unresolved. The Firmware Implementation Gate is **CLOSED** and First Flash remains **NO-GO**. The only further device proposal is a separately reviewed, sanitized, minimum read-only eFuse summary; it remains **NOT AUTHORIZED**. It must not include `read_flash`, Flash write, erase, recovery, eFuse write, firmware build, monitor, or peripheral activity. Read-only authorization would not authorize firmware implementation or First Flash.
