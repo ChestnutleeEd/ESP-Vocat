@@ -19,7 +19,9 @@
 - Task 5.1 audit result: the post-build worktree was clean; no tracked-file changes were present, all existing generated paths were ignored, and no generated files were tracked.
 - No Git commit or push was performed during the host-only configure/build execution.
 - The later documentation closeout was committed as `c2d8a16` with message `docs: record ESP-IDF host build baseline` and pushed to `origin/feat/establish-esp-idf-hello-world-build-baseline`.
-- At this record update, the Change has 17/17 completed implementation tasks, strict validation is valid, and the Change has not been archived.
+- The documentation consistency correction was subsequently committed as `538e56d037df6a18ac465496e2e89243f3011cdc` (`538e56d`) with message `docs: align host build spec with ESP-IDF image generation` and pushed to `origin/feat/establish-esp-idf-hello-world-build-baseline`.
+- At the time of the pre-archive record update, the Change had not yet been archived.
+- The Change was subsequently archived on 2026-07-25 at `openspec/changes/archive/2026-07-25-establish-esp-idf-hello-world-build-baseline`.
 
 ## Toolchain
 
@@ -139,7 +141,7 @@ Task 5.1 confirmed that the existing generated paths were ignored:
 - Successful compilation does not validate Flash, PSRAM, partition layout, display, touch, audio, microphone, GPIO, or any other peripheral configuration.
 - Generated `.bin`, `.elf`, map, bootloader, and partition-table files have no Flash authorization.
 - The complete 2553-line build output was captured, but part of it was truncated by the conversation/API display. No missing output has been invented.
-- PCB smoke testing, Flash authorization, device execution, recovery, and hardware validation require a separate reviewed OpenSpec Change.
+- PCB V1.0 smoke testing, Flash authorization, device execution, recovery, and hardware validation require a separate reviewed OpenSpec Change.
 
 ## Current Completion State
 
@@ -150,8 +152,11 @@ Task 5.1 confirmed that the existing generated paths were ignored:
 - This completion does not mean firmware adaptation to hardware, safe Flash authorization, device testing, PCB smoke-test success, or completion of the entire hardware-development project.
 - No Git commit or push was performed during the host-only configure/build execution.
 - The later approved documentation closeout was committed as `c2d8a16` with message `docs: record ESP-IDF host build baseline` and pushed to `origin/feat/establish-esp-idf-hello-world-build-baseline`.
-- At this record update, strict validation is valid and the Change has not been archived.
-- The OpenSpec Change has not been archived.
+- The documentation consistency correction was committed as `538e56d037df6a18ac465496e2e89243f3011cdc` (`538e56d`) with message `docs: align host build spec with ESP-IDF image generation` and pushed to `origin/feat/establish-esp-idf-hello-world-build-baseline`.
+- At the time of the pre-archive record update, strict validation was valid and the Change had not yet been archived.
+- The Change was subsequently archived on 2026-07-25 at `openspec/changes/archive/2026-07-25-establish-esp-idf-hello-world-build-baseline`.
+- The delta spec was synchronized to `openspec/specs/esp-idf-host-build-baseline/spec.md`.
+- Current lifecycle status: implementation tasks completed: 17/17; strict validation passed; documentation commits pushed; OpenSpec Change archived; main spec synchronized.
 - Any generated `.bin`, `.elf`, bootloader, or partition-table files still have no Flash authorization.
-- PCB smoke testing, Flash, and hardware validation must remain in a separate new OpenSpec Change.
+- PCB V1.0 smoke testing, Flash, and hardware validation must remain in a separate new OpenSpec Change.
 - No Git add, commit, or push was performed during the host-only configure/build and device-safety audit phases.
