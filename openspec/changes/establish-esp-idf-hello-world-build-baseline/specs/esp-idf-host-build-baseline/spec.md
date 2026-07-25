@@ -72,15 +72,23 @@ Existing repository facts marked `CONFIRMED` SHALL be treated only as prior docu
 - **THEN** they make no new `CONFIRMED` hardware claim
 
 ### Requirement: Device-free configure and build
-Configure and build SHALL be host-only operations and MUST complete without enumerating, opening, monitoring, reading, writing, erasing, restoring, or otherwise accessing any serial port or physical device. The workflow MUST NOT invoke `esptool`.
+Configure and build SHALL be host-only operations and MUST complete without enumerating, opening, monitoring, reading, writing, erasing, restoring, or otherwise accessing any serial port or physical device. The workflow MUST NOT manually, directly, or independently execute a device-side `esptool` command, use `esptool` to enumerate or open a serial port, or perform any device-side operation. An `idf.py build` invocation MAY internally call `esptool.py` only to generate host-side firmware image files, provided that it specifies no serial port, accesses no device, performs no Flash, read, erase, restore, or eFuse operation, and grants no Flash authorization to generated outputs.
 
 #### Scenario: Configure and build run with no device
 - **WHEN** the later Apply executes configure and build
 - **THEN** no device connection is required
-- **THEN** no serial, monitor, `esptool`, Flash, restore, eFuse, motor, audio, microphone, network, battery, or power-control command is executed
+- **THEN** no serial port is enumerated or opened, and no manual, direct, or independent device-side `esptool` command is executed
+- **THEN** no monitor, Flash, read, erase, restore, eFuse, motor, audio, microphone, network, battery, or power-control operation is executed
+
+#### Scenario: ESP-IDF build internally generates firmware images
+- **WHEN** `idf.py build` internally invokes `esptool.py` only to generate host-side image files
+- **THEN** no serial port is specified or opened
+- **THEN** no physical device is enumerated or accessed
+- **THEN** no Flash, read, erase, restore, or eFuse operation occurs
+- **THEN** the internal invocation is recorded as host-side image generation and is not treated as device authorization
 
 #### Scenario: A proposed command includes device access
-- **WHEN** a command would enumerate or open a serial port, invoke `esptool`, monitor firmware, or perform a device operation
+- **WHEN** a command would manually or directly invoke a device-side `esptool`, enumerate or open a serial port, monitor firmware, or perform a Flash, read, erase, restore, eFuse, or other device operation
 - **THEN** the workflow stops before executing that command
 - **THEN** the command is rejected as outside this change
 

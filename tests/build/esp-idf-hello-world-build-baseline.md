@@ -17,7 +17,9 @@
 - Build-time HEAD: `00f78db` (project version metadata also reported `00f78db`).
 - Local/upstream state before build: ahead/behind `0/0`.
 - Task 5.1 audit result: the post-build worktree was clean; no tracked-file changes were present, all existing generated paths were ignored, and no generated files were tracked.
-- No Git commit was created.
+- No Git commit or push was performed during the host-only configure/build execution.
+- The later documentation closeout was committed as `c2d8a16` with message `docs: record ESP-IDF host build baseline` and pushed to `origin/feat/establish-esp-idf-hello-world-build-baseline`.
+- At this record update, the Change has 17/17 completed implementation tasks, strict validation is valid, and the Change has not been archived.
 
 ## Toolchain
 
@@ -128,6 +130,7 @@ Task 5.1 confirmed that the existing generated paths were ignored:
 - No standalone device-side `esptool` command was executed. The host-only `idf.py build` process internally invoked `esptool.py v4.12.dev3` to generate firmware images; it used no serial port, did not connect to a device, and did not write Flash.
 - Task 5.3 final audit passed on 2026-07-25.
 - The final audit confirmed no device connection, enumeration, or write, and no Flash, monitor, erase, or eFuse operation.
+- No Git add, commit, or push was performed during the host-only configure/build and device-safety audit phases; the later approved documentation closeout add/commit/push is recorded in Git Context.
 
 ## Limitations
 
@@ -145,8 +148,10 @@ Task 5.1 confirmed that the existing generated paths were ignored:
 - `tasks.md` contains 17/17 completed tasks; the final audit passed.
 - The host-only ESP-IDF v5.5.4 `esp32s3` configure/build baseline is complete, and the implementation tasks for the current Change are complete.
 - This completion does not mean firmware adaptation to hardware, safe Flash authorization, device testing, PCB smoke-test success, or completion of the entire hardware-development project.
-- No Git commit or push has been performed.
+- No Git commit or push was performed during the host-only configure/build execution.
+- The later approved documentation closeout was committed as `c2d8a16` with message `docs: record ESP-IDF host build baseline` and pushed to `origin/feat/establish-esp-idf-hello-world-build-baseline`.
+- At this record update, strict validation is valid and the Change has not been archived.
 - The OpenSpec Change has not been archived.
 - Any generated `.bin`, `.elf`, bootloader, or partition-table files still have no Flash authorization.
 - PCB smoke testing, Flash, and hardware validation must remain in a separate new OpenSpec Change.
-- No Git add, commit, push, pull, fetch, merge, rebase, reset, checkout, restore, clean, or delete operation was executed.
+- No Git add, commit, or push was performed during the host-only configure/build and device-safety audit phases.
