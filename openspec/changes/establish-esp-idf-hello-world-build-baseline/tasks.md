@@ -1,8 +1,8 @@
 ## 1. Preflight and safety checks
 
-- [ ] 1.1 **[READ-ONLY]** Confirm the repository root, branch `feat/establish-esp-idf-hello-world-build-baseline`, expected starting HEAD, worktree state, OpenSpec 1.6.0 health, and this Change's Apply instructions; stop on any mismatch.
-- [ ] 1.2 **[READ-ONLY]** Resolve the existing ESP-IDF v5.5.4 installation and PowerShell activation entry without activating tools, installing dependencies, upgrading dependencies, or changing persistent environment variables.
-- [ ] 1.3 **[READ-ONLY]** Review `.gitignore` with Git ignore checks for `firmware/build/`, `firmware/sdkconfig`, `firmware/sdkconfig.old`, and representative binary/map outputs; stop before file generation if any planned output is not ignored.
+- [x] 1.1 **[READ-ONLY]** Confirm the repository root, branch `feat/establish-esp-idf-hello-world-build-baseline`, expected starting HEAD, worktree state, OpenSpec 1.6.0 health, and this Change's Apply instructions; stop on any mismatch.
+- [x] 1.2 **[READ-ONLY]** Resolve the existing ESP-IDF v5.5.4 installation and PowerShell activation entry without activating tools, installing dependencies, upgrading dependencies, or changing persistent environment variables.
+- [x] 1.3 **[READ-ONLY]** Review `.gitignore` with Git ignore checks for `firmware/build/`, `firmware/sdkconfig`, `firmware/sdkconfig.old`, and representative binary/map outputs; stop before file generation if any planned output is not ignored.
 
 ## 2. Minimal repository project
 
