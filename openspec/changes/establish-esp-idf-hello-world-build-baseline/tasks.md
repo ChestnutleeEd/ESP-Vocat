@@ -6,10 +6,10 @@
 
 ## 2. Minimal repository project
 
-- [ ] 2.1 **[WRITE]** Create only the minimal top-level `firmware/CMakeLists.txt` required for a standard ESP-IDF project and do not add board, bootloader, partition, OTA, Flash, PSRAM, or peripheral configuration.
-- [ ] 2.2 **[WRITE]** Create only `firmware/main/CMakeLists.txt`, registering one `main.c` source without external dependencies, board components, or additional include trees.
-- [ ] 2.3 **[WRITE]** Create `firmware/main/main.c` with an `app_main` that emits one ordinary Hello World build-baseline string and performs no hardware introspection, delay loop, restart, GPIO, peripheral, serial, Flash, eFuse, network, storage-device, or product operation.
-- [ ] 2.4 **[READ-ONLY]** Statically review the three project files and confirm they contain no PCB revision definitions, GPIO numbers, peripheral models, voltage values, partition offsets, board-specific `sdkconfig.defaults`, device commands, or dependencies on `STRONGLY SUPPORTED` or `UNVERIFIED` hardware facts.
+- [x] 2.1 **[WRITE]** Create only the minimal top-level `firmware/CMakeLists.txt` required for a standard ESP-IDF project and do not add board, bootloader, partition, OTA, Flash, PSRAM, or peripheral configuration.
+- [x] 2.2 **[WRITE]** Create only `firmware/main/CMakeLists.txt`, registering one `main.c` source without external dependencies, board components, or additional include trees.
+- [x] 2.3 **[WRITE]** Create `firmware/main/main.c` with an `app_main` that emits one ordinary Hello World build-baseline string and performs no hardware introspection, delay loop, restart, GPIO, peripheral, serial, Flash, eFuse, network, storage-device, or product operation.
+- [x] 2.4 **[READ-ONLY]** Statically review the three project files and confirm they contain no PCB revision definitions, GPIO numbers, peripheral models, voltage values, partition offsets, board-specific `sdkconfig.defaults`, device commands, or dependencies on `STRONGLY SUPPORTED` or `UNVERIFIED` hardware facts.
 
 ## 3. Existing toolchain activation and verification
 
