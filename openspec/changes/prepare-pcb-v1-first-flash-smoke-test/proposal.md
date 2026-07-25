@@ -8,6 +8,7 @@ The host-only ESP-IDF v5.5.4 `esp32s3` build baseline is complete, but it delibe
 - Define a later minimal smoke-test implementation that starts on ESP32-S3 and emits fixed startup and compile-time version logs.
 - Permit PSRAM initialization only after its exact PCB V1.0 configuration is supported by reviewed evidence; otherwise build and test with PSRAM initialization disabled.
 - Require a board-configuration allowlist and default-deny all unknown peripherals, GPIOs, storage mutation, network, OTA, security configuration, and physical movement.
+- Require a separately reviewed and explicitly authorized device-read-only inspection before firmware configuration when offline evidence cannot resolve mandatory Flash/PSRAM inputs.
 - Separate host-only implementation/build, artifact inspection, device connection, Flash, serial observation, pass/fail, and rollback into independently reviewed stages.
 - Require a separate, exact user authorization for any future Flash operation. A vague instruction such as “continue” or “do the next step” is not authorization.
 - Preserve the archived host-build baseline Change and its synchronized main specification unchanged.
@@ -23,6 +24,8 @@ Evidence used by this Change remains explicitly classified:
 - `UNVERIFIED`: current-device state or electrical facts not established by the available evidence and therefore unavailable to implementation.
 
 This proposal authorizes planning artifacts only in the current round. A later Apply may create firmware and run host-only configure/build tasks, but it gains no automatic device or Flash authorization.
+
+Apply preflight on 2026-07-25 restored the exact D:/E: cross-volume recovery paths and independently reconfirmed the backup layout and original images. It did not resolve the physical Flash/PSRAM configuration conflict. Firmware implementation therefore remains gated, and the only proposed next device action is the still-unauthorized read-only inspection plan in `docs/hardware/pcb-v1-device-readonly-inspection-plan.md`.
 
 ## Non-goals
 

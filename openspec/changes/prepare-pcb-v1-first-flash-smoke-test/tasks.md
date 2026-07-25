@@ -1,22 +1,22 @@
 ## 1. Preconditions and evidence
 
-- [ ] 1.1 **[READ-ONLY]** Re-read the constitution, hardware profile, product specification, decision/architecture records, host-build main spec and test record, and every artifact in this Change; record any contradiction and stop the affected work.
-- [ ] 1.2 **[READ-ONLY]** Confirm the exact PCB V1.0 scope, current Git branch and clean worktree, unchanged archived host-baseline Change, unchanged synchronized host-build main spec, and unchanged three-file firmware baseline before Apply work.
-- [ ] 1.3 **[READ-ONLY]** Build an Apply-time evidence ledger that distinguishes prior device records, immutable-file facts, image-header declarations, original-firmware strings, reference-source evidence, current-device state, and electrical facts.
-- [ ] 1.4 **[READ-ONLY]** Resolve or explicitly retain every First Flash blocker from the two readiness reports; do not begin firmware configuration while a required Flash or PSRAM input remains unsupported.
+- [x] 1.1 **[READ-ONLY]** Re-read the constitution, hardware profile, product specification, decision/architecture records, host-build main spec and test record, and every artifact in this Change; record any contradiction and stop the affected work.
+- [x] 1.2 **[READ-ONLY]** Confirm the exact PCB V1.0 scope, current Git branch and clean worktree, unchanged archived host-baseline Change, unchanged synchronized host-build main spec, and unchanged three-file firmware baseline before Apply work.
+- [x] 1.3 **[READ-ONLY]** Build an Apply-time evidence ledger that distinguishes prior device records, immutable-file facts, image-header declarations, original-firmware strings, reference-source evidence, current-device state, and electrical facts.
+- [x] 1.4 **[READ-ONLY]** Resolve or explicitly retain every First Flash blocker from the two readiness reports; do not begin firmware configuration while a required Flash or PSRAM input remains unsupported.
 
 ## 2. Backup and recovery verification
 
-- [ ] 2.1 **[READ-ONLY]** Locate the immutable `E:` and `D:` recovery directories by their exact reviewed paths without broad disk scanning, and restore reviewed cross-disk redundancy before First Flash can become `GO`.
-- [ ] 2.2 **[READ-ONLY]** Verify that each full recovery file is exactly 33554432 bytes and has SHA-256 `72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001`; stop on any missing file or mismatch.
-- [ ] 2.3 **[READ-ONLY]** Repeat the host-only partition-table, bootloader, and app-layout verification against one hash-matching recovery file and confirm that no private NVS content is decoded, logged, or copied into the repository.
-- [ ] 2.4 **[READ-ONLY]** Complete and record a host-only recovery rehearsal covering same-device scope, exact recovery image/hash/range review, tool availability, operation separation, stop conditions, and operator judgment points without connecting to or writing a device.
+- [x] 2.1 **[READ-ONLY]** Locate the immutable `E:` and `D:` recovery directories by their exact reviewed paths without broad disk scanning, and restore reviewed cross-disk redundancy before First Flash can become `GO`.
+- [x] 2.2 **[READ-ONLY]** Verify that each full recovery file is exactly 33554432 bytes and has SHA-256 `72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001`; stop on any missing file or mismatch.
+- [x] 2.3 **[READ-ONLY]** Repeat the host-only partition-table, bootloader, and app-layout verification against one hash-matching recovery file and confirm that no private NVS content is decoded, logged, or copied into the repository.
+- [x] 2.4 **[READ-ONLY]** Complete and record a host-only recovery rehearsal covering same-device scope, exact recovery image/hash/range review, tool availability, operation separation, stop conditions, and operator judgment points without connecting to or writing a device.
 
 ## 3. Board-configuration decision
 
 - [ ] 3.1 **[READ-ONLY]** Locate traceable device-test evidence for physical Flash capacity/interface/voltage and PSRAM mode/size, then reconcile it with the original bootloader/app declarations of DIO, 80 MHz, and 16 MB; stop if reconciliation is incomplete.
-- [ ] 3.2 **[WRITE]** Record a PCB V1.0 configuration allowlist containing only reviewed ESP32-S3, serial, Flash, and optional PSRAM inputs, with every peripheral, GPIO, network, storage-mutation, OTA, and security feature defaulted off.
-- [ ] 3.3 **[READ-ONLY]** Make and record the PSRAM gate decision; keep PSRAM disabled unless exact mode, size, clock, voltage domain, and ESP-IDF v5.5.4 options are all supported.
+- [x] 3.2 **[WRITE]** Record a PCB V1.0 configuration allowlist containing only reviewed ESP32-S3, serial, Flash, and optional PSRAM inputs, with every peripheral, GPIO, network, storage-mutation, OTA, and security feature defaulted off.
+- [x] 3.3 **[READ-ONLY]** Make and record the PSRAM gate decision; keep PSRAM disabled unless exact mode, size, clock, voltage domain, and ESP-IDF v5.5.4 options are all supported.
 - [ ] 3.4 **[READ-ONLY]** Decide whether one app-only write can be compatible with the preserved original bootloader and partition layout; stop rather than proposing a bootloader, partition-table, OTA-layout, or unused-tail change.
 
 ## 4. Firmware implementation

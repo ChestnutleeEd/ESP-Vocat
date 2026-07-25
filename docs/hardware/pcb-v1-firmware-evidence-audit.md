@@ -7,7 +7,7 @@
 
 ## 1. Executive Summary
 
-Two 32 MiB full-Flash files were located in the immutable `D:` recovery directory. Both are `33554432` bytes and both match the repository-expected SHA-256 `72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001`. The repository-recorded `E:` primary directory was not present, so cross-disk recovery redundancy is incomplete.
+Two 32 MiB full-Flash files were independently reverified in the immutable `D:` recovery directory. Both are `33554432` bytes and both match the repository-expected SHA-256 `72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001`. On 2026-07-25 the exact `E:` recovery directory was created, the two verified files were copied without overwriting either D: original, and all four files were rehashed successfully. This establishes redundancy across the D: and E: volume paths; it does not prove that the volumes are on different physical disks.
 
 Offline scanning of one hash-matching image found 47 raw partition-magic occurrences but only one complete, valid partition-table candidate. It is at `0x00008000`, contains six bounded, non-overlapping entries, and was independently accepted by ESP-IDF's `gen_esp32part.py`. The bootloader and active `ota_0` application are valid ESP32-S3 images with valid checksums and validation hashes.
 
@@ -33,9 +33,11 @@ It does not cover device connection, serial enumeration, Flash read/write/erase/
 - No `idf.py` command was run.
 - No device-side `esptool` command was run.
 - No command contained `--port`, `-p`, Flash read/write/erase/restore, or eFuse behavior.
-- Recovery originals were not moved, renamed, copied, modified, or used as output.
-- Binary slices and analysis JSON were written only under:
+- D: recovery originals were not moved, renamed, modified, overwritten, deleted, or used as output. Verified copies were created only at the exact reviewed E: paths.
+- Original planning-round slices were written under the following historical path (the username was rendered incorrectly in that earlier record):
   `C:\Users\栗旭阳\AppData\Local\Temp\custom-vocat-pcb-v1-analysis-20260725-203936`
+- Fresh Apply slices were written under:
+  `C:\Users\栗旭阳\AppData\Local\Temp\custom-vocat-pcb-v1-apply-preflight-20260725-211303`
 - Extracted content was not executed.
 - NVS values, account data, Wi-Fi configuration, certificates, tokens, MAC addresses, and unique identifiers were not decoded or printed.
 - Firmware source, generated `sdkconfig`, bootloader configuration, and partition inputs were not changed.
@@ -79,7 +81,7 @@ The exact directories came from repository-controlled documents, so no broad dis
 
 | Recorded location | Result |
 |---|---|
-| `E:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi` | Directory not present during audit |
+| `E:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi` | Created during Apply preflight; two verified copies and `SHA256SUMS.txt` present |
 | `D:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi` | Present; two 32 MiB candidates found |
 
 Located files:
@@ -89,7 +91,7 @@ Located files:
 | `D:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi\esp-vocat_full_flash_32MB_2026-07-10.bin` | 33554432 bytes | 2026-07-10 22:48:47 +08:00 |
 | `D:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi\esp-vocat_full_flash_32MB_verify_2026-07-10.bin` | 33554432 bytes | 2026-07-10 23:08:20 +08:00 |
 
-Exactly two 32 MiB files were found in the available recorded directory. They are two files on the same currently available disk, not verified cross-disk redundancy.
+The two D: originals and two E: copies all have the expected size and SHA-256. D: and E: are verified as distinct volume paths only; physical-disk independence was not established.
 
 ## 6. Hash Verification
 
@@ -244,7 +246,7 @@ The app and bootloader were plaintext-parsable. That fact does not establish cur
 |---|---|---|---|---|---|---|---|---|---|
 | F-001 | Target identity | Development target is ESP-VoCat PCB V1.0 | Constitution/profile | Both explicitly record PCB V1.0 | CONFIRMED (prior repository device record; not revalidated) | Scope isolation only | None | Current live identity | Exact-device read-only identity check after authorization |
 | F-002 | Physical chip | MCU is ESP32-S3 | Prior profile plus image metadata | Both parsed images report chip ID 9 / ESP32-S3 | CONFIRMED for image target; prior-recorded CONFIRMED for device | Compile target usable; physical identity still checked before Flash | None | Current connected chip | Exact-device read-only identity check |
-| F-003 | Backup assets | Two same-hash 32 MiB files exist on `D:` | Host file metadata | Two files, 33554432 bytes, expected SHA-256 | CONFIRMED host-file fact | Recovery input candidate | `E:` directory missing | Cross-disk copy availability | Restore immutable redundancy and rehash |
+| F-003 | Backup assets | Two same-hash 32 MiB originals exist on `D:` and two verified copies exist on `E:` | Host file metadata | Four files, 33554432 bytes, expected SHA-256 | CONFIRMED host-file fact across two volume paths | Recovery input candidate | Physical-disk independence not established | Exact same-device scope still relies on prior records | Rehash before any future recovery review |
 | F-004 | Flash image size | Backup covers 32 MiB address space | Host file metadata | File length `0x02000000` | CONFIRMED backup-file fact | Layout analysis only | Header says 16 MB | Physical chip capacity this round | Traceable prior test or controlled future read |
 | F-005 | Physical Flash capacity | Device has 32 MiB Flash | Hardware profile | Recorded `CONFIRMED` from prior device evidence | CONFIRMED (prior record; not revalidated) | Not sufficient alone for new config because trace record is absent | Image headers declare 16 MB | Underlying test record | Locate recorded observation or perform controlled future read |
 | F-006 | Physical Flash bus | Device Flash is Octal/8-line | Hardware profile | Recorded `CONFIRMED`; app contains OPI/Octal strings | CONFIRMED prior record; strings only STRONGLY SUPPORTED | Blocked for configuration | Headers declare DIO | Exact configuration evidence | Reconcile recorded device output and ESP-IDF options |
@@ -301,7 +303,7 @@ Repository-recorded prior device facts were not revalidated and retain that qual
 
 ## 17. Conflicts and Ambiguities
 
-1. **Recovery redundancy:** repository documents name `E:` primary and `D:` cross-disk directories; only `D:` was present.
+1. **Recovery redundancy:** the exact D: and E: volume paths now contain matching recovery files. This is cross-volume evidence, not proof of separate physical disks.
 2. **Flash declaration versus prior physical record:** both original image headers declare DIO/80 MHz/16 MB; prior device records say 32 MiB Octal/1.8 V. These are different evidence types and require reconciliation.
 3. **Evidence traceability:** the hardware profile marks several facts `CONFIRMED`, but the repository's `tests/` directory contains only the host build record, not the underlying device-observation record.
 4. **Touch evidence:** reference/profile evidence names CST816S, but the exact token was absent from the limited app scan. Neither presence nor absence would prove PCB wiring.
@@ -309,7 +311,6 @@ Repository-recorded prior device facts were not revalidated and retain that qual
 
 ## 18. First-Flash Blockers
 
-- Restore cross-disk recovery redundancy; `E:` is currently absent.
 - Locate or create a controlled, reviewable test record supporting exact Flash and PSRAM configuration.
 - Resolve the DIO/16 MB image-header versus 32 MiB/Octal prior-device ambiguity.
 - Decide whether PSRAM remains disabled for the first revision.
@@ -321,10 +322,12 @@ Repository-recorded prior device facts were not revalidated and retain that qual
 
 ## 19. Recovery Assets
 
-- Available: two same-hash 32 MiB files under
+- Available originals: two same-hash 32 MiB files under
   `D:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi`.
-- Unavailable during audit:
+- Available cross-volume copies: two same-hash 32 MiB files under
   `E:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi`.
+- The E: directory also contains `SHA256SUMS.txt` with file names, sizes, SHA-256 values, backup date, and a private-data warning.
+- No D: original was overwritten, moved, or deleted.
 - Expected and observed full-image SHA-256:
   `72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001`.
 - Assets remain immutable and outside Git.
@@ -333,8 +336,82 @@ Repository-recorded prior device facts were not revalidated and retain that qual
 
 **NO-GO for First Flash.**
 
-The offline evidence is sufficient to design a recovery-first, serial-only OpenSpec Change, but not to select the final PCB V1.0 Flash/PSRAM configuration or authorize a device write. Missing redundancy, configuration ambiguity, unbuilt artifacts, absent exact port/device review, incomplete recovery rehearsal, and absent explicit authorization are stop conditions.
+The offline evidence is sufficient to design a recovery-first, serial-only OpenSpec Change, but not to select the final PCB V1.0 Flash/PSRAM configuration or authorize a device write. Cross-volume redundancy is now established, but configuration ambiguity, absent traceable raw device evidence, unbuilt artifacts, absent exact port/device review, and absent explicit authorization remain stop conditions.
 
 ## 21. Recommended Next Change
 
-Use `prepare-pcb-v1-first-flash-smoke-test` only after its preconditions are satisfied. The first Apply increment should resolve recovery redundancy and the Flash/PSRAM evidence gate before changing firmware. The first firmware revision should remain serial-log-only with PSRAM disabled unless the optional gate is closed by evidence. Display, touch, audio, motor, network, NVS, security, and power behavior must remain separate future Changes.
+Cross-volume recovery redundancy is complete. The next step is not firmware implementation: the user must separately review and explicitly authorize the minimum device-read-only inspection described in `docs/hardware/pcb-v1-device-readonly-inspection-plan.md`. The Firmware Implementation Gate remains closed until the mandatory Flash configuration evidence is reconciled. PSRAM remains disabled, and display, touch, audio, motor, network, NVS, security, and power behavior remain separate future Changes.
+
+## 22. Apply-Time Independent Revalidation
+
+This section records the independent Apply preflight performed later on 2026-07-25.
+
+### Repository and OpenSpec gate
+
+- Branch: `feat/prepare-pcb-v1-first-flash-smoke-test`.
+- Starting HEAD, upstream reference, and remote branch: `55ef92f2835a9695467f02f4d5a24c6acdea2794`.
+- Starting ahead/behind: `0/0`.
+- Starting worktree: clean.
+- OpenSpec: 1.6.0.
+- Change status: `spec-driven`, planning artifacts complete, Apply state ready.
+- Starting tasks: `0/48`.
+- Change strict validation: passed.
+- Full-repository strict validation: 2 passed, 0 failed.
+- The archived host-build Change, synchronized host-build main spec, and three tracked firmware files were unchanged before Apply.
+
+### Fresh partition scan
+
+The fresh scan used the expected-hash D: original and a newly created temporary directory. It did not reuse prior slices.
+
+- Raw `0x50AA` magic hits: 47.
+- Valid root candidates: 1.
+- Five additional hits were continuation entries within the valid table.
+- Forty-one hits failed printable/structured label validation.
+- Unique valid root: `0x00008000`.
+- Entry MD5: valid.
+- `0xFF` terminator: valid.
+- ESP-IDF v5.5.4 partition parser: accepted.
+- Bounds violations: 0.
+- Partition overlaps: 0.
+- `ota_1` non-`0xFF` byte count: 0 of 4,128,768.
+- `0x01000000` through `0x02000000` non-`0xFF` byte count: 0 of 16,777,216.
+
+### Fresh image analysis
+
+Bootloader:
+
+- target: ESP32-S3;
+- image format version: 1;
+- entry point: `0x403C8908`;
+- segment count: 3;
+- effective image length: 16,256 bytes;
+- checksum: `0x09`, valid;
+- appended SHA-256: present and valid;
+- ESP-IDF: `v5.5.3-dirty`;
+- compile time: `Mar 25 2026 18:04:01`;
+- header declaration: DIO, 80 MHz, 16 MB.
+
+`ota_0` application:
+
+- target: ESP32-S3;
+- image format version: 1;
+- entry point: `0x4037978C`;
+- segment count: 6;
+- effective image length: 2,615,808 bytes;
+- checksum: `0x8E`, valid;
+- appended SHA-256: present and valid;
+- project/version: `xiaozhi` 2.2.6;
+- compile time: `Jul 1 2026 10:20:26`;
+- ESP-IDF: `v5.5.3-dirty`;
+- header declaration: DIO, 80 MHz, 16 MB.
+
+### Limited printable-string search
+
+- Bootloader effective range: none of the requested Flash/PSRAM/configuration keywords was found.
+- App effective range: OPI, Octal, QOUT, DOUT, PSRAM, SPIRAM, MSPI, Flash-size/model text, and `1.8V` were present.
+- Reviewed matches were generic driver messages, symbols, mode names, diagnostic format strings, or error text.
+- `CONFIG_SPIRAM`, `CONFIG_ESPTOOLPY`, `CONFIG_ESPTOOLPY_FLASHSIZE`, `CONFIG_ESPTOOLPY_FLASHMODE`, and `CONFIG_ESPTOOLPY_FLASHFREQ` were not found.
+- Presence does not prove a Kconfig option or physical configuration; absence does not prove a feature is unavailable.
+- A Git-tracked-text search found prior summary claims but no raw `flash_id`, chip-identification, Flash manufacturer/device-ID, capacity, or observed PSRAM-size transcript.
+
+The detailed board decision is recorded in `docs/hardware/pcb-v1-board-configuration-decision.md`. Flash/PSRAM configuration remains unresolved, the Firmware Implementation Gate is **CLOSED**, and First Flash remains **NO-GO**.

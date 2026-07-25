@@ -11,7 +11,7 @@ Repository policy defines two immutable recovery locations:
 - Primary: `E:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi`
 - Cross-disk: `D:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi`
 
-During this audit, the `E:` directory was not present. The `D:` directory was present and contained two expected full-image files. The files were read only for size, hash, and offline structure.
+During the planning audit, the `E:` directory was not present. During the 2026-07-25 Apply preflight, both D: originals were reverified, the exact E: directory was created, and verified copies were created without overwriting either original. D: and E: establish distinct volume paths; no evidence establishes that they are different physical disks.
 
 ## 2. Full Backups
 
@@ -19,8 +19,10 @@ During this audit, the `E:` directory was not present. The `D:` directory was pr
 |---|---:|---|
 | `D:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi\esp-vocat_full_flash_32MB_2026-07-10.bin` | 33554432 bytes | `72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001` |
 | `D:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi\esp-vocat_full_flash_32MB_verify_2026-07-10.bin` | 33554432 bytes | `72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001` |
+| `E:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi\esp-vocat_full_flash_32MB_2026-07-10.bin` | 33554432 bytes | `72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001` |
+| `E:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi\esp-vocat_full_flash_32MB_verify_2026-07-10.bin` | 33554432 bytes | `72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001` |
 
-The hashes are identical and match repository policy. Because both currently available files are on `D:`, they do not satisfy the intended cross-disk failure isolation.
+All four hashes are identical and match repository policy. E: also contains `SHA256SUMS.txt`, which records only file names, sizes, SHA-256 values, backup date, and the warning “Contains private device data; do not commit or share”. No D: original was moved, deleted, renamed, modified, or overwritten.
 
 ## 3. Verified Original-Firmware Partition Layout
 
@@ -70,7 +72,7 @@ No private values were decoded. Only structural metadata and hashes were recorde
 
 Before any custom Flash:
 
-1. Restore two-disk recovery redundancy, including the recorded `E:` location or a newly reviewed equivalent.
+1. Maintain the verified D: and E: cross-volume recovery redundancy; do not describe it as separate physical-disk redundancy without additional evidence.
 2. Recalculate size and SHA-256 for every recovery image.
 3. Confirm the image belongs to the exact device being authorized.
 4. Confirm exact target chip and PCB V1.0 identity.
@@ -128,8 +130,7 @@ No exact custom image, target slot, offset, or write length has yet been built o
 - No custom image hash, effective size, offset, or range has been reviewed.
 - The original image headers declare DIO/80 MHz/16 MB while prior repository records say 32 MiB Octal/1.8 V.
 - Exact Flash and optional PSRAM configuration are unresolved.
-- The `E:` recovery directory is missing.
-- No host-only recovery rehearsal is complete.
+- A host-only recovery rehearsal is complete, but it performed no device action and grants no recovery or Flash authorization.
 - The exact current device and port are not reviewed.
 - No explicit operation-specific authorization exists.
 
@@ -143,14 +144,14 @@ The gate becomes reviewable only when all of the following are true:
 
 - [ ] exact PCB V1.0 device identified;
 - [ ] exact current port identified without assuming COM7;
-- [ ] two-disk recovery assets present;
-- [ ] both full images are 33554432 bytes and match the expected SHA-256;
-- [ ] partition layout remains uniquely verified;
+- [x] D: and E: cross-volume recovery assets present;
+- [x] all four full-image files are 33554432 bytes and match the expected SHA-256;
+- [x] partition layout remains uniquely verified;
 - [ ] Flash/PSRAM configuration conflict resolved;
 - [ ] serial-only firmware implemented and host-built with ESP-IDF v5.5.4;
 - [ ] source/configuration allowlist passes static review;
 - [ ] exact image, hash, offset, and write range pass artifact review;
-- [ ] host-only recovery rehearsal passes;
+- [x] host-only recovery rehearsal passes at the host/procedure level only;
 - [ ] observation window, stop conditions, and rollback are reviewed;
 - [ ] user explicitly authorizes the exact operation.
 
@@ -158,7 +159,61 @@ Future command structures may be discussed only in a non-executable placeholder 
 
 ```text
 EXAMPLE ONLY — NOT AUTHORIZED — DO NOT EXECUTE
-esptool.py --port <REVIEWED_PORT> write_flash <REVIEWED_OFFSET> <REVIEWED_IMAGE>
+No executable command is recorded.
 ```
 
-The placeholder is incomplete by design. It contains neither a real port nor a real write offset and grants no Flash authority.
+No executable or copyable Flash or recovery command is provided. Any future packet must remain unauthorized until its exact device, current reviewed port, image, hash, range, risk, and observation plan receive separate explicit user authorization.
+
+## 13. Cross-Volume Copy Record
+
+The Apply preflight performed the following host-computer file operation only:
+
+- source directory: `D:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi`;
+- destination directory: `E:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi`;
+- source files: the two exact reviewed 32 MiB originals;
+- destination behavior: create only when absent; never overwrite a mismatching file;
+- post-copy result: both destination files are 33,554,432 bytes and match the expected SHA-256;
+- manifest: `E:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi\SHA256SUMS.txt`;
+- D: originals: not moved, overwritten, modified, renamed, or deleted.
+
+The D: and E: paths establish cross-volume redundancy. They are not claimed to be different physical disks.
+
+## 14. Host-Only Recovery Rehearsal
+
+- Rehearsal date: 2026-07-25.
+- Execution scope: host-only procedure and evidence review.
+- Device connection: none.
+- Recovery write: not executed and not authorized.
+- Tool availability: Espressif Python environment available; `esptool.py` reports version `4.12.dev3`.
+- Same-device constraint: the full image is restricted to the exact ESP-VoCat PCB V1.0 unit from which repository records say it was captured; this scope was not revalidated on a live device.
+- Reviewed full-image size: `33554432` bytes.
+- Reviewed complete range: `0x00000000` through `0x02000000`.
+- Reviewed SHA-256: `72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001`.
+- Privacy impact: a complete recovery would overwrite NVS, PHY, OTA state, assets, and all captured private/device-specific data; therefore it is same-device only.
+
+The rehearsed future separation is:
+
+1. reverify exact image path, size, and SHA-256;
+2. reverify exact same device, PCB V1.0, and user-supplied current port;
+3. review the full range, privacy impact, risks, tool/version, and possible reset behavior;
+4. obtain separate explicit recovery authorization;
+5. execute at most one exact `WRITE` operation, with no preceding erase and no automatic retry;
+6. stop after the write result;
+7. observe original-device boot as a separate `READ-ONLY` operation;
+8. verify required original behavior before any further project hardware work.
+
+Operator judgment points:
+
+- stop on any image, size, hash, device, PCB, port, or range mismatch;
+- stop if a command would erase first, alter eFuses/security/voltage, add another image, or retry automatically;
+- stop if privacy/same-device scope is uncertain;
+- after a failed write, do not widen or retry the operation automatically;
+- do not treat a successful tool exit as proof of original-device recovery.
+
+Host-only rehearsal result: **COMPLETE for procedure review only**. It proves recovery inputs and decision points are reviewable. It does not prove that the physical device can be restored, does not authorize a recovery write, and does not change the First Flash result from **NO-GO**.
+
+## 15. Configuration and Device-Read Gate
+
+The Flash/PSRAM decision remains unresolved. The Firmware Implementation Gate is **CLOSED**. The next allowable proposal is the separately authorized read-only evidence collection described in `docs/hardware/pcb-v1-device-readonly-inspection-plan.md`.
+
+The inspection must use `<REVIEWED_PORT>` until the user explicitly supplies and authorizes an exact current port. It must not include `read_flash`, Flash write, erase, recovery, eFuse write, firmware build, monitor, or peripheral activity. Device-read-only authorization, if later granted, will not authorize firmware implementation or First Flash.

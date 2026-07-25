@@ -4,6 +4,8 @@ The completed host-only baseline proves only that three repository-owned source 
 
 This planning round independently verified two 32 MiB files in the `D:` recovery directory with the expected SHA-256. Offline analysis found one valid original partition table at `0x00008000`, a valid ESP32-S3 bootloader image, and a valid `ota_0` ESP32-S3 application image. Both image headers declare `DIO`, `80 MHz`, and `16 MB`; repository hardware records describe the physical device as 32 MiB Octal Flash at 1.8 V with 16 MiB PSRAM. These statements concern different evidence domains and cannot be collapsed into one board configuration. The `E:` primary recovery directory was not present during this round.
 
+During Apply preflight on 2026-07-25, the two D: files were reverified, exact copies were created at the recorded E: path, and all four files matched the expected size and SHA-256. This establishes D:/E: cross-volume redundancy without proving separate physical disks. A fresh partition/image analysis reproduced the planning results, while a limited string search and tracked-repository search still found no traceable raw device-read output capable of resolving the Flash/PSRAM configuration conflict.
+
 Stakeholders are the device owner reviewing risk and authorizing any exact device operation, and the later Apply agent implementing only the approved host-side portion before a separate Flash checkpoint.
 
 ### Assumptions
@@ -80,11 +82,26 @@ The later Apply SHALL build a configuration allowlist before changing firmware:
 
 The allowlist decision must be recorded; it must not be hidden in generated `sdkconfig`.
 
+## Device-Read-Only Configuration Gate
+
+Offline evidence is insufficient to select the mandatory PCB V1.0 Flash configuration. Firmware implementation, tracked board configuration, configure, and build therefore remain blocked before the existing implementation steps.
+
+The next possible evidence-gathering action is a separate device-read-only inspection described in `docs/hardware/pcb-v1-device-readonly-inspection-plan.md`. It remains `NOT AUTHORIZED` and must:
+
+- use an exact user-reviewed `<REVIEWED_PORT>` rather than historical `COM7`;
+- identify each read-only query category, tool/version, expected output, reset risk, privacy handling, and stop condition;
+- provide no complete executable command before review;
+- exclude `read_flash`, writes, erases, restores, eFuse writes, security changes, monitor, firmware build, and peripheral behavior;
+- redact MAC addresses and unnecessary unique identifiers;
+- require an explicit authorization statement for the exact packet, with vague continuation language rejected.
+
+If the inspection cannot resolve physical Flash mode, capacity, frequency, voltage domain, and the required ESP-IDF v5.5.4 mapping, the firmware gate remains closed. PSRAM remains disabled until its independent mode/size/clock/voltage/options gate is satisfied.
+
 ## Recovery-First Strategy
 
 - Recovery images remain immutable and outside Git.
 - Both full-image files must be rehashed immediately before the pre-Flash review.
-- Cross-disk redundancy must be restored or explicitly treated as a blocking exception; this design does not waive the missing `E:` directory.
+- The exact D: and E: recovery paths now contain verified matching files. Treat this as cross-volume redundancy only; do not claim separate physical disks without evidence.
 - A host-only recovery rehearsal must verify file availability, hash, intended same-device scope, tool availability, and a reviewed placeholder procedure without writing a device.
 - Full recovery is reserved for the same exact device because the image includes NVS, PHY data, and potentially unique/private state.
 - Any rollback command is prepared separately and remains unauthorized until its own exact review.
@@ -171,7 +188,7 @@ OpenSpec Apply may create firmware and prepare a non-executed command. It must s
 ## Risk Analysis
 
 - **Image-header/configuration mismatch:** The original images declare 16 MB DIO while prior device records say 32 MiB Octal. Treat as a configuration blocker, not a value-selection contest.
-- **Missing cross-disk redundancy:** The `E:` directory was absent. Restore redundancy before first Flash.
+- **Recovery-location semantics:** D: and E: now contain verified copies, but only cross-volume separation is established; physical-disk independence is not claimed.
 - **Private state in recovery image:** Restrict full-image use to the same device and never commit or print NVS contents.
 - **App-only compatibility risk:** Require bootloader/partition/app compatibility review; stop rather than widen the write.
 - **Port identity drift:** Never reuse historical `COM7`; mismatch invalidates authorization.
@@ -193,27 +210,30 @@ The authorization checkpoint is a hard boundary after all host-only work and hum
 
 ## Testing Plan
 
-1. Host-only static review of source and configuration allowlist.
-2. Separate ESP-IDF v5.5.4 configure and build commands.
-3. Host-only inspection of target, image metadata, image hash, size, write range, partition compatibility, and Git state.
-4. Host-only recovery rehearsal and human review.
-5. Exact authorization checkpoint.
-6. Separate device connection/identity check; any mismatch invalidates authorization.
-7. One exact Flash write.
-8. Separate serial observation for ready marker, reset/panic/watchdog absence, and bounded stability window.
-9. Pass/fail decision and, if required, separately authorized full-image rollback.
-10. Evidence recording that distinguishes compiled, host-tested, device-tested, restored, and unverified claims.
+1. Separately review and explicitly authorize the minimum device-read-only inspection needed to resolve the configuration gate.
+2. Reconcile sanitized device evidence with image declarations and exact ESP-IDF v5.5.4 options; keep the firmware gate closed on ambiguity.
+3. Host-only static review of source and configuration allowlist.
+4. Separate ESP-IDF v5.5.4 configure and build commands.
+5. Host-only inspection of target, image metadata, image hash, size, write range, partition compatibility, and Git state.
+6. Host-only recovery rehearsal and human review.
+7. Exact First Flash authorization checkpoint.
+8. Separate device connection/identity check; any mismatch invalidates authorization.
+9. One exact Flash write.
+10. Separate serial observation for ready marker, reset/panic/watchdog absence, and bounded stability window.
+11. Pass/fail decision and, if required, separately authorized full-image rollback.
+12. Evidence recording that distinguishes compiled, host-tested, device-tested, restored, and unverified claims.
 
 This smoke test does not exercise animation, frame time, display memory, audio tasks, or product workloads. It must nevertheless report heap/PSRAM initialization failures and watchdog/reset behavior visible in startup logs; performance validation remains future work.
 
 ## Open Questions
 
-- Where is the missing `E:` recovery directory, and how will cross-disk redundancy be restored?
 - Which archived test output supports the prior 32 MiB Octal/1.8 V Flash and 16 MiB PSRAM classifications?
 - Which exact ESP-IDF v5.5.4 options reconcile the prior device evidence with the original images' DIO/16 MB headers?
 - Should PSRAM remain entirely disabled for the first serial-only revision?
 - Can an app-only write be proven compatible with the preserved original bootloader and OTA layout?
 - What exact observation duration will be accepted at pre-Flash review?
+
+The E: location question is resolved at the volume-path level. Whether D: and E: are on different physical disks was not investigated and is not claimed.
 
 ## Alternatives Considered
 

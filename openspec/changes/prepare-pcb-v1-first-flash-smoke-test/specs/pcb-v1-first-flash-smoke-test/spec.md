@@ -42,6 +42,17 @@ The later Apply SHALL create a reviewed allowlist containing only the exact ESP3
 - **WHEN** static or generated-configuration review finds a board, memory, peripheral, storage, network, security, or GPIO option outside the allowlist
 - **THEN** the build artifact is rejected and no Flash command is prepared
 
+### Requirement: Device-read-only configuration evidence gate
+When offline evidence cannot resolve a mandatory PCB V1.0 Flash or PSRAM configuration input, the workflow SHALL stop before firmware implementation, tracked board configuration, configure, or build and SHALL require a separately reviewed device-read-only inspection packet. The packet MUST remain `NOT AUTHORIZED` until the user explicitly approves the exact device, current reviewed port, query categories, tool/version, reset risk, privacy handling, and stop conditions. Vague continuation language MUST NOT authorize device access.
+
+#### Scenario: Offline evidence remains ambiguous
+- **WHEN** original image declarations, prior device records, and compiled strings do not establish one traceable physical Flash/PSRAM configuration
+- **THEN** the Firmware Implementation Gate remains closed, PSRAM remains disabled, and the workflow prepares only a non-executed read-only inspection plan
+
+#### Scenario: Read-only inspection is later reviewed
+- **WHEN** a future packet proposes chip identification, Flash identification/capacity, or read-only eFuse summary evidence
+- **THEN** it uses `<REVIEWED_PORT>` until an exact current port is explicitly authorized, excludes `read_flash` and every write/erase/restore/eFuse-write operation, and requires redaction of MAC addresses and unnecessary unique identifiers
+
 ### Requirement: No unverified GPIO use
 The initial smoke-test source and configuration MUST NOT name, configure, read, write, reserve experimentally, or toggle any GPIO.
 
