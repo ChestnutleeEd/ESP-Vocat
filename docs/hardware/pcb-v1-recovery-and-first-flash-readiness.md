@@ -1,7 +1,7 @@
 # ESP-VoCat PCB V1.0 Recovery and First-Flash Readiness
 
-- Assessment date: 2026-07-25
-- Device operations recorded: separately authorized `chip_id` and `flash_id` on `COM7`; no device was accessed during this host-side audit/update
+- Assessment date: 2026-07-26
+- Device operations recorded: separately authorized `chip_id`, `flash_id`, and minimum read-only eFuse summary; no device was accessed during this ESP-IDF source audit/update
 - Current decision: **NO-GO**
 
 ## 1. Current Known Recovery Assets
@@ -128,9 +128,9 @@ No exact custom image, target slot, offset, or write length has yet been built o
 
 - The custom smoke-test firmware does not exist yet.
 - No custom image hash, effective size, offset, or range has been reviewed.
-- The original image headers declare DIO/80 MHz/16 MB while the completed query reports 32 MB and an Octal eFuse selector; exact image/boot/configuration mapping is unresolved.
-- The completed query's installed-tool voltage text says 3.3 V, but the helper cannot uniquely decode the raw voltage-bit pattern and the prior repository record says 1.8 V.
-- Embedded 16 MB PSRAM capacity is confirmed for the query, but PSRAM mode/clock/options remain unresolved and initialization stays disabled.
+- The image/physical/runtime configuration layers are now source-mapped, but the custom app artifact and its compatibility with the preserved bootloader/table/OTA state do not yet exist.
+- The historical 3.3 V tool text is explained by a source-logic defect; FORCE/XPD/TIEH support a forced 1.8 V eFuse configuration, not a PCB-rail measurement.
+- Embedded 16 MB PSRAM capacity is confirmed and its Kconfig/runtime path is mapped, but mode/clock/routing remain unresolved; the first candidate keeps PSRAM disabled.
 - A host-only recovery rehearsal is complete, but it performed no device action and grants no recovery or Flash authorization.
 - The exact device and `COM7` were reviewed for the completed read-only queries only; any future operation requires a fresh identity/port review.
 - No explicit operation-specific authorization exists.
@@ -148,7 +148,7 @@ The gate becomes reviewable only when all of the following are true:
 - [x] D: and E: cross-volume recovery assets present;
 - [x] all four full-image files are 33554432 bytes and match the expected SHA-256;
 - [x] partition layout remains uniquely verified;
-- [ ] Flash/PSRAM configuration conflict resolved;
+- [x] Flash/PSRAM configuration mapped for a host-only candidate with PSRAM disabled; this is not physical validation;
 - [ ] serial-only firmware implemented and host-built with ESP-IDF v5.5.4;
 - [ ] source/configuration allowlist passes static review;
 - [ ] exact image, hash, offset, and write range pass artifact review;
@@ -215,6 +215,8 @@ Host-only rehearsal result: **COMPLETE for procedure review only**. It proves re
 
 ## 15. Configuration and Device-Read Gate
 
-The authorized `chip_id` and `flash_id` inspection is complete and recorded in `docs/hardware/pcb-v1-device-readonly-inspection-result.md`. It confirmed the query-time device and port, 32 MB Flash identification, the Octal Flash-type eFuse selector, and embedded 16 MB PSRAM package fields. It also exposed an unresolved conflict: the installed tool printed 3.3 V, its source cannot uniquely decode the underlying masked eFuse bit pattern, and prior repository records say 1.8 V.
+The authorized `chip_id`, `flash_id`, and minimum read-only eFuse evidence is complete and recorded in `docs/hardware/pcb-v1-device-readonly-inspection-result.md`. It confirmed the query-time device/port, 32 MB Flash identification, the Octal Flash-type eFuse selector, embedded 16 MB PSRAM package fields, and `VDD_SPI_FORCE=1`, `VDD_SPI_XPD=1`, `VDD_SPI_TIEH=0`. The bit-level fields support a forced 1.8 V eFuse configuration and explain the installed tool's historical 3.3 V line as a source-logic defect; no physical rail measurement is claimed.
 
-The Flash/PSRAM decision therefore remains unresolved. The Firmware Implementation Gate is **CLOSED** and First Flash remains **NO-GO**. The only further device proposal is a separately reviewed, sanitized, minimum read-only eFuse summary; it remains **NOT AUTHORIZED**. It must not include `read_flash`, Flash write, erase, recovery, eFuse write, firmware build, monitor, or peripheral activity. Read-only authorization would not authorize firmware implementation or First Flash.
+The exact ESP-IDF v5.5.4 mapping is in `docs/hardware/pcb-v1-esp-idf-configuration-map.md`. Firmware Implementation Gate is **OPEN FOR HOST-ONLY IMPLEMENTATION** using explicit Octal Flash/STR, 80 MHz, a conservative 16 MB header limit, USB Serial/JTAG, and PSRAM disabled. This allows only a future independent firmware/configure/build/static-review task.
+
+First Flash remains **NO-GO**. The built app, original bootloader/table/OTA compatibility, exact image/hash/offset/range, current device/port, observation plan, and explicit operation authorization are absent. No further device access and no Flash write are authorized.

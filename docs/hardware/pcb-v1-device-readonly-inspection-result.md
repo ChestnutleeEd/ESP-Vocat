@@ -6,7 +6,7 @@
 - Reviewed port for these two completed operations: `COM7`
 - Tool: esptool.py `v4.12.dev3`
 - Result status: **COMPLETED WITH AN UNRESOLVED FLASH-VOLTAGE CONFLICT**
-- Firmware Implementation Gate: **CLOSED**
+- Firmware Implementation Gate: **OPEN FOR HOST-ONLY IMPLEMENTATION**
 - First Flash: **NO-GO**
 
 ## 1. Authorization Scope
@@ -183,7 +183,7 @@ The DIO and Octal observations are not mutually exclusive statements about the s
 
 ## 12. Stop Decision
 
-- Firmware Implementation Gate: **CLOSED**.
+- Firmware Implementation Gate: **OPEN FOR HOST-ONLY IMPLEMENTATION**.
 - First Flash: **NO-GO**.
 - Flash authorization: **NOT GRANTED**.
 - Minimum eFuse-summary authorization: **CONSUMED AND CLOSED**.
@@ -191,7 +191,7 @@ The DIO and Octal observations are not mutually exclusive statements about the s
 
 The minimum summary has now exposed the individual VDDSPI fields and explained the earlier esptool 3.3 V text. No additional device query is authorized. The eFuse result does not authorize a voltage change, firmware implementation, build, Flash, monitor, or rollback.
 
-The Firmware Implementation Gate remains closed at this stop point pending a separate host-side review of the complete board configuration and exact ESP-IDF v5.5.4 mapping. It is not opened automatically by this query.
+The query did not open the Firmware Implementation Gate by itself. The later independent host-side mapping in `docs/hardware/pcb-v1-esp-idf-configuration-map.md` opened the gate only for a future host-only implementation task. That decision grants no device access or Flash authorization.
 
 ## 13. Minimum Read-Only eFuse Summary
 
@@ -212,7 +212,7 @@ Safety boundary for this summary:
 - The query did not modify Flash contents, NVS, the bootloader, the partition table, firmware, `sdkconfig`, Secure Boot state, Flash Encryption state, or any eFuse bit.
 - It did not execute `read_flash`, `write_flash`, `erase_flash`, restore, monitor, a firmware build, or firmware Flash.
 - Its effects were limited to device reads, transient connection-state changes, and the final successful hard reset; no persistent write was identified.
-- Authorization remains unchanged: no further device access is authorized, no Flash write is authorized, the Firmware Implementation Gate is **CLOSED**, and First Flash is **NO-GO**.
+- Authorization remains unchanged: no further device access is authorized, no Flash write is authorized, the Firmware Implementation Gate is **OPEN FOR HOST-ONLY IMPLEMENTATION** only, and First Flash is **NO-GO**.
 
 Sanitized necessary values:
 

@@ -6,7 +6,7 @@ This planning round independently verified two 32 MiB files in the `D:` recovery
 
 During Apply preflight on 2026-07-25, the two D: files were reverified, exact copies were created at the recorded E: path, and all four files matched the expected size and SHA-256. This establishes D:/E: cross-volume redundancy without proving separate physical disks. A fresh partition/image analysis reproduced the planning results, while a limited string search and tracked-repository search still found no traceable raw device-read output capable of resolving the Flash/PSRAM configuration conflict.
 
-A later, separately authorized minimum inspection completed `chip_id` and `flash_id` on the user-reviewed `COM7` with esptool.py `v4.12.dev3`, `--no-stub`, exit code 0, MAC redaction, and a final RTS hard reset. It confirmed ESP32-S3 QFN56 revision v0.2, a 32 MB JEDEC capacity code, the ESP32-S3 Octal Flash-type eFuse selector, and embedded 16 MB PSRAM package fields (`AP_1v8`). Installed-source audit also found that this version's inherited voltage helper prints 3.3 V for any nonzero combination of three masked eFuse voltage bits, so its 3.3 V line does not expose a unique bit pattern or resolve the prior 1.8 V record. No device was accessed again during that audit.
+A later, separately authorized minimum inspection completed `chip_id` and `flash_id` with esptool.py `v4.12.dev3`, `--no-stub`, exit code 0, MAC redaction, and a final RTS hard reset. It confirmed ESP32-S3 QFN56 revision v0.2, a 32 MB JEDEC capacity code, the ESP32-S3 Octal Flash-type eFuse selector, and embedded 16 MB PSRAM package fields (`AP_1v8`). A separately authorized minimum read-only eFuse summary then recorded `VDD_SPI_FORCE=1`, `VDD_SPI_XPD=1`, and `VDD_SPI_TIEH=0`. Installed-source audit explains the historical 3.3 V output as an early-branch tool defect; the individual ESP32-S3 fields support a forced, enabled 1.8 V LDO configuration but are not a PCB-rail measurement. No device was accessed during the subsequent ESP-IDF mapping audit.
 
 Stakeholders are the device owner reviewing risk and authorizing any exact device operation, and the later Apply agent implementing only the approved host-side portion before a separate Flash checkpoint.
 
@@ -19,9 +19,9 @@ Stakeholders are the device owner reviewing risk and authorizing any exact devic
 
 ### Unresolved hardware facts
 
-- The exact ESP-IDF Flash-mode/header-size/frequency and PSRAM mode/clock/options configuration that is safe for this PCB V1.0 unit.
-- Physical Flash voltage: current tool output says 3.3 V, prior repository evidence says 1.8 V, and the installed helper does not uniquely reveal its input bit pattern.
-- Individual VDDSPI eFuse bits, Secure Boot, Flash Encryption, download-mode, JTAG, and running-firmware state. USB Serial/JTAG was observed only in the completed query context.
+- Physical Flash voltage by instrument measurement; only the forced 1.8 V eFuse configuration is confirmed.
+- Enabled PSRAM mode, clock, routing, timing, and runtime success. The first candidate avoids this dependency by disabling PSRAM.
+- Secure Boot, Flash Encryption, download-mode, JTAG, and running-firmware state beyond the minimum committed evidence. USB Serial/JTAG was observed only in the completed query context.
 - Exact electrical wiring and safe initialization for all display, touch, audio, motor, SD, battery, power-control, and GPIO signals.
 - Whether BMI270 is physically fitted and whether original-firmware component strings represent populated hardware.
 
@@ -73,7 +73,7 @@ No evidence may be promoted across rows without a recorded verification.
 
 ## Board-Configuration Decision Process
 
-The later Apply SHALL build a configuration allowlist before changing firmware:
+The 2026-07-26 host-side audit built the configuration allowlist before any firmware change:
 
 1. Start with only target `esp32s3`, fixed serial logging, no peripheral drivers, no GPIO references, no NVS, and no network.
 2. Map every proposed Flash/PSRAM option to an evidence source and state exactly what that source proves.
@@ -82,22 +82,23 @@ The later Apply SHALL build a configuration allowlist before changing firmware:
 5. Disable PSRAM initialization if its mode, size, clock, voltage, and pin ownership are not all accepted.
 6. Stop before configure if any required option is outside the allowlist.
 
-The allowlist decision must be recorded; it must not be hidden in generated `sdkconfig`.
+The allowlist is recorded in `docs/hardware/pcb-v1-esp-idf-configuration-map.md`; it must not be hidden in generated `sdkconfig`.
 
 ## Device-Read-Only Configuration Gate
 
-Offline evidence plus the completed `chip_id`/`flash_id` query is still insufficient to select the mandatory PCB V1.0 Flash configuration. Firmware implementation, tracked board configuration, configure, and build therefore remain blocked before the existing implementation steps.
+The completed read-only evidence is recorded in `docs/hardware/pcb-v1-device-readonly-inspection-result.md`. Its authorization is consumed and closed and grants no continuing device authority.
 
-The first separately authorized inspection is complete and recorded in `docs/hardware/pcb-v1-device-readonly-inspection-result.md`. It consumed only the approved chip/Flash identification scope and grants no continuing device authority. The remaining possible evidence-gathering action is a separately reviewed, sanitized, minimum read-only eFuse summary. It remains `NOT AUTHORIZED` and must:
+The clean local ESP-IDF v5.5.4 source maps the evidence to an exact host-only candidate:
 
-- use an exact newly user-reviewed `<REVIEWED_PORT>` rather than reusing the completed event's `COM7`;
-- identify each read-only query category, tool/version, expected output, reset risk, privacy handling, and stop condition;
-- provide no complete executable command before review;
-- exclude `read_flash`, writes, erases, restores, eFuse writes, security changes, monitor, firmware build, and peripheral behavior;
-- redact MAC addresses and unnecessary unique identifiers;
-- require an explicit authorization statement for the exact packet, with vague continuation language rejected.
+- `esp32s3`;
+- explicit Octal Flash with OPI runtime and STR sampling;
+- 80 MHz;
+- a conservative 16 MB image-address-space limit on the confirmed 32 MB physical device;
+- integrated USB Serial/JTAG console;
+- PSRAM disabled;
+- no VDDSPI, security, GPIO, peripheral, network, NVS, or OTA mutation path.
 
-The completed inspection confirms current-device Flash capacity and the Octal eFuse selector but not frequency, physical voltage, or the required ESP-IDF v5.5.4 mapping. The firmware gate therefore remains closed. PSRAM capacity is confirmed at the package/eFuse level, but PSRAM remains disabled until its independent mode/clock/voltage/options gate is satisfied.
+Firmware Implementation Gate is **OPEN FOR HOST-ONLY IMPLEMENTATION**. This permits only a later independent firmware/configure/build/static-review task. It does not authorize device access, Flash, or any write layout.
 
 ## Recovery-First Strategy
 
@@ -143,9 +144,9 @@ No board-support, display, touch, audio, motor, power, storage-service, companio
 
 ## Flash and PSRAM Configuration Gates
 
-Flash configuration is mandatory for a safe build and is not resolved by the backup alone. The image headers' `DIO / 80 MHz / 16 MB` declaration is recorded as original-image metadata. Current device evidence now confirms a 32 MB JEDEC capacity code and an Octal eFuse Flash-type selector; these describe physical identification/eFuse fields rather than the image header layer. The installed-tool 3.3 V text conflicts with the prior 1.8 V record and is limited by ambiguous source logic, so voltage and exact ESP-IDF mapping remain unresolved.
+Flash configuration is mandatory for a safe build and is not resolved by the backup alone. The source mapping in `docs/hardware/pcb-v1-esp-idf-configuration-map.md` now distinguishes the original DIO/80 MHz/16 MB headers from physical 32 MB/eight-line evidence and the runtime MSPI layer. Explicit Octal maps to `CONFIG_ESPTOOLPY_OCT_FLASH=y`, OPI runtime, STR sampling, and a generated DOUT header; 80 MHz maps to `CONFIG_ESPTOOLPY_FLASHFREQ_80M=y`. The conservative candidate retains a 16 MB header/address-space limit because ESP-IDF permits a smaller header on a larger device and the preserved layout ends at 16 MB.
 
-PSRAM is disabled by default. The current query confirms embedded 16 MB package fields and the `AP_1v8` PSRAM vendor/variant label, but not active bus mode or clock. It can be enabled only when exact PCB V1.0 mode, size, clock, voltage domain, and ESP-IDF options are reviewed together. Failure to initialize optional PSRAM must not block serial startup.
+PSRAM is disabled by default. The query confirms embedded 16 MB package fields and the `AP_1v8` PSRAM vendor/variant label, but not active bus mode, clock, routing, or runtime success. ESP-IDF has no 16 MB capacity Kconfig; its Octal driver detects density after initialization. The first serial candidate keeps `CONFIG_SPIRAM` off, which is source-supported independently of Octal Flash.
 
 No design task changes VDD_SPI, Flash voltage, eFuses, security state, or memory-device wiring.
 
@@ -189,8 +190,8 @@ OpenSpec Apply may create firmware and prepare a non-executed command. It must s
 
 ## Risk Analysis
 
-- **Image-header/configuration layering:** The original images declare 16 MB DIO while the current device query reports 32 MB and the Octal eFuse selector. Treat these as different layers requiring exact compatibility mapping, not a value-selection contest.
-- **Voltage conflict:** Current installed-tool output says 3.3 V, prior repository evidence says 1.8 V, and the installed helper hides the exact bit pattern. Do not choose or alter a voltage until authoritative evidence is reconciled.
+- **Image-header/configuration layering:** The original images declare 16 MB DIO while device evidence reports 32 MB and the Octal selector. Source explains these as different layers; generated-header and preserved-bootloader compatibility still require artifact review.
+- **Voltage evidence:** FORCE/XPD/TIEH support a forced 1.8 V eFuse configuration; the historical 3.3 V output is an explained tool defect. Do not treat the eFuse result as a PCB measurement or alter voltage.
 - **Recovery-location semantics:** D: and E: now contain verified copies, but only cross-volume separation is established; physical-disk independence is not claimed.
 - **Private state in recovery image:** Restrict full-image use to the same device and never commit or print NVS contents.
 - **App-only compatibility risk:** Require bootloader/partition/app compatibility review; stop rather than widen the write.
@@ -213,27 +214,26 @@ The authorization checkpoint is a hard boundary after all host-only work and hum
 
 ## Testing Plan
 
-1. Separately review and explicitly authorize the minimum device-read-only inspection needed to resolve the configuration gate.
-2. Reconcile sanitized device evidence with image declarations and exact ESP-IDF v5.5.4 options; keep the firmware gate closed on ambiguity.
-3. Host-only static review of source and configuration allowlist.
-4. Separate ESP-IDF v5.5.4 configure and build commands.
-5. Host-only inspection of target, image metadata, image hash, size, write range, partition compatibility, and Git state.
-6. Host-only recovery rehearsal and human review.
-7. Exact First Flash authorization checkpoint.
-8. Separate device connection/identity check; any mismatch invalidates authorization.
-9. One exact Flash write.
-10. Separate serial observation for ready marker, reset/panic/watchdog absence, and bounded stability window.
-11. Pass/fail decision and, if required, separately authorized full-image rollback.
-12. Evidence recording that distinguishes compiled, host-tested, device-tested, restored, and unverified claims.
+1. Use the reviewed configuration allowlist in a separate host-only implementation task.
+2. Perform host-only source and generated-configuration static review.
+3. Run separate ESP-IDF v5.5.4 configure and build commands.
+4. Inspect target, image metadata, image hash, size, partition fit, preserved-bootloader compatibility, and Git state.
+5. Complete the host-only recovery/human review and exact First Flash packet.
+6. Reach an exact First Flash authorization checkpoint.
+7. Separately connect and check device identity; any mismatch invalidates authorization.
+8. Perform at most one exact authorized Flash write.
+9. Observe serial output separately for ready marker, reset/panic/watchdog absence, and the bounded stability window.
+10. Pass/fail decision and, if required, separately authorized full-image rollback.
+11. Evidence recording that distinguishes compiled, host-tested, device-tested, restored, and unverified claims.
 
 This smoke test does not exercise animation, frame time, display memory, audio tasks, or product workloads. It must nevertheless report heap/PSRAM initialization failures and watchdog/reset behavior visible in startup logs; performance validation remains future work.
 
 ## Open Questions
 
-- Which authoritative electrical evidence resolves the installed-tool 3.3 V output versus the prior 1.8 V record?
-- Which exact ESP-IDF v5.5.4 options reconcile current 32 MB/Octal device evidence with the original images' DIO/16 MB headers?
-- Should PSRAM remain entirely disabled for the first serial-only revision?
 - Can an app-only write be proven compatible with the preserved original bootloader and OTA layout?
+- Does the generated explicit-Octal app contain the expected DOUT header and remain compatible with that preserved bootloader?
+- Should a later artifact ever use a 32 MB header when the first write and preserved layout require no address above 16 MB?
+- Which mode/clock/routing evidence would be required before any later PSRAM enablement?
 - What exact observation duration will be accepted at pre-Flash review?
 
 The E: location question is resolved at the volume-path level. Whether D: and E: are on different physical disks was not investigated and is not claimed.

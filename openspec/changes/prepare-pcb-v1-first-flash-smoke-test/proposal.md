@@ -23,9 +23,11 @@ Evidence used by this Change remains explicitly classified:
 - `STRONGLY SUPPORTED`: matching source or original-firmware component evidence that does not prove PCB wiring.
 - `UNVERIFIED`: current-device state or electrical facts not established by the available evidence and therefore unavailable to implementation.
 
-This proposal authorizes planning artifacts only in the current round. A later Apply may create firmware and run host-only configure/build tasks, but it gains no automatic device or Flash authorization.
+The 2026-07-26 host-only source audit opens the Firmware Implementation Gate only for a later independent Apply to create the minimal firmware, create a reviewed candidate `sdkconfig.defaults`, configure/build on the host, and perform static/artifact review. It grants no device or Flash authorization.
 
-Apply preflight on 2026-07-25 restored the exact D:/E: cross-volume recovery paths and independently reconfirmed the backup layout and original images. It did not resolve the physical Flash/PSRAM configuration conflict. Firmware implementation therefore remains gated, and the only proposed next device action is the still-unauthorized read-only inspection plan in `docs/hardware/pcb-v1-device-readonly-inspection-plan.md`.
+Apply preflight on 2026-07-25 restored the exact D:/E: cross-volume recovery paths and independently reconfirmed the backup layout and original images. Later authorized read-only evidence exposed the exact VDDSPI fields, and the 2026-07-26 local ESP-IDF v5.5.4 audit mapped Flash, disabled PSRAM, and USB Serial/JTAG to a conservative host-only candidate in `docs/hardware/pcb-v1-esp-idf-configuration-map.md`. The old esptool 3.3 V conflict is resolved as a tool-logic defect, while the eFuse result remains configuration evidence rather than a rail measurement.
+
+Firmware Implementation Gate is **OPEN FOR HOST-ONLY IMPLEMENTATION**. First Flash remains **NO-GO**. App-only compatibility, the actual offset/range, current device/port, and explicit operation authorization remain future gates; no further device access is authorized.
 
 ## Non-goals
 
@@ -53,7 +55,7 @@ None. In particular, `esp-idf-host-build-baseline` remains unchanged.
 
 - **Firmware:** A later Apply may replace the minimal baseline behavior with a PCB V1.0-isolated startup/logging smoke test and reviewed configuration inputs. This proposal itself changes no firmware.
 - **Companion application:** No impact.
-- **Documentation:** Adds the PCB V1.0 firmware-evidence audit, recovery/readiness report, and this Change's planning artifacts.
+- **Documentation:** Adds the PCB V1.0 firmware-evidence audit, recovery/readiness report, ESP-IDF configuration map, and this Change's planning artifacts.
 - **Assets:** No asset files are read into the repository or changed.
 - **Tests:** A later Apply must add host-only configure/build evidence, static safety review, artifact-layout review, and—only after exact authorization—serial observation and rollback evidence.
 - **Dependencies:** Reuses the installed ESP-IDF v5.5.4 and OpenSpec 1.6.0; no install or upgrade is allowed.

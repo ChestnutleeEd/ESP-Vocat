@@ -19,6 +19,8 @@
 - [x] 3.3 **[READ-ONLY]** Make and record the PSRAM gate decision; keep PSRAM disabled unless exact mode, size, clock, voltage domain, and ESP-IDF v5.5.4 options are all supported.
 - [ ] 3.4 **[READ-ONLY]** Decide whether one app-only write can be compatible with the preserved original bootloader and partition layout; stop rather than proposing a bootloader, partition-table, OTA-layout, or unused-tail change.
 
+  Blocked after the 2026-07-26 source audit: compatibility is plausible for a newer ESP-IDF app, but no custom app artifact exists yet. Keep this task incomplete until the generated header, segments, size, hash, revision bounds, secure version, original OTA selection, exact partition fit, and proposed single range are reviewed together. Firmware Implementation Gate is open only for host-only implementation; First Flash remains `NO-GO`.
+
 ## 4. Firmware implementation
 
 - [ ] 4.1 **[WRITE]** Restate the exact serial-only implementation scope, expected changed files, allowlisted inputs, assumptions, unresolved hardware facts, and acceptance criteria before editing.

@@ -1,9 +1,9 @@
 # ESP-VoCat PCB V1.0 Firmware Evidence Audit
 
-- Audit date: 2026-07-25
-- Audit mode: offline evidence plus host-side audit of two previously completed, authorized read-only device queries
+- Audit date: 2026-07-26
+- Audit mode: offline evidence plus host-side audit of completed authorized read-only device evidence and local ESP-IDF v5.5.4 source
 - Target evidence domain: ESP-VoCat PCB V1.0
-- Device access: `chip_id` and `flash_id` were previously completed on the user-reviewed `COM7`; no device was accessed during this host-side audit/update
+- Device access: `chip_id`, `flash_id`, and a minimum eFuse summary were previously completed under separate authorization; no device was accessed during this ESP-IDF source audit/update
 
 ## 1. Executive Summary
 
@@ -13,7 +13,7 @@ Offline scanning of one hash-matching image found 47 raw partition-magic occurre
 
 Both image headers declare `DIO`, `80 MHz`, and `16 MB`. These remain image declarations rather than measurements of physical Flash capacity, interface, or voltage.
 
-A later, separately authorized `chip_id`/`flash_id` inspection on `COM7` completed with exit code 0 and no RAM stub. It directly reported ESP32-S3 QFN56 revision v0.2, embedded 16 MB PSRAM (`AP_1v8`), USB-Serial/JTAG, Flash RDID manufacturer `0xC2` / device `0x8039`, detected 32 MB capacity, an Octal/8-line Flash-type eFuse selector, and `Flash voltage set by eFuse to 3.3V`. All emitted MAC lines were redacted. Installed-source audit shows that the 3.3 V helper returns that label for any nonzero value among three masked eFuse voltage bits, leaving the exact bit pattern and physical voltage unresolved. The conflict with the prior 1.8 V record therefore remains a configuration blocker.
+A later, separately authorized `chip_id`/`flash_id` inspection completed with exit code 0 and no RAM stub. It directly reported ESP32-S3 QFN56 revision v0.2, embedded 16 MB PSRAM (`AP_1v8`), USB-Serial/JTAG, Flash RDID manufacturer `0xC2` / device `0x8039`, detected 32 MB capacity, an Octal/8-line Flash-type eFuse selector, and the historical line `Flash voltage set by eFuse to 3.3V`. A separate minimum read-only eFuse summary recorded `VDD_SPI_FORCE=1`, `VDD_SPI_XPD=1`, and `VDD_SPI_TIEH=0`. All emitted MAC lines were redacted. Installed-source audit shows that esptool's 3.3 V helper enters its broad branch too early, while the ESP32-S3 eFuse definitions map the independent bit combination to a forced, enabled 1.8 V LDO. The voltage interpretation conflict is resolved as a tool-logic defect; the 1.8 V conclusion remains configuration evidence, not a PCB-rail measurement.
 
 Current First Flash assessment: **NO-GO**.
 
@@ -26,15 +26,15 @@ This audit covers:
 - offline Flash-image structure, partition-table, bootloader, application metadata, and a strict allowlist of component strings;
 - evidence classification and blockers for a future serial-log-only PCB V1.0 smoke test.
 
-It records the already completed, authorized connection/query results but performs no new device access. It does not cover an eFuse summary, Flash read/write/erase/restore, firmware build, live electrical measurement, current running firmware, or peripheral tests.
+It records the already completed, authorized connection/query results but performs no new device access. It does not cover Flash read/write/erase/restore, firmware build, live electrical measurement, current running firmware, or peripheral tests.
 
 ## 3. Safety Boundary
 
-- A minimal port-identification step and the later `chip_id`/`flash_id` queries were separately authorized and completed before this host-side audit; `COM7` is confirmed only for those recorded events.
+- A minimal port-identification step, the later `chip_id`/`flash_id` queries, and the minimum eFuse summary were separately authorized and completed before this host-side audit; the historical port is confirmed only for those recorded events.
 - No COM port was enumerated or opened again during this audit/update.
 - No `idf.py` command was run.
 - No device-side command was rerun during this audit/update.
-- The completed queries contained the authorized `--port COM7`, `--no-stub`, and hard-reset behavior. They contained no Flash read/write/erase/restore or eFuse-summary/write operation.
+- The completed identification queries used the authorized port, `--no-stub`, and hard-reset behavior. The later eFuse operation was read-only `summary`. None contained Flash read/write/erase/restore or any eFuse write/protect/voltage operation.
 - D: recovery originals were not moved, renamed, modified, overwritten, deleted, or used as output. Verified copies were created only at the exact reviewed E: paths.
 - Original planning-round slices were written under the following historical path (the username was rendered incorrectly in that earlier record):
   `C:\Users\栗旭阳\AppData\Local\Temp\custom-vocat-pcb-v1-analysis-20260725-203936`
@@ -250,23 +250,23 @@ The app and bootloader were plaintext-parsable. That fact does not establish cur
 | F-002 | Physical chip | MCU is ESP32-S3 | Current sanitized `chip_id`/`flash_id`; prior profile; image metadata | Current query reports ESP32-S3 QFN56 revision v0.2; both images report chip ID 9 | CONFIRMED current-device and image-target evidence | Compile target usable; exact identity must still be rechecked before a future operation | None | PCB electrical properties | Retain operation-specific identity review |
 | F-003 | Backup assets | Two same-hash 32 MiB originals exist on `D:` and two verified copies exist on `E:` | Host file metadata | Four files, 33554432 bytes, expected SHA-256 | CONFIRMED host-file fact across two volume paths | Recovery input candidate | Physical-disk independence not established | Exact same-device scope still relies on prior records | Rehash before any future recovery review |
 | F-004 | Flash image size | Backup covers 32 MiB address space | Host file metadata | File length `0x02000000` | CONFIRMED backup-file fact | Layout analysis only | Header says 16 MB | Current live content equality | Keep separate from the independently confirmed 32 MB RDID capacity |
-| F-005 | Physical Flash capacity | Device has 32 MB Flash | Current JEDEC RDID `0xC2/0x8039`; installed capacity map; dump length | Capacity byte `0x39` maps to 32 MB | CONFIRMED current-device identification evidence | Capacity can be recorded; no partition/write range follows | Image headers declare 16 MB | Exact build/header mapping | Reconcile physical capacity with image and IDF semantics |
-| F-006 | Physical Flash bus | Flash-type eFuse selector is Octal/8-line | Current `flash_id`; installed ESP32-S3 `flash_type()` | eFuse bit 9 read as set and mapped to Octal | CONFIRMED eFuse-setting evidence | Blocked as an active config until exact mapping/voltage is resolved | Headers declare DIO | Runtime/image/config relationship | Map exact ESP-IDF v5.5.4 settings |
-| F-007 | Physical Flash voltage | Tool printed 3.3 V; prior record says 1.8 V | Current output; installed voltage helper; hardware profile | Helper labels any nonzero masked eFuse voltage value 3.3 V and hides the raw bit pattern | CONFIRMED output; UNVERIFIED/conflicted physical conclusion | Safety boundary only; never change | Direct 3.3 V text versus prior 1.8 V record | Individual eFuse bit values and authoritative electrical evidence | Separately authorize sanitized eFuse summary; do not alter voltage |
+| F-005 | Physical Flash capacity | Device has 32 MB Flash | Current JEDEC RDID `0xC2/0x8039`; installed capacity map; dump length | Capacity byte `0x39` maps to 32 MB | CONFIRMED current-device identification evidence | Maps to `CONFIG_ESPTOOLPY_FLASHSIZE_32MB`; no partition/write range follows | Original headers declare 16 MB | Built-artifact compatibility | Keep conservative 16 MB first candidate and inspect artifact |
+| F-006 | Physical Flash bus | Flash-type eFuse selector is Octal/8-line | Current `flash_id`; ESP32-S3 eFuse/IDF source | eFuse bit 9 is set; explicit Octal maps to `CONFIG_ESPTOOLPY_OCT_FLASH` | CONFIRMED eFuse-setting evidence; source-mapped candidate | OPI STR usable for host-only candidate | Original headers declare DIO | Generated header and preserved-bootloader acceptance | Inspect built DOUT header and artifact |
+| F-007 | Flash voltage | Forced 1.8 V LDO eFuse configuration; physical rail not measured | `FORCE=1`, `XPD=1`, `TIEH=0`; ESP32-S3 definitions; historical tool output | Individual bits map to forced/enabled 1.8 V; old 3.3 V helper enters a broad branch early | CONFIRMED eFuse configuration; physical rail UNVERIFIED | Safety boundary only; no setting required or allowed | Historical 3.3 V text explained as tool defect | Physical instrumentation only if separately specified | Preserve state; never alter voltage |
 | F-008 | PSRAM | Device package fields decode as embedded 16 MB `AP_1v8` | Current features output; installed ESP32-S3 package-field decoder | Capacity code 3 and vendor/variant code 2 | CONFIRMED package/eFuse evidence; active mode UNVERIFIED | Capacity record only; initialization remains disabled | Exact mode/options unresolved | Mode, clock, active voltage, IDF config | Obtain traceable mode/options evidence or keep disabled |
 | F-009 | Partition table | Original image table is at `0x8000` | Full-image scan and ESP-IDF parser | One of 47 magic hits uniquely passes validation | CONFIRMED for this backup image | Recovery/layout review | None | Current live Flash equality | Rehash recovery before use; no live inference |
 | F-010 | Original layout | Six named partitions are bounded/non-overlapping | Parsed table | `nvs`, `otadata`, `phy_init`, `ota_0`, `ota_1`, `assets` | CONFIRMED for backup image | Preserve-only planning | None | Custom image compatibility | Artifact-layout review |
 | F-011 | Original app | `ota_0` holds valid Xiaozhi 2.2.6 | `image_info` | Valid checksum/hash; project/app metadata | CONFIRMED for backup image | Recovery identification | None | Current running slot/state | Future controlled serial/read evidence |
 | F-012 | `ota_1` | Original `ota_1` is erased | Full partition scan | Entire 4032 KiB is `0xFF` | CONFIRMED for backup image | No automatic write authorization | Current state unknown | Current live content | Do not assume during Flash review |
 | F-013 | Upper tail | `0x01000000–0x02000000` is erased | Full-image scan | Entire 16 MiB tail is `0xFF` | CONFIRMED for backup image | Must not be repurposed | None | Reviewed future partition strategy | Separate partition-design Change |
-| F-014 | Image header | Boot/app declare DIO, 80 MHz, 16 MB | `esptool image_info` | Matching values in both headers | CONFIRMED image declaration | Metadata only; not board config | Conflicts with prior 32 MiB/Octal record at statement level | Physical/runtime configuration | Reconcile before firmware configure |
+| F-014 | Image header | Boot/app declare DIO, 80 MHz, 16 MB | `esptool image_info`; ESP-IDF header/runtime source | Matching values in both headers; source separates header and runtime Octal layers | CONFIRMED image declaration; source-mapped relationship | Supports conservative 80 MHz/16 MB candidate; DIO is not a physical bus claim | No direct conflict | Generated candidate header | Inspect artifact before any write |
 | F-015 | Display component | Original app includes ST77916 strings | Allowlist scan | `ST77916` token present | STRONGLY SUPPORTED original-firmware config | Not usable in first smoke test | Wiring not proven | Schematic/measurement/init sequence | Separate display Change and test |
 | F-016 | Screen touch | Profile says CST816S; strict app token absent | Hardware profile and allowlist scan | Profile `STRONGLY SUPPORTED`; no `cst816` token found | STRONGLY SUPPORTED from reference only | Not usable in first smoke test | Evidence sources incomplete | Physical model, address, pins, orientation | Separate touch Change and test |
 | F-017 | Audio ADC/DAC | Original app includes ES7210/ES8311 strings | Allowlist scan/profile | Both tokens present | STRONGLY SUPPORTED | Prohibited in first smoke test | Wiring/power sequence unproven | Exact bus/pins/power behavior | Separate audio Change |
 | F-018 | IMU | Original app includes BMI270 strings | Allowlist scan/profile | `BMI270` token present; profile says possibly optional | UNVERIFIED physical population | Not usable | Population unknown | Physical presence and wiring | Controlled future probe after evidence |
 | F-019 | GPIO map | Profile lists PCB V1.0 source-derived pins | Hardware profile | Values explicitly marked `STRONGLY SUPPORTED` | STRONGLY SUPPORTED | No GPIO allowed in initial smoke | No electrical measurement record | Per-signal verification | Separate peripheral tests |
 | F-020 | PCB V1.2 | V1.2 must not be mixed | Constitution/AGENTS/spec | Only prohibition references found | CONFIRMED process boundary | Mandatory | None | None | Continue exact-revision review |
-| F-021 | eFuse/security | Partial eFuse-derived fields observed; full state not queried | Current `flash_id`; no eFuse summary | Flash type and ambiguous voltage label only | CONFIRMED for those tool outputs; all other state UNVERIFIED | Cannot authorize mutation or infer unreported security state | Voltage output conflicts with prior record | Individual voltage bits and required security/download fields | Separately approved sanitized read-only summary only; never write |
+| F-021 | eFuse/security | Minimum Flash/PSRAM/VDDSPI fields observed; unrelated state not queried | Sanitized `flash_id` and minimum eFuse summary | Flash type, package fields, FORCE/XPD/TIEH recorded; no key digest or unique ID retained | CONFIRMED for reported fields; all unrelated state UNVERIFIED | Cannot authorize mutation or infer unreported security state | Historical voltage label explained | Secure Boot/Flash Encryption/download/JTAG state remains outside this gate | Keep security features disabled; never write eFuse |
 | F-022 | Current port | Queries completed on COM7 | User-reviewed port and successful query | `Serial port COM7` in both sanitized outputs | CONFIRMED for the recorded event only | Not reusable as a stable identity | Port may change | Future-operation port | Re-review before any future operation |
 | F-023 | Current running state | Device was hard-reset after each query | Direct output; installed reset source | Final RTS hard reset occurred | CONFIRMED reset event; running image UNVERIFIED | No firmware-state claim | None | Post-reset running firmware | Controlled future observation only if authorized |
 | F-024 | Recovery privacy | NVS contains private/stateful data | Non-erased NVS plus profile | NVS exists; content deliberately not decoded | CONFIRMED sensitive-region existence | Same-device recovery only | None | No content inspection needed | Maintain privacy controls |
@@ -284,7 +284,8 @@ Confirmed within this audit's host/file domains:
 - `ota_1` and the upper 16 MiB tail are erased in this backup.
 - NVS exists and is non-erased; its contents were protected.
 - The completed queries identified ESP32-S3 QFN56 revision v0.2, USB-Serial/JTAG, Flash RDID `0xC2/0x8039`, 32 MB detected capacity, the Octal Flash-type eFuse selector, and embedded 16 MB PSRAM package fields.
-- Both device commands exited 0, used no RAM stub, and ended with an RTS hard reset.
+- The minimum eFuse summary recorded FORCE/XPD/TIEH as `1/1/0`, supporting a forced 1.8 V LDO configuration.
+- All authorized queries exited 0 and ended with a hard reset; the identification queries used no RAM stub.
 
 Repository-recorded prior device facts were not revalidated and retain that qualification.
 
@@ -297,9 +298,9 @@ Repository-recorded prior device facts were not revalidated and retain that qual
 ## 16. Unverified Facts
 
 - Current running firmware and live partition contents.
-- Exact VDDSPI eFuse-bit pattern, Secure Boot, Flash Encryption, download-mode, and JTAG state. USB-Serial/JTAG was observed only in the completed query context.
-- Physical Flash voltage remains conflicted: the tool printed 3.3 V, but its installed helper is ambiguous and the prior repository record says 1.8 V.
-- Safe custom Flash mode, size declaration, frequency, and PSRAM configuration.
+- Secure Boot, Flash Encryption, download-mode, and JTAG state. USB-Serial/JTAG was observed only in the completed query context.
+- Physical Flash voltage by instrument measurement; the eFuse configuration is not that measurement.
+- Enabled PSRAM mode, clock, routing, timing, and runtime behavior.
 - All PCB wiring and GPIO assignments on this exact unit.
 - Physical presence of BMI270.
 - Safe display/touch/audio/motor/power initialization.
@@ -308,19 +309,15 @@ Repository-recorded prior device facts were not revalidated and retain that qual
 ## 17. Conflicts and Ambiguities
 
 1. **Recovery redundancy:** the exact D: and E: volume paths now contain matching recovery files. This is cross-volume evidence, not proof of separate physical disks.
-2. **Flash declaration versus current device evidence:** both original image headers declare DIO/80 MHz/16 MB; current RDID/eFuse evidence reports 32 MB and Octal. These describe different layers and require exact ESP-IDF/boot compatibility mapping.
-3. **Voltage evidence:** current esptool output says 3.3 V, the installed helper cannot uniquely distinguish its masked eFuse bit patterns, and the repository's prior record says 1.8 V.
+2. **Flash declaration versus current device evidence:** both original image headers declare DIO/80 MHz/16 MB; current RDID/eFuse evidence reports 32 MB and Octal. ESP-IDF source resolves these as different layers, while generated-artifact/bootloader compatibility remains to be checked.
+3. **Voltage evidence:** the individual eFuse bits support a forced 1.8 V LDO configuration and explain the historical 3.3 V line as a tool defect; physical rail voltage remains unmeasured.
 4. **Touch evidence:** reference/profile evidence names CST816S, but the exact token was absent from the limited app scan. Neither presence nor absence would prove PCB wiring.
 5. **BMI270:** compiled component strings do not prove physical population.
 
 ## 18. First-Flash Blockers
 
-- Resolve the installed-tool 3.3 V output versus prior 1.8 V voltage record without changing voltage.
-- Map the DIO/16 MB image-header declarations and 32 MB/Octal device evidence to exact ESP-IDF v5.5.4 and preserved-boot-chain behavior.
-- Resolve PSRAM mode/clock/options or retain PSRAM initialization as disabled.
-- Decide whether PSRAM remains disabled for the first revision.
 - Implement and host-build the serial-only smoke-test firmware in a later Apply.
-- Review the exact built image, hash, effective size, partition compatibility, offset, and write range.
+- Review the exact built image, DOUT header expectation, hash, effective size, preserved-bootloader/table/OTA compatibility, offset, and write range.
 - Complete a host-only recovery rehearsal.
 - Re-review exact device identity and current port before any future operation; the completed `COM7` observation is not a permanent port assignment.
 - Obtain explicit authorization for the exact Flash operation.
@@ -341,11 +338,11 @@ Repository-recorded prior device facts were not revalidated and retain that qual
 
 **NO-GO for First Flash.**
 
-The offline evidence and sanitized current-device record are sufficient to confirm the exact queried chip, Flash capacity/type selector, and embedded PSRAM capacity fields, but not to select the final PCB V1.0 Flash/PSRAM configuration or authorize a device write. Cross-volume redundancy is established, but the voltage conflict, PSRAM mode/options, preserved-boot-chain mapping, unbuilt artifacts, future-operation port/device review, and absent exact Flash authorization remain stop conditions.
+The offline evidence, sanitized device record, and local ESP-IDF source are sufficient to select a conservative host-only configuration with PSRAM disabled. They are not sufficient to authorize a device write. Cross-volume redundancy is established, but preserved-boot-chain/artifact compatibility, unbuilt artifacts, future-operation port/device review, exact image/hash/offset/range, and explicit Flash authorization remain stop conditions.
 
 ## 21. Recommended Next Change
 
-Cross-volume recovery redundancy and the authorized `chip_id`/`flash_id` inspection are complete. The next step is not firmware implementation: the only further device proposal is a separately reviewed, sanitized, read-only eFuse summary needed to expose the voltage bits hidden by the installed tool's helper. It remains `NOT AUTHORIZED`. The Firmware Implementation Gate stays closed until the mandatory Flash configuration evidence is reconciled. PSRAM remains disabled, and display, touch, audio, motor, network, NVS, security, and power behavior remain separate future Changes.
+Cross-volume recovery redundancy, authorized read-only evidence, and the ESP-IDF v5.5.4 configuration map are complete. Firmware Implementation Gate is **OPEN FOR HOST-ONLY IMPLEMENTATION**. The next allowed step is a separate minimal firmware/configuration/configure/build/static-review Apply task using PSRAM disabled. No further device access or Flash is authorized, and display, touch, audio, motor, network, NVS, security, and power behavior remain separate future Changes.
 
 ## 22. Apply-Time Independent Revalidation
 
@@ -419,11 +416,11 @@ Bootloader:
 - Presence does not prove a Kconfig option or physical configuration; absence does not prove a feature is unavailable.
 - A Git-tracked-text search found prior summary claims but no raw `flash_id`, chip-identification, Flash manufacturer/device-ID, capacity, or observed PSRAM-size transcript.
 
-The detailed board decision is recorded in `docs/hardware/pcb-v1-board-configuration-decision.md`. Flash/PSRAM configuration remains unresolved, the Firmware Implementation Gate is **CLOSED**, and First Flash remains **NO-GO**.
+The detailed board decision is recorded in `docs/hardware/pcb-v1-board-configuration-decision.md`, and the exact ESP-IDF mapping is recorded in `docs/hardware/pcb-v1-esp-idf-configuration-map.md`. The Firmware Implementation Gate is **OPEN FOR HOST-ONLY IMPLEMENTATION** with PSRAM disabled; First Flash remains **NO-GO**.
 
 ## 23. Authorized Device-Query Evidence and Installed-Source Audit
 
-The later device queries were explicitly limited to `chip_id` and `flash_id` on the user-reviewed `COM7`. Both exited 0, used esptool.py `v4.12.dev3` with `--no-stub`, printed sanitized identification evidence, and ended with `Hard resetting via RTS pin...`. No monitor, Flash read/program/erase, eFuse summary/write, restore, build, or firmware Flash was executed. MAC was replaced with `<REDACTED>`.
+The identification queries were explicitly limited to `chip_id` and `flash_id` on the then-reviewed port. Both exited 0, used esptool.py `v4.12.dev3` with `--no-stub`, printed sanitized identification evidence, and ended with `Hard resetting via RTS pin...`. The separately authorized minimum eFuse operation was read-only `summary`, exited 0, and ended with a successful hard reset. No monitor, Flash read/program/erase, eFuse write/protect/voltage operation, restore, build, or firmware Flash was executed. MAC was replaced with `<REDACTED>`.
 
 Installed-source audit established:
 
@@ -433,4 +430,23 @@ Installed-source audit established:
 - ESP32-S3 inherits the generic voltage helper. In the installed source its first branch returns 3.3 V for any nonzero value among `VDD_SPI_FORCE`, `VDD_SPI_XPD`, and `VDD_SPI_TIEH`; the later eFuse 1.8 V/OFF branches cannot be reached. The observed `eFuse` source label therefore does not reveal a unique raw bit pattern or establish the physical Flash rail.
 - `--no-stub` prevented RAM-stub upload. The common ROM-loader path still performed volatile watchdog/control-register changes, SPI attachment, Flash reset commands `0x66`/`0x99`, and a final hard reset. No persistent Flash/eFuse/NVS write path was found for the completed operations.
 
-The exact sanitized output, source paths/functions, limitations, and conflict matrix are preserved in `docs/hardware/pcb-v1-device-readonly-inspection-result.md`. The voltage conflict remains unresolved; a minimum sanitized read-only eFuse summary is justified but **NOT AUTHORIZED**. Firmware Implementation Gate remains **CLOSED** and First Flash remains **NO-GO**.
+The exact sanitized output, source paths/functions, limitations, and conflict matrix are preserved in `docs/hardware/pcb-v1-device-readonly-inspection-result.md`. The completed minimum summary resolves the old 3.3 V interpretation at the bit/source level without claiming a measured PCB rail. Its authorization is consumed and closed; no further device access is authorized.
+
+## 24. ESP-IDF v5.5.4 Configuration Mapping Result
+
+The clean local ESP-IDF tree at `D:\esp\v5.5.4\esp-idf` is tag `v5.5.4`, revision `735507283d5b2f9fb363a1901172dbd9e847945d`. Host-only source audit established:
+
+- physical 32 MB maps to `CONFIG_ESPTOOLPY_FLASHSIZE_32MB`; a 16 MB image header is legal on a detected larger chip and remains the conservative first candidate because the preserved layout ends at 16 MB;
+- explicit Octal Flash maps to `CONFIG_ESPTOOLPY_OCT_FLASH=y` and `CONFIG_ESPTOOLPY_FLASHMODE_OPI=y`; STR is selected because DTR capability is not proven;
+- explicit OPI generates a DOUT image-header mode because the header has no OPI encoding and ROM obtains Octal handling from eFuse;
+- the original DIO header and physical/runtime Octal operation are different layers and can coexist through the eFuse/MSPI startup path;
+- 80 MHz maps to `CONFIG_ESPTOOLPY_FLASHFREQ_80M=y` and is supported by both original headers and the ESP32-S3 target default;
+- PSRAM enable/mode/frequency symbols are mapped, but no 16 MB capacity Kconfig exists; runtime density is detected after initialization, so `CONFIG_SPIRAM` remains off;
+- the integrated console maps to `CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y` and needs no custom UART GPIO;
+- no ESP32-S3 tracked configuration is required or allowed to set VDDSPI.
+
+The complete source table, allowlist, denylist, candidate values, and limitations are in `docs/hardware/pcb-v1-esp-idf-configuration-map.md`.
+
+Firmware Implementation Gate: **OPEN FOR HOST-ONLY IMPLEMENTATION**.
+
+First Flash: **NO-GO**. No Flash authorization or further device-access authorization exists. The generated app artifact, preserved bootloader/table/OTA compatibility, exact offset/range, and operation packet remain blocked future reviews.

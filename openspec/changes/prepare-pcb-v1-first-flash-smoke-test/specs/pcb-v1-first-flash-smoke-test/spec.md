@@ -36,7 +36,7 @@ The workflow SHALL identify the original partition table by validated magic, ent
 - **THEN** the workflow keeps the layout `UNVERIFIED` and stops before preparing a device write
 
 ### Requirement: Board configuration allowlist
-The later Apply SHALL create a reviewed allowlist containing only the exact ESP32-S3, serial, Flash, and optional PSRAM settings supported for PCB V1.0; all other board features SHALL default to disabled.
+The implementation SHALL use the reviewed allowlist in `docs/hardware/pcb-v1-esp-idf-configuration-map.md`, containing only the exact ESP32-S3, serial, Flash, and disabled-PSRAM settings supported for the initial PCB V1.0 candidate; all other board features SHALL default to disabled.
 
 #### Scenario: A generated configuration includes an unlisted option
 - **WHEN** static or generated-configuration review finds a board, memory, peripheral, storage, network, security, or GPIO option outside the allowlist
@@ -52,6 +52,17 @@ When offline evidence cannot resolve a mandatory PCB V1.0 Flash or PSRAM configu
 #### Scenario: Read-only inspection is later reviewed
 - **WHEN** a future packet proposes chip identification, Flash identification/capacity, or read-only eFuse summary evidence
 - **THEN** it uses `<REVIEWED_PORT>` until an exact current port is explicitly authorized, excludes `read_flash` and every write/erase/restore/eFuse-write operation, and requires redaction of MAC addresses and unnecessary unique identifiers
+
+#### Scenario: Evidence and source mapping support a host-only candidate
+- **WHEN** device evidence and local ESP-IDF source identify exact target, Flash bus/sample mode, frequency, conservative header size, console, disabled PSRAM path, and a no-VDDSPI-mutation boundary without guessing
+- **THEN** the Firmware Implementation Gate may become `OPEN FOR HOST-ONLY IMPLEMENTATION` while device access remains unauthorized and First Flash remains `NO-GO`
+
+### Requirement: Host-only implementation gate is not Flash authorization
+An open Firmware Implementation Gate SHALL authorize only a separate firmware edit, candidate `sdkconfig.defaults`, host-only configure/build, static review, and artifact inspection. Partition/write offset or range selection, device connection, Flash, monitor, and hardware-validation claims SHALL remain independently gated.
+
+#### Scenario: Host-only implementation gate opens
+- **WHEN** the reviewed ESP-IDF map opens the Firmware Implementation Gate
+- **THEN** no device command is prepared or executed, no Flash authorization is inferred, and the generated artifact still requires preserved-bootloader/partition/OTA compatibility review
 
 ### Requirement: No unverified GPIO use
 The initial smoke-test source and configuration MUST NOT name, configure, read, write, reserve experimentally, or toggle any GPIO.
