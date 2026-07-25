@@ -159,11 +159,11 @@ The correct description is therefore: **read-only identification with transient 
 | Device `0x8039` | JEDEC RDID via `flash_id` | Current queried Flash returned device bytes `0x8039` | Exact complete part number or voltage | `CONFIRMED` for query | Header declares only 16 MB | Retain raw ID and capacity mapping context |
 | Detected Flash size 32 MB | Capacity byte `0x39` mapped by installed esptool | The queried JEDEC capacity code maps to 32 MB in this tool | Safe image-header size, partition design, or voltage | `CONFIRMED` current-device identification evidence | Original headers declare 16 MB | Reconcile as physical capacity versus image declaration; do not widen write range |
 | Octal / 8 data lines | ESP32-S3 eFuse Flash-type bit set | The installed tool read the target Flash-type eFuse selector as Octal | Current app header mode, safe ESP-IDF mode/frequency, or exact PCB routing | `CONFIRMED` eFuse-setting evidence | Original headers declare DIO | Treat eFuse/package interface and image transfer declaration as different layers |
-| Flash voltage 3.3 V | Installed inherited voltage helper | This version returned 3.3 V from a nonzero masked eFuse value and printed source `eFuse` | Exact raw bit pattern or conclusive physical Flash rail | `CONFIRMED` output; `UNVERIFIED` physical conclusion | Conflicts with `AP_1v8` interpretation scope and prior 1.8 V record | Separately authorize a sanitized minimum eFuse summary; then reconcile with authoritative board evidence without changing voltage |
+| Flash voltage | Sanitized minimum eFuse summary plus installed definitions | `VDD_SPI_FORCE=1`, `VDD_SPI_XPD=1`, and `VDD_SPI_TIEH=0`; the ESP32-S3 definition maps TIEH 0, when forced, to the 1.8 V LDO | Measured PCB rail voltage or external wiring | `CONFIRMED` eFuse configuration; physical measurement not performed | Explains why the earlier installed esptool helper incorrectly printed 3.3 V | Retain 1.8 V as eFuse-configuration evidence; never alter voltage |
 | Original image DIO / 80 MHz / 16 MB | Bootloader/app headers | What both original images declare | Physical Flash capacity, eFuse Flash type, voltage, or PCB routing | `CONFIRMED` image declaration | DIO/16 MB differs from Octal/32 MB evidence | Preserve layer distinction; map bootloader/app compatibility before any build/write |
 | Original backup covers 32 MiB | Verified file length | Captured file covers `0x00000000-0x02000000` | Physical capacity by itself, electrical mode, or current live content | `CONFIRMED` immutable-file fact | Consistent with current detected 32 MB | Keep as independent corroboration only |
 | Upper 16 MiB is erased | Offline byte count | That backup region contains only `0xFF` | Physical chip size, unused safety, or permission to repurpose | `CONFIRMED` backup fact | Header declares 16 MB while dump/query cover 32 MB | Do not repurpose; retain original partition boundary |
-| Prior repository 1.8 V record | Hardware profile/constitution history | Repository previously classified 1.8 V as confirmed | The underlying raw measurement or exact current eFuse bits | Prior-recorded `CONFIRMED`; trace missing | Directly conflicts with current installed-tool 3.3 V text | Obtain bit-level read-only evidence and authoritative electrical documentation; never trial-flash or alter voltage |
+| Prior repository 1.8 V record | Hardware profile/constitution history plus current eFuse summary | Repository's 1.8 V record agrees with the current forced eFuse configuration | Direct electrical measurement | `CONFIRMED` eFuse configuration; prior-recorded physical claim | Earlier 3.3 V text is explained as an installed-tool interpretation defect | Preserve the distinction between configured and measured voltage |
 
 The DIO and Octal observations are not mutually exclusive statements about the same field: DIO is an image-header transfer declaration, while the Octal line is derived from an ESP32-S3 eFuse Flash-type selector. Likewise, the detected 32 MB capacity is closer to physical chip-identification evidence than an image-declared 16 MB field, but it remains tied to this exact tool, command, device, and query context.
 
@@ -176,18 +176,64 @@ The DIO and Octal observations are not mutually exclusive statements about the s
 | Physical Flash capacity | 32 MB; current RDID evidence `CONFIRMED` | Capacity may be recorded, but no write range follows from it |
 | Flash bus type | Octal/8-line eFuse selector `CONFIRMED` | Do not enter tracked board config until exact ESP-IDF mapping and voltage conflict are resolved |
 | Flash frequency | 80 MHz image declaration only | Unresolved as a board setting |
-| Flash voltage | 3.3 V tool output confirmed; physical conclusion conflicted/`UNVERIFIED` | No voltage setting or change allowed |
+| Flash voltage | Forced eFuse configuration selects 1.8 V LDO; current query `CONFIRMED` | Record 1.8 V as eFuse-configuration evidence; no voltage setting or change allowed |
 | PSRAM capacity | Embedded 16 MB eFuse/package decode `CONFIRMED` | Capacity may be recorded; initialization remains disabled |
 | PSRAM voltage/variant | `AP_1v8` eFuse/package label `CONFIRMED` as a label | Does not resolve Flash voltage or PSRAM mode |
 | PSRAM mode/clock | Not reported | Unresolved; initialization remains disabled |
 
-## 12. Stop Decision and Required Next Evidence
+## 12. Stop Decision
 
 - Firmware Implementation Gate: **CLOSED**.
 - First Flash: **NO-GO**.
 - Flash authorization: **NOT GRANTED**.
-- eFuse summary: **NOT AUTHORIZED**.
+- Minimum eFuse-summary authorization: **CONSUMED AND CLOSED**.
+- Further device access: **NOT AUTHORIZED**.
 
-A later, separately reviewed minimum read-only eFuse summary is justified to expose the individual `VDD_SPI_FORCE`, `VDD_SPI_XPD`, and `VDD_SPI_TIEH` states hidden by this installed esptool implementation. It must redact MAC and unrelated unique fields, perform no eFuse write, and stop after the approved fields are recorded. Even that summary may still require reconciliation with authoritative PCB/schematic or electrical evidence; it must not be treated as permission to change voltage.
+The minimum summary has now exposed the individual VDDSPI fields and explained the earlier esptool 3.3 V text. No additional device query is authorized. The eFuse result does not authorize a voltage change, firmware implementation, build, Flash, monitor, or rollback.
 
-The only next device decision is whether the user explicitly authorizes that separately reviewed, sanitized, read-only eFuse-summary packet. Vague continuation language is not authorization.
+The Firmware Implementation Gate remains closed at this stop point pending a separate host-side review of the complete board configuration and exact ESP-IDF v5.5.4 mapping. It is not opened automatically by this query.
+
+## 13. Minimum Read-Only eFuse Summary
+
+- Authorization: explicit, limited to one sanitized read-only summary on `COM7`.
+- Tool: espefuse.py `v4.12.dev3` from the ESP-IDF v5.5.4 Python environment.
+- Operation: `summary` only, JSON format, ten explicitly selected fields.
+- Query result: success.
+- Normal hard reset: success.
+- Wrapper exit code: `0`.
+- Persistent write: none identified.
+- Device operations after reset: none.
+- Privacy: no MAC, chip-unique identifier, key digest, identity value, or unrelated eFuse field was emitted or stored.
+
+Safety boundary for this summary:
+
+- The only executed eFuse operation was the read-only `summary`.
+- No eFuse burn, protection, or other permanent-configuration operation was executed, including `burn_efuse`, `burn_key`, `burn_key_digest`, `write_protect_efuse`, `read_protect_efuse`, or `set_flash_voltage`.
+- The query did not modify Flash contents, NVS, the bootloader, the partition table, firmware, `sdkconfig`, Secure Boot state, Flash Encryption state, or any eFuse bit.
+- It did not execute `read_flash`, `write_flash`, `erase_flash`, restore, monitor, a firmware build, or firmware Flash.
+- Its effects were limited to device reads, transient connection-state changes, and the final successful hard reset; no persistent write was identified.
+- Authorization remains unchanged: no further device access is authorized, no Flash write is authorized, the Firmware Implementation Gate is **CLOSED**, and First Flash is **NO-GO**.
+
+Sanitized necessary values:
+
+| Field | Raw value | Decoded value | Evidence meaning |
+|---|---:|---|---|
+| `VDD_SPI_FORCE` | `0x1` | `true` | eFuse VDDSPI configuration is forced |
+| `VDD_SPI_XPD` | `0x1` | `true` | SPI regulator power-up signal is enabled |
+| `VDD_SPI_TIEH` | `0x0` | `VDD_SPI connects to 1.8 V LDO` | With FORCE set, the eFuse definition selects the 1.8 V LDO |
+| `FLASH_TYPE` | `0x1` | `8 data lines` | Confirms the Octal/8-line Flash-type eFuse selector |
+| `PKG_VERSION` | `0x0` | `0` | ESP32-S3 QFN56 package code used by the installed decoder |
+| `FLASH_CAP` | `0x0` | `None` | No embedded-Flash capacity is encoded in the package field; this does not negate the external 32 MB JEDEC Flash |
+| `FLASH_VENDOR` | `0x0` | `None` | No embedded-Flash vendor is encoded in the package field |
+| `PSRAM_CAP` | `0x3` | `16M` | Embedded PSRAM low capacity field decodes as 16 MB |
+| `PSRAM_CAP_3` | `0x0` | `false` | High PSRAM capacity bit is clear; combined capacity remains 16 MB |
+| `PSRAM_VENDOR` | `0x2` | `AP_1v8` | Embedded PSRAM vendor/voltage-variant label |
+
+Conflict resolution:
+
+- The actual VDDSPI bit combination is `FORCE=1`, `XPD=1`, `TIEH=0`.
+- The ESP32-S3 eFuse definition says TIEH 0 selects the 1.8 V LDO when FORCE is set.
+- The earlier `Flash voltage set by eFuse to 3.3V` line is retained as historical esptool.py `v4.12.dev3` output. It came from that version evaluating any nonzero masked VDDSPI bit as 3.3 V before its narrower branches.
+- Therefore the earlier 3.3 V line is not a competing eFuse state. The current bit-level evidence supports a forced 1.8 V eFuse configuration.
+- The historical 3.3 V interpretation conflicts with the independent bit-level eFuse result and cannot establish a final physical-voltage conclusion.
+- The 1.8 V result remains configuration evidence, not a direct electrical measurement of the PCB rail. No voltage adjustment, eFuse write, or trial Flash is permitted.
