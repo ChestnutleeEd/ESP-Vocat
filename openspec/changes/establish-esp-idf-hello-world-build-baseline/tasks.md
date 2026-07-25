@@ -13,9 +13,9 @@
 
 ## 3. Existing toolchain activation and verification
 
-- [ ] 3.1 **[READ-ONLY — process-local environment only]** Activate the existing ESP-IDF v5.5.4 environment in the current PowerShell session without modifying system/user PATH, installing tools, repairing tools, or writing repository files; stop if activation fails.
-- [ ] 3.2 **[READ-ONLY]** Record the resolved paths and versions for `idf.py`, Python, CMake, and Ninja; stop before configure if ESP-IDF is not exactly v5.5.4 or any tool resolves to an unrelated or incompatible environment.
-- [ ] 3.3 **[READ-ONLY]** Review the exact planned configure and build commands and confirm they contain no serial port, `monitor`, `flash`, `erase`, `restore`, `esptool`, eFuse, device, motor, audio, microphone, network, battery, or power-control operation.
+- [x] 3.1 **[READ-ONLY — process-local environment only]** Activate the existing ESP-IDF v5.5.4 environment in the current PowerShell session without modifying system/user PATH, installing tools, repairing tools, or writing repository files; stop if activation fails.
+- [x] 3.2 **[READ-ONLY]** Record the resolved paths and versions for `idf.py`, Python, CMake, and Ninja; stop before configure if ESP-IDF is not exactly v5.5.4 or any tool resolves to an unrelated or incompatible environment.
+- [x] 3.3 **[READ-ONLY]** Review the exact planned configure and build commands and confirm they contain no serial port, `monitor`, `flash`, `erase`, `restore`, `esptool`, eFuse, device, motor, audio, microphone, network, battery, or power-control operation.
 
 ## 4. Host-only configure, build, and inspection
 
