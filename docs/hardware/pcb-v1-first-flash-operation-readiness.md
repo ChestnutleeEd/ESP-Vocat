@@ -661,3 +661,58 @@ The record remains **UNSIGNED / NOT AUTHORIZED / DO NOT EXECUTE**. It creates
 no authority. Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**; Task 3.4
 remains **NOT COMPLETED**; First Flash remains **NO-GO**; device access and
 Flash authorization remain `NONE`.
+
+## 33. Post-Authorization Execution Update
+
+On 2026-07-26 the user supplied an explicit one-operation authorization
+matching the reviewed D: candidate, `COM7`, image geometry, erase envelope,
+attempt controls, ancillary reads, observation plan, and recovery boundary.
+All pre-open artifact, backup, package, harness, version, source-integrity,
+privacy-filter, and attempt-count checks passed.
+
+One device-mode harness invocation then:
+
+- identified ESP32-S3 QFN56 revision v0.2 on exact `COM7` over USB
+  Serial/JTAG;
+- erased `0x00020000-0x00047FFF`;
+- reported `Wrote 161792 bytes at 0x00020000`;
+- reported `Hash of data verified`;
+- performed no automatic retry;
+- remained in the ROM loader.
+
+The 161792-byte count is 960 bytes larger than the 160832-byte candidate.
+Installed esptool 4.12.dev3 source confirms that the no-stub path pads the
+final 64-byte candidate block to the 1024-byte ROM write size with 960
+`0xFF` bytes and sends the full block. The additional transmitted range is
+`0x00047440-0x000477FF`. The post-write MD5 uses the unpadded 160832-byte
+length, so it verifies only the authorized candidate range.
+
+This contradicts the earlier host-only statement that no end padding would be
+written beyond ordinary four-byte preparation. It also conflicts with the
+authorization's distinction between candidate-covered bytes and the
+erased-only trailing region. The user's possible-unauthorized-range stop
+condition therefore triggered.
+
+Current decision:
+
+- operation-tool result: **SUCCESS REPORTED FOR ONE INVOCATION**;
+- authorization conformance: **FAILED**;
+- First Flash acceptance:
+  **STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIATION**;
+- startup reset and 60-second observation: **NOT PERFORMED**;
+- automatic retry: **NONE**;
+- rollback/recovery: **NOT AUTHORIZED / NOT PERFORMED**;
+- last known device state: **STAYING IN ROM BOOTLOADER**;
+- device/Flash authorization: **CONSUMED AND CLOSED / NONE**;
+- startup-reset, observation, and rollback authorization: **NONE**;
+- further automatic action: **NO-GO**.
+
+The one-time external authorization JSON was deleted after the invocation and
+cannot be reused. No startup reset, observation serial open, monitor,
+`read_flash`, independent verify read, second write, independent erase,
+rollback, restore, or eFuse operation followed.
+
+The complete sanitized record and source analysis are in
+`tests/hardware/pcb-v1-first-flash-attempt-2026-07-26.md`. Historical
+host-only readiness statements above remain evidence of their review-time
+state; this section supersedes their current operation status.

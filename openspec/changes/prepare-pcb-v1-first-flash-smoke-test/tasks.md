@@ -88,8 +88,19 @@
 
 ## 9. Explicit user authorization
 
-- [ ] 9.1 **[READ-ONLY]** Obtain an explicit user statement authorizing the one exact First Flash packet, including device, port, image, hash, offset, range, recovery status, and acknowledged risks; reject vague continuation language.
-- [ ] 9.2 **[READ-ONLY]** Record the authorization verbatim with its exact scope and confirm it authorizes neither erase, eFuse, security changes, bootloader/table changes, unrelated images, automatic retry, nor rollback.
+- [x] 9.1 **[READ-ONLY]** Obtain an explicit user statement authorizing the one exact First Flash packet, including device, port, image, hash, offset, range, recovery status, and acknowledged risks; reject vague continuation language.
+- [x] 9.2 **[READ-ONLY]** Record the authorization verbatim with its exact scope and confirm it authorizes neither erase, eFuse, security changes, bootloader/table changes, unrelated images, automatic retry, nor rollback.
+
+  On 2026-07-26 the user supplied an explicit, operation-specific statement
+  covering exact ESP-VoCat PCB V1.0, `COM7`, candidate path/size/hash,
+  `0x00020000` start, `0x00047440` candidate end-exclusive, `0x00048000`
+  erase end-exclusive, all preserved regions, ancillary reads, volatile
+  effects, one-attempt controls, MD5, observation, stop conditions,
+  compatibility class B, and recovery separation. The verbatim final
+  authorizing clause and exact structured scope are recorded in
+  `tests/hardware/pcb-v1-first-flash-attempt-2026-07-26.md`. The one-time
+  external executor authorization JSON was deleted after use; device and
+  Flash authorization are consumed and closed, `NONE`, and not reusable.
 
 ## 10. Device connection
 
@@ -102,13 +113,19 @@
 ## 11. First Flash
 
 - [ ] 11.1 **[DEVICE WRITE]** Execute only the exact authorized single-image, single-range Flash operation as a standalone command with no monitor, erase, restore, eFuse, bootloader, partition-table, or retry behavior.
-- [ ] 11.2 **[DEVICE WRITE]** Preserve the complete actual result, then stop further writes whether the command succeeds or fails; success means only that the exact write command reported success.
+- [x] 11.2 **[DEVICE WRITE]** Preserve the complete actual result, then stop further writes whether the command succeeds or fails; success means only that the exact write command reported success.
 
-  The host precondition for retry control is implemented and host-tested:
-  whole-operation, block, connection, open, sync, and reset-reopen attempts
-  are forced to one before any future serial open, with exact version/source
-  guards and an external authorization lock. Task 11.1 remains unchecked
-  because no authorization file exists and no device write occurred.
+  One harness invocation connected to exact `COM7`, confirmed ESP32-S3 QFN56
+  revision v0.2 over USB Serial/JTAG, erased the reviewed sector envelope,
+  reported write success and candidate-range MD5 success, and stayed in the
+  ROM loader. No automatic retry occurred. Task 11.1 remains incomplete
+  because esptool reported 161792 transmitted bytes rather than the
+  authorized 160832 bytes: its 1024-byte ROM block path padded the final
+  64-byte candidate block with 960 `0xFF` bytes and sent them over
+  `0x00047440-0x000477FF`. This was inside the erase envelope but outside the
+  candidate byte range. The exact result and source analysis are preserved in
+  `tests/hardware/pcb-v1-first-flash-attempt-2026-07-26.md`. All further device
+  writes stopped.
 
 ## 12. Serial observation
 
@@ -116,10 +133,21 @@
 - [ ] 12.2 **[DEVICE READ]** Check for the expected smoke-test identity, version, target, disabled-feature summary, optional PSRAM result, and ready marker, while recording silence, unexpected output, resets, panics, watchdogs, or memory-allocation failures.
 - [ ] 12.3 **[DEVICE READ]** Continue for the full authorized observation duration and then close the serial connection; do not extend into display, touch, audio, motor, network, or other peripheral tests.
 
+  The separately authorized startup reset and 60-second observation were not
+  performed. The 960-byte final-block padding triggered the user's
+  possible-unauthorized-range stop condition immediately after the write
+  result. The last known state is ROM loader.
+
 ## 13. Pass/fail decision
 
-- [ ] 13.1 **[READ-ONLY]** Apply the serial-only acceptance criteria to the actual Flash and observation records and classify the result as pass, fail, or inconclusive without inferring untested hardware behavior.
-- [ ] 13.2 **[READ-ONLY]** On any defined stop condition, freeze further device work, preserve evidence, and decide whether rollback should be proposed; do not retry or widen the write automatically.
+- [x] 13.1 **[READ-ONLY]** Apply the serial-only acceptance criteria to the actual Flash and observation records and classify the result as pass, fail, or inconclusive without inferring untested hardware behavior.
+- [x] 13.2 **[READ-ONLY]** On any defined stop condition, freeze further device work, preserve evidence, and decide whether rollback should be proposed; do not retry or widen the write automatically.
+
+  Result: **STOPPED / INCONCLUSIVE**. No serial acceptance criterion was
+  evaluated because observation did not start. Device work is frozen. No
+  automatic rollback is proposed from this result; any Level 1 proposal
+  requires a new independent review and explicit authorization. Level 2
+  remains higher-risk and separately gated.
 
 ## 14. Rollback if required
 

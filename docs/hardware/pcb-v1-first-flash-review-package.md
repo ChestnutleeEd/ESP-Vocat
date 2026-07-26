@@ -476,3 +476,41 @@ authorization, token, signature, or command. No new Task is completed.
 Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**, Task 3.4 remains
 **NOT COMPLETED**, First Flash remains **NO-GO**, and device/Flash
 authorization remain `NONE`.
+
+## 27. Consumed Authorization and Stopped Attempt Update
+
+The later one-operation authorization was consumed on 2026-07-26 and is now
+closed. The external authorization JSON was deleted and cannot be reused.
+
+The one App-only write invocation reported:
+
+- exact target `COM7`, ESP32-S3 QFN56 revision v0.2;
+- sector erase envelope `0x00020000-0x00047FFF`;
+- candidate range `0x00020000-0x0004743F`, 160832 bytes;
+- transmitted ROM-block range `0x00020000-0x000477FF`, 161792 bytes;
+- 960 bytes / `0x000003C0` of final-block `0xFF` padding at
+  `0x00047440-0x000477FF`;
+- `Hash of data verified`;
+- `Staying in bootloader`;
+- no automatic outer or block retry.
+
+The padding was wholly inside the reviewed sector erase envelope but outside
+the explicitly authorized candidate-image byte range. This is a
+**RANGE-SCOPE DEVIATION** and triggered the possible-unauthorized-range stop
+condition. The remaining `0x00047800-0x00047FFF` range was erased but not
+covered by transmitted data.
+
+Current state:
+
+- First Flash attempt: **STOPPED / INCONCLUSIVE**;
+- runtime validation: **NOT PERFORMED**;
+- Compatibility: **B — PLAUSIBLE BUT NOT PROVEN**;
+- Task 3.4: **NOT COMPLETED**;
+- last observed device state: **STAYING IN ROM BOOTLOADER**;
+- device access and Flash authorization: **CONSUMED AND CLOSED / NONE**;
+- startup-reset, observation, and rollback authorization: **NONE**;
+- further automatic action: **NO-GO**.
+
+No startup reset, observation serial open, monitor, readback, independent
+verify, second write, independent erase, rollback, restore, or eFuse operation
+followed. **DO NOT CONTINUE WITHOUT NEW AUTHORIZATION.**

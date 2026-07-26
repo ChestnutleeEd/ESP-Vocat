@@ -298,3 +298,66 @@ When a hardware fact is verified:
 4. update the document version;
 5. add the decision or test record under `docs/decisions` or `tests`;
 6. do not silently overwrite previous uncertainty.
+
+## 16. First Flash attempt state
+
+On 2026-07-26 one explicitly authorized App-only write invocation was
+performed on the same reviewed ESP-VoCat PCB V1.0 unit at exact `COM7`.
+Connection identified ESP32-S3 QFN56 revision v0.2 and USB Serial/JTAG. The
+base MAC was filtered before display and was not retained.
+
+The operation:
+
+- used esptool 4.12.dev3, ROM loader, no stub, and no compression;
+- erased `0x00020000-0x00047FFF`;
+- transmitted the 160832-byte candidate beginning at `0x00020000`;
+- also transmitted 960 final-block padding bytes with value `0xFF` over
+  `0x00047440-0x000477FF`;
+- reported candidate-range MD5 success;
+- performed no automatic retry;
+- ended in ROM loader.
+
+The 960-byte transmitted padding was not represented in the authorization's
+candidate byte range, even though it remained inside the reviewed erase
+envelope. This triggered the possible-unauthorized-range stop condition. No
+startup reset, serial observation, readback, rollback, or recovery followed.
+
+Exact affected ranges:
+
+- sector erase:
+  `0x00020000-0x00047FFF`, end-exclusive `0x00048000`, length
+  `0x00028000` / 163840 bytes;
+- candidate image:
+  `0x00020000-0x0004743F`, end-exclusive `0x00047440`, length
+  `0x00027440` / 160832 bytes;
+- transmitted ROM blocks:
+  `0x00020000-0x000477FF`, end-exclusive `0x00047800`, length
+  `0x00027800` / 161792 bytes;
+- additional transmitted padding:
+  `0x00047440-0x000477FF`, length `0x000003C0` / 960 bytes, value `0xFF`;
+- erased but not covered by transmitted data:
+  `0x00047800-0x00047FFF`.
+
+Current evidence state:
+
+- candidate-byte transmission and candidate-range MD5: **CONFIRMED by the
+  one esptool result**;
+- final-block `0xFF` transmission semantics: **CONFIRMED by installed
+  esptool source and reported byte count**;
+- application boot, ready marker, stability, and peripheral behavior:
+  **UNVERIFIED / UNOBSERVED**;
+- physical contents outside the reported erase/write envelope:
+  **not read back in this attempt**;
+- Level 1 and Level 2 recovery: **NOT AUTHORIZED / NOT PERFORMED**.
+
+Current authorization and execution state:
+
+- First Flash attempt: **STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIATION**;
+- runtime validation: **NOT PERFORMED**;
+- device/Flash authorization: **CONSUMED AND CLOSED / NONE**;
+- startup-reset, observation, and rollback authorization: **NONE**;
+- last observed device state: **STAYING IN ROM BOOTLOADER**;
+- further automatic action: **NO-GO**.
+
+The controlling sanitized record is
+`tests/hardware/pcb-v1-first-flash-attempt-2026-07-26.md`.
