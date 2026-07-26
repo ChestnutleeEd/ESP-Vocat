@@ -602,3 +602,22 @@ This is a source-and-document audit. No configuration file or binary was generat
 The local source proves available mechanisms and conditional behavior, not that the original firmware used a particular Kconfig. The original DIO header can be reconciled with Octal hardware through the documented layer model, but the original `sdkconfig` remains unknown. `AP_1v8` remains a package/vendor variant label, not proof of every PSRAM parameter. Physical 32 MB capacity remains separate from the conservative 16 MB image-address-space candidate.
 
 No MAC, chip-unique identifier, key digest, credential, token, certificate, network configuration, executable device command, or private recovery content is included.
+
+## 30. Host-Only Candidate Verification
+
+The 2026-07-26 host-only implementation used `firmware/sdkconfig.defaults` plus `idf.py set-target esp32s3` under ESP-IDF v5.5.4. Final resolved values matched the candidate:
+
+- explicit Octal Flash, OPI runtime, STR, and DOUT header string;
+- 80 MHz and 16 MB;
+- USB Serial/JTAG primary console and no secondary/UART console;
+- default single factory-app build table at host-build offset `0x8000`;
+- Secure Boot, Flash Encryption, rollback, and anti-rollback off;
+- PSRAM support absent from the minimal dependency closure.
+
+Offline image review confirmed that both generated bootloader and app headers are DOUT / 80 MHz / 16 MB with valid checksums and appended hashes. The app is 160832 bytes and has secure version 0.
+
+The generated default factory-app offset is `0x10000`, not the original `ota_0` offset `0x20000`. The generated bootloader/table/app offsets are build metadata only and are **NOT REVIEWED FOR DEVICE WRITE** and **NOT AUTHORIZED**. Task 3.4 remains incomplete because current `otadata`, exact future offset/range approval, and actual preserved-bootloader acceptance are unresolved.
+
+Firmware Implementation Gate: **HOST-ONLY IMPLEMENTATION COMPLETED**.
+
+First Flash: **NO-GO**. Device access authorization: **NONE**. Flash authorization: **NONE**.

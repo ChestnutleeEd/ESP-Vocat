@@ -19,30 +19,30 @@
 - [x] 3.3 **[READ-ONLY]** Make and record the PSRAM gate decision; keep PSRAM disabled unless exact mode, size, clock, voltage domain, and ESP-IDF v5.5.4 options are all supported.
 - [ ] 3.4 **[READ-ONLY]** Decide whether one app-only write can be compatible with the preserved original bootloader and partition layout; stop rather than proposing a bootloader, partition-table, OTA-layout, or unused-tail change.
 
-  Blocked after the 2026-07-26 source audit: compatibility is plausible for a newer ESP-IDF app, but no custom app artifact exists yet. Keep this task incomplete until the generated header, segments, size, hash, revision bounds, secure version, original OTA selection, exact partition fit, and proposed single range are reviewed together. Firmware Implementation Gate is open only for host-only implementation; First Flash remains `NO-GO`.
+  Still blocked after the 2026-07-26 host build: the 160832-byte ESP-IDF v5.5.4 app is ESP32-S3 image v1, DOUT / 80 MHz / 16 MB, secure version 0, and fits geometrically within the original `ota_0` capacity. However, the generated default factory-app offset is `0x10000` rather than original `ota_0` at `0x20000`; current `otadata` state, the only safe future offset/range, and actual preserved-v5.5.3-dirty-bootloader acceptance remain unresolved. No offset/range is selected or authorized. First Flash remains `NO-GO`.
 
 ## 4. Firmware implementation
 
-- [ ] 4.1 **[WRITE]** Restate the exact serial-only implementation scope, expected changed files, allowlisted inputs, assumptions, unresolved hardware facts, and acceptance criteria before editing.
-- [ ] 4.2 **[WRITE]** Modify only the minimal repository firmware inputs needed for an ESP32-S3 startup application and its reviewed board configuration; do not add board drivers, product modules, third-party dependencies, or adjacent refactors.
-- [ ] 4.3 **[WRITE]** Implement fixed smoke-test identity, compile-time version, PCB target, disabled-feature summary, and ready-marker logs followed by a bounded non-busy idle state.
-- [ ] 4.4 **[WRITE]** If the PSRAM gate is satisfied, implement it as optional and nonessential to serial startup; otherwise include no PSRAM initialization or compatibility claim.
+- [x] 4.1 **[WRITE]** Restate the exact serial-only implementation scope, expected changed files, allowlisted inputs, assumptions, unresolved hardware facts, and acceptance criteria before editing.
+- [x] 4.2 **[WRITE]** Modify only the minimal repository firmware inputs needed for an ESP32-S3 startup application and its reviewed board configuration; do not add board drivers, product modules, third-party dependencies, or adjacent refactors.
+- [x] 4.3 **[WRITE]** Implement fixed smoke-test identity, compile-time version, PCB target, disabled-feature summary, and ready-marker logs followed by a bounded non-busy idle state.
+- [x] 4.4 **[WRITE]** If the PSRAM gate is satisfied, implement it as optional and nonessential to serial startup; otherwise include no PSRAM initialization or compatibility claim.
 
 ## 5. Host-only configure/build
 
-- [ ] 5.1 **[READ-ONLY]** Activate and verify the existing ESP-IDF v5.5.4 environment process-locally, confirm output paths are Git-ignored, and review configure/build commands for absence of ports, device access, Flash, monitor, erase, restore, and eFuse operations.
-- [ ] 5.2 **[WRITE]** Run the reviewed `esp32s3` configure operation as a standalone host-only command, write only ignored generated outputs, and stop before build on any error or configuration-allowlist deviation.
-- [ ] 5.3 **[WRITE]** Run the reviewed host-only build as a separate command, preserve its real output, and make no hardware or Flash-authorization claim from compilation.
+- [x] 5.1 **[READ-ONLY]** Activate and verify the existing ESP-IDF v5.5.4 environment process-locally, confirm output paths are Git-ignored, and review configure/build commands for absence of ports, device access, Flash, monitor, erase, restore, and eFuse operations.
+- [x] 5.2 **[WRITE]** Run the reviewed `esp32s3` configure operation as a standalone host-only command, write only ignored generated outputs, and stop before build on any error or configuration-allowlist deviation.
+- [x] 5.3 **[WRITE]** Run the reviewed host-only build as a separate command, preserve its real output, and make no hardware or Flash-authorization claim from compilation.
 
 ## 6. Static safety review
 
-- [ ] 6.1 **[READ-ONLY]** Review all tracked firmware/configuration changes and confirm there is no GPIO number/API, PCB V1.2 value, generic-board dependency, driver initialization, NVS mutation, network, OTA, reboot loop, or product behavior.
-- [ ] 6.2 **[READ-ONLY]** Inspect generated configuration and linked-component metadata against the allowlist, including explicit absence of display, touch, audio, microphone, motor, SD, battery, power-control, Wi-Fi, Bluetooth, OTA, Secure Boot, Flash Encryption, and eFuse mutation paths.
-- [ ] 6.3 **[READ-ONLY]** Confirm that logs cannot emit MAC addresses, unique chip identifiers, credentials, tokens, NVS values, recovery contents, or other private data.
+- [x] 6.1 **[READ-ONLY]** Review all tracked firmware/configuration changes and confirm there is no GPIO number/API, PCB V1.2 value, generic-board dependency, driver initialization, NVS mutation, network, OTA, reboot loop, or product behavior.
+- [x] 6.2 **[READ-ONLY]** Inspect generated configuration and linked-component metadata against the allowlist, including explicit absence of display, touch, audio, microphone, motor, SD, battery, power-control, Wi-Fi, Bluetooth, OTA, Secure Boot, Flash Encryption, and eFuse mutation paths.
+- [x] 6.3 **[READ-ONLY]** Confirm that logs cannot emit MAC addresses, unique chip identifiers, credentials, tokens, NVS values, recovery contents, or other private data.
 
 ## 7. Artifact-layout review
 
-- [ ] 7.1 **[READ-ONLY]** Inspect the custom app image offline for target, image version, entry point, segments, checksum/hash, effective image size, and header declarations; record declarations without treating them as physical facts.
+- [x] 7.1 **[READ-ONLY]** Inspect the custom app image offline for target, image version, entry point, segments, checksum/hash, effective image size, and header declarations; record declarations without treating them as physical facts.
 - [ ] 7.2 **[READ-ONLY]** Calculate and record the exact candidate image SHA-256, offset, end address, byte range, partition fit, and compatibility with the preserved bootloader and partition table; stop on any ambiguity or overlap.
 - [ ] 7.3 **[READ-ONLY]** Confirm that no bootloader, partition table, NVS, OTA metadata, PHY, assets, unused-tail, erase, or unrelated image is included in the candidate first write.
 - [ ] 7.4 **[WRITE]** Prepare a non-executed operation packet and placeholder command structure containing the exact reviewed inputs while marking it unauthorized; do not connect to a device or perform Flash.
@@ -88,7 +88,7 @@
 
 ## 15. Final evidence recording
 
-- [ ] 15.1 **[WRITE]** Update the hardware-evidence audit, recovery/readiness report, and a task-specific test record with actual commands, outputs, hashes, observations, privacy handling, failures, and remaining uncertainty.
-- [ ] 15.2 **[READ-ONLY]** Distinguish implemented, compiled, host-tested, device-written, serial-observed, restored, verified, failed, and not tested states; explicitly retain all untested peripherals as `UNVERIFIED`.
-- [ ] 15.3 **[READ-ONLY]** Run OpenSpec strict validation, Git diff checks, generated-output ignore checks, and a scope audit confirming no recovery binary, dump, slice, NVS data, sdkconfig output, device identifier, or unrelated file is staged.
-- [ ] 15.4 **[WRITE]** Submit only the reviewed source, configuration, documentation, and test-record changes after user-requested Git authorization, without archiving this Change until all applicable tasks and recovery evidence are complete.
+- [x] 15.1 **[WRITE]** Update the hardware-evidence audit, recovery/readiness report, and a task-specific test record with actual commands, outputs, hashes, observations, privacy handling, failures, and remaining uncertainty.
+- [x] 15.2 **[READ-ONLY]** Distinguish implemented, compiled, host-tested, device-written, serial-observed, restored, verified, failed, and not tested states; explicitly retain all untested peripherals as `UNVERIFIED`.
+- [x] 15.3 **[READ-ONLY]** Run OpenSpec strict validation, Git diff checks, generated-output ignore checks, and a scope audit confirming no recovery binary, dump, slice, NVS data, sdkconfig output, device identifier, or unrelated file is staged.
+- [x] 15.4 **[WRITE]** Submit only the reviewed source, configuration, documentation, and test-record changes after user-requested Git authorization, without archiving this Change until all applicable tasks and recovery evidence are complete.

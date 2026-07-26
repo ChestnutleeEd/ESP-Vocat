@@ -149,8 +149,8 @@ The gate becomes reviewable only when all of the following are true:
 - [x] all four full-image files are 33554432 bytes and match the expected SHA-256;
 - [x] partition layout remains uniquely verified;
 - [x] Flash/PSRAM configuration mapped for a host-only candidate with PSRAM disabled; this is not physical validation;
-- [ ] serial-only firmware implemented and host-built with ESP-IDF v5.5.4;
-- [ ] source/configuration allowlist passes static review;
+- [x] serial-only firmware implemented and host-built with ESP-IDF v5.5.4;
+- [x] source/configuration allowlist passes static review;
 - [ ] exact image, hash, offset, and write range pass artifact review;
 - [x] host-only recovery rehearsal passes at the host/procedure level only;
 - [ ] observation window, stop conditions, and rollback are reviewed;
@@ -220,3 +220,19 @@ The authorized `chip_id`, `flash_id`, and minimum read-only eFuse evidence is co
 The exact ESP-IDF v5.5.4 mapping is in `docs/hardware/pcb-v1-esp-idf-configuration-map.md`. Firmware Implementation Gate is **OPEN FOR HOST-ONLY IMPLEMENTATION** using explicit Octal Flash/STR, 80 MHz, a conservative 16 MB header limit, USB Serial/JTAG, and PSRAM disabled. This allows only a future independent firmware/configure/build/static-review task.
 
 First Flash remains **NO-GO**. The built app, original bootloader/table/OTA compatibility, exact image/hash/offset/range, current device/port, observation plan, and explicit operation authorization are absent. No further device access and no Flash write are authorized.
+
+## 16. Host-Only Implementation Readiness Update
+
+The serial-only candidate has now been implemented, configured, built, and inspected on the host with ESP-IDF v5.5.4. Static review passed, PSRAM and excluded optional components are absent from the minimal dependency closure, and the generated app is 160832 bytes with SHA-256 `1B72A60DE9C9BB42DE401A58D7772B0525AFBC4DC3D8C85BB550D2D758F99DDC`.
+
+Both generated images declare DOUT / 80 MHz / 16 MB and have valid checksums and appended hashes. This closes only the host-only implementation/build items in Section 12.
+
+The build-generated single-factory-app offset `0x10000` differs from the preserved `ota_0` offset `0x20000`; it is **NOT REVIEWED FOR DEVICE WRITE** and **NOT AUTHORIZED**. Task 3.4 remains incomplete because current `otadata`, exact future app-only offset/range, and actual preserved-bootloader acceptance remain unresolved.
+
+Updated gate state:
+
+- Firmware Implementation Gate: **HOST-ONLY IMPLEMENTATION COMPLETED**
+- First Flash: **NO-GO**
+- Device access authorization: **NONE**
+- Flash authorization: **NONE**
+- Generated artifacts: **NOT DEVICE-VALIDATED / NOT APPROVED FOR FLASH**

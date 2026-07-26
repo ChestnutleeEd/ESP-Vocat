@@ -182,12 +182,12 @@ That authorization was consumed and closed. No further device evidence is requir
 
 ## 17. Current Go/No-Go Decision
 
-- Firmware Implementation: **OPEN FOR HOST-ONLY IMPLEMENTATION**
+- Firmware Implementation: **HOST-ONLY IMPLEMENTATION COMPLETED**
 - First Flash: **NO-GO**
 - Completed `chip_id`/`flash_id` authorization: **CONSUMED AND CLOSED**
 - Further device access authorization: **NOT GRANTED**
 
-The next allowed work is a separate host-only firmware implementation/configure/build/static-review task. It grants no device authority. Vague continuation language does not authorize device access or Flash.
+The next allowed work is host-only compatibility and pre-Flash evidence preparation that does not select or authorize a device-write range. It grants no device authority. Vague continuation language does not authorize device access or Flash.
 
 ## Decision Table
 
@@ -206,3 +206,13 @@ The next allowed work is a separate host-only firmware implementation/configure/
 | First Flash write range | Unresolved | No custom image exists | `UNVERIFIED` | No | No image, hash, length, slot, or compatibility decision | Implement/build only after gate opens, then inspect exact artifact |
 | UART port | `COM7` for the completed queries | User-reviewed port and successful current query | `CONFIRMED` for the recorded event only | No future assumption | Ports are not stable identities | Re-review before any future operation |
 | Reset/download method | ROM-loader connection; final RTS hard reset | Direct output and installed source | `CONFIRMED` for the recorded event | No | Connection also made transient register/SPI changes; it grants no future reset permission | Separately review any future connection/reset behavior |
+
+## 18. Host-Only Implementation Verification
+
+The approved candidate was implemented and built on the host on 2026-07-26 with ESP-IDF v5.5.4. The final generated configuration resolved to Octal Flash, OPI runtime, STR, DOUT header string, 80 MHz, 16 MB, USB Serial/JTAG primary console, no secondary/UART console, and no PSRAM component. Secure Boot, Flash Encryption, rollback, and anti-rollback remained off.
+
+The final app is 160832 bytes with SHA-256 `1B72A60DE9C9BB42DE401A58D7772B0525AFBC4DC3D8C85BB550D2D758F99DDC`. Offline inspection reports ESP32-S3 image v1, DOUT / 80 MHz / 16 MB, valid checksum/hash, revision bounds v0.0-v0.99, and secure version 0.
+
+The generated default layout is a host-build single-factory-app layout with app offset `0x10000`; it is not compatible as a partition-table replacement for the preserved OTA layout and is not authorized for device write. Task 3.4 remains incomplete because exact future `otadata`, offset/range, and preserved-bootloader runtime compatibility are unresolved.
+
+Firmware Implementation Gate: **HOST-ONLY IMPLEMENTATION COMPLETED**. First Flash remains **NO-GO**. Device and Flash authorization remain **NONE**.

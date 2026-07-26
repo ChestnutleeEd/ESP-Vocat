@@ -450,3 +450,21 @@ The complete source table, allowlist, denylist, candidate values, and limitation
 Firmware Implementation Gate: **OPEN FOR HOST-ONLY IMPLEMENTATION**.
 
 First Flash: **NO-GO**. No Flash authorization or further device-access authorization exists. The generated app artifact, preserved bootloader/table/OTA compatibility, exact offset/range, and operation packet remain blocked future reviews.
+
+## 25. Host-Only Firmware and Artifact Evidence
+
+The separate 2026-07-26 host-only implementation Apply completed without device or serial access. Final configure and build used ESP-IDF v5.5.4 and exited 0. The tracked candidate uses a minimal component closure, fixed privacy-safe logs, the reviewed 16 MB / Octal / OPI STR / 80 MHz / USB Serial-JTAG configuration, and no PSRAM component.
+
+Final app evidence:
+
+- path: ignored `firmware/build/pcb_v1_first_flash_smoke_test.bin`;
+- size: 160832 bytes;
+- SHA-256: `1B72A60DE9C9BB42DE401A58D7772B0525AFBC4DC3D8C85BB550D2D758F99DDC`;
+- ESP32-S3 image v1, six segments, entry `0x403752D0`;
+- DOUT, 80 MHz, 16 MB;
+- checksum and appended validation hash valid;
+- ESP-IDF v5.5.4, revision bounds v0.0-v0.99, secure version 0.
+
+The generated single-factory-app layout uses app offset `0x10000`, unlike the preserved OTA layout's `ota_0` at `0x20000`. It is build metadata only, not a write layout. The standalone app fits geometrically within the original `0x3F0000` app capacity, but no exact future offset/range is selected or authorized.
+
+Task 3.4 remains incomplete pending current OTA metadata interpretation, exact app-only range review, and actual preserved-bootloader compatibility. First Flash remains **NO-GO**. Device and Flash authorization remain **NONE**.

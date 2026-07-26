@@ -248,3 +248,11 @@ The E: location question is resolved at the volume-path level. Whether D: and E:
 - **Flash bootloader, partition table, and app together:** Rejected as the default because it unnecessarily widens the first write.
 - **Use the erased upper 16 MiB:** Rejected; the region is not part of the reviewed original partition plan.
 - **Enable PSRAM unconditionally:** Rejected; it is unnecessary for serial acceptance and its exact configuration gate is unresolved.
+
+## Host-Only Implementation Result (2026-07-26)
+
+The separate host-only implementation Apply completed with ESP-IDF v5.5.4. The tracked project now uses a minimal dependency closure, fixed privacy-safe logs, and the reviewed 16 MB / Octal / OPI STR / 80 MHz / USB Serial-JTAG candidate. PSRAM is excluded from the dependency closure and has no resolved enable/mode/frequency symbol.
+
+The final standalone configure and build exited 0. Offline image inspection confirmed ESP32-S3 image v1, DOUT, 80 MHz, 16 MB, valid checksums/hashes, app secure version 0, and a 160832-byte app. The default build layout places a factory app at `0x10000`; this differs from the preserved original `ota_0` at `0x20000` and is explicitly rejected as a device-write layout.
+
+Task 3.4 remains incomplete. App-only compatibility is source-plausible and the app fits geometrically in the original slot, but current `otadata` state, the future exact offset/range, and actual preserved-bootloader acceptance of the v5.5.4 DOUT image remain unresolved. First Flash remains `NO-GO`; device and Flash authorization remain `NONE`.
