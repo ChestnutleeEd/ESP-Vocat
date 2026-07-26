@@ -340,3 +340,18 @@ Device access authorization: NONE
 Flash authorization: NONE
 Artifacts: NOT DEVICE-VALIDATED / NOT APPROVED FOR FLASH / NOT A PCB V1.0 HARDWARE PASS
 ```
+
+## 27. Subsequent Host-Only Compatibility Review
+
+A later 2026-07-26 review reused this exact ignored app artifact without running `idf.py`, reconfigure, or build. The file still existed as `firmware/build/pcb_v1_first_flash_smoke_test.bin`, remained 160832 bytes, and retained SHA-256 `1B72A60DE9C9BB42DE401A58D7772B0525AFBC4DC3D8C85BB550D2D758F99DDC`. The stale baseline name `firmware/build/hello_world_build_baseline.bin` was absent and was not substituted.
+
+The primary D: and E: recovery copies were rehashed. A fresh `%TEMP%` extraction and ESP-IDF-equivalent OTA parser found one historical CRC-valid sequence-1 `VALID` entry selecting `ota_0`; the second entry was erased. This describes the 2026-07-10 backup only.
+
+The candidate app-only geometry was recorded as offset `0x00020000`, length `0x00027440`, end-exclusive `0x00047440`, last byte `0x0004743F`, and remaining historical slot capacity `0x003C8BC0`. Direct application references remained only `printf`, `puts`, and `vTaskDelay`; no OTA/NVS/assets/network/peripheral dependency was found.
+
+Compatibility classification is **B — PLAUSIBLE BUT NOT PROVEN**. Task 3.4 remains incomplete because current OTA/security state, vendor `v5.5.3-dirty` changes, and actual preserved-bootloader acceptance remain unresolved. See:
+
+- `docs/hardware/pcb-v1-app-only-compatibility-assessment.md`;
+- `docs/hardware/pcb-v1-first-flash-review-package.md`.
+
+No firmware changed, no build ran, no device or port was accessed, and no Flash/monitor/erase/restore/eFuse operation occurred. First Flash remains `NO-GO`; device and Flash authorization remain `NONE`.

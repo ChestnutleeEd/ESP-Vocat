@@ -216,3 +216,20 @@ The final app is 160832 bytes with SHA-256 `1B72A60DE9C9BB42DE401A58D7772B0525AF
 The generated default layout is a host-build single-factory-app layout with app offset `0x10000`; it is not compatible as a partition-table replacement for the preserved OTA layout and is not authorized for device write. Task 3.4 remains incomplete because exact future `otadata`, offset/range, and preserved-bootloader runtime compatibility are unresolved.
 
 Firmware Implementation Gate: **HOST-ONLY IMPLEMENTATION COMPLETED**. First Flash remains **NO-GO**. Device and Flash authorization remain **NONE**.
+
+## 19. App-Only Compatibility Review
+
+The 2026-07-26 host-only review used the existing candidate artifact and a fresh `%TEMP%` extraction from a hash-matching recovery image. No firmware was changed or rebuilt, and no device was accessed.
+
+Historical `otadata` evidence:
+
+- sector 0: `ota_seq=1`, `VALID`, CRC valid;
+- sector 1: erased;
+- historical selected slot: `ota_0`;
+- no pending, invalid, or aborted historical entry.
+
+The candidate's host-reviewed range is `0x00020000-0x0004743F`. Its size, segment alignment, revision bounds, secure version 0, checksum/hash, dependency closure, and original partition fit were revalidated. The candidate does not require a factory subtype and does not call OTA, NVS, assets, network, storage, or peripheral APIs.
+
+Compatibility is classified **B — PLAUSIBLE BUT NOT PROVEN**, not A. The historical OTA snapshot is not current device state, vendor `v5.5.3-dirty` changes cannot be audited from the locally available shallow v5.5.4 checkout, current security/anti-rollback state is unknown, and the preserved bootloader has not loaded the candidate.
+
+Task 3.4 remains incomplete. The candidate range is host-reviewed metadata only: **NOT DEVICE-VALIDATED / NOT AUTHORIZED FOR WRITE**. The draft review package contains no executable command. First Flash remains **NO-GO**; Device access authorization and Flash authorization remain **NONE**.

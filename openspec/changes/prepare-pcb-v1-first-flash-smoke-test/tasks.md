@@ -19,7 +19,7 @@
 - [x] 3.3 **[READ-ONLY]** Make and record the PSRAM gate decision; keep PSRAM disabled unless exact mode, size, clock, voltage domain, and ESP-IDF v5.5.4 options are all supported.
 - [ ] 3.4 **[READ-ONLY]** Decide whether one app-only write can be compatible with the preserved original bootloader and partition layout; stop rather than proposing a bootloader, partition-table, OTA-layout, or unused-tail change.
 
-  Still blocked after the 2026-07-26 host build: the 160832-byte ESP-IDF v5.5.4 app is ESP32-S3 image v1, DOUT / 80 MHz / 16 MB, secure version 0, and fits geometrically within the original `ota_0` capacity. However, the generated default factory-app offset is `0x10000` rather than original `ota_0` at `0x20000`; current `otadata` state, the only safe future offset/range, and actual preserved-v5.5.3-dirty-bootloader acceptance remain unresolved. No offset/range is selected or authorized. First Flash remains `NO-GO`.
+  The 2026-07-26 host-only compatibility assessment parsed the historical backup `otadata`: entry 0 is sequence 1 / `VALID` / CRC-valid and historically selects `ota_0`; entry 1 is erased. The exact candidate range `0x00020000-0x0004743F` fits and has no partition overlap, and the app has no factory/OTA/NVS/assets dependency. Compatibility remains classification B, **PLAUSIBLE BUT NOT PROVEN**, because the snapshot is not current state, vendor `v5.5.3-dirty` changes are unavailable, current security/anti-rollback state is unknown, and the exact preserved bootloader has not loaded the v5.5.4 DOUT candidate. No bootloader, table, OTA-layout, or tail change is proposed. Task 3.4 therefore remains incomplete; First Flash remains `NO-GO`.
 
 ## 4. Firmware implementation
 
@@ -43,14 +43,16 @@
 ## 7. Artifact-layout review
 
 - [x] 7.1 **[READ-ONLY]** Inspect the custom app image offline for target, image version, entry point, segments, checksum/hash, effective image size, and header declarations; record declarations without treating them as physical facts.
-- [ ] 7.2 **[READ-ONLY]** Calculate and record the exact candidate image SHA-256, offset, end address, byte range, partition fit, and compatibility with the preserved bootloader and partition table; stop on any ambiguity or overlap.
-- [ ] 7.3 **[READ-ONLY]** Confirm that no bootloader, partition table, NVS, OTA metadata, PHY, assets, unused-tail, erase, or unrelated image is included in the candidate first write.
-- [ ] 7.4 **[WRITE]** Prepare a non-executed operation packet and placeholder command structure containing the exact reviewed inputs while marking it unauthorized; do not connect to a device or perform Flash.
+- [x] 7.2 **[READ-ONLY]** Calculate and record the exact candidate image SHA-256, offset, end address, byte range, partition fit, and compatibility with the preserved bootloader and partition table; stop on any ambiguity or overlap.
+- [x] 7.3 **[READ-ONLY]** Confirm that no bootloader, partition table, NVS, OTA metadata, PHY, assets, unused-tail, erase, or unrelated image is included in the candidate first write.
+- [x] 7.4 **[WRITE]** Prepare a non-executed operation packet and placeholder command structure containing the exact reviewed inputs while marking it unauthorized; do not connect to a device or perform Flash.
+
+  Evidence for 7.2-7.4 is in `docs/hardware/pcb-v1-app-only-compatibility-assessment.md` and the non-executable, unauthorized field manifest in `docs/hardware/pcb-v1-first-flash-review-package.md`. The package contains no Flash command and grants no write authority.
 
 ## 8. Pre-flash human review
 
 - [ ] 8.1 **[READ-ONLY]** Present the exact physical device/PCB identity, user-supplied current port, custom image path/hash, offset/range, partition interpretation, recovery paths/hashes, risks, observation window, stop conditions, and rollback strategy for review.
-- [ ] 8.2 **[READ-ONLY]** Reconfirm that historical COM7 is not assumed and that any change to device, port, image, hash, offset, range, recovery state, or command invalidates the packet.
+- [x] 8.2 **[READ-ONLY]** Reconfirm that historical COM7 is not assumed and that any change to device, port, image, hash, offset, range, recovery state, or command invalidates the packet.
 - [ ] 8.3 **[READ-ONLY]** Record a `GO` or `NO-GO` human-review result; retain `NO-GO` while any evidence, redundancy, compatibility, or recovery-rehearsal item is incomplete.
 
 ## 9. Explicit user authorization

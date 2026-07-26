@@ -236,3 +236,31 @@ Updated gate state:
 - Device access authorization: **NONE**
 - Flash authorization: **NONE**
 - Generated artifacts: **NOT DEVICE-VALIDATED / NOT APPROVED FOR FLASH**
+
+## 17. App-Only Compatibility and Draft Review Package
+
+The primary D: and E: recovery copies were rehashed during a later host-only review. Both remained 33554432 bytes and matched SHA-256 `72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001`. Only bootloader, partition-table, `otadata`, and `ota_0` slices were created under a new `%TEMP%` directory; no slice entered Git and no NVS content was parsed.
+
+The historical 2026-07-10 `otadata` snapshot has one CRC-valid `VALID` sequence-1 entry selecting `ota_0`; the second entry is erased. This is not current device state.
+
+The candidate app path, hash, image metadata, dependencies, and candidate-only geometry were reviewed:
+
+- offset `0x00020000`;
+- length `0x00027440`;
+- end-exclusive `0x00047440`;
+- last byte `0x0004743F`;
+- historical `ota_0` capacity `0x003F0000`;
+- remaining space `0x003C8BC0`.
+
+The range is **HOST-REVIEWED / NOT DEVICE-VALIDATED / NOT AUTHORIZED FOR WRITE**. Bootloader, table, NVS, OTA metadata, PHY, `ota_1`, assets, and the upper tail remain outside it.
+
+Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN** because the preserved bootloader is vendor-modified `v5.5.3-dirty`, its modifications are unavailable for local source comparison, current OTA/security state is unknown, and runtime boot acceptance has not been tested. Task 3.4 remains incomplete.
+
+The draft pre-Flash package is `docs/hardware/pcb-v1-first-flash-review-package.md`. It is marked `DRAFT / HOST-ONLY REVIEW / NOT AUTHORIZED / DO NOT EXECUTE`, contains no executable command, and requires a future human review. Exact current device/port, current-state evidence, observation duration, rollback packet, and operation-specific authorization are still absent.
+
+Current state remains:
+
+- Firmware Implementation Gate: **HOST-ONLY IMPLEMENTATION COMPLETED**
+- First Flash: **NO-GO**
+- Device access authorization: **NONE**
+- Flash authorization: **NONE**

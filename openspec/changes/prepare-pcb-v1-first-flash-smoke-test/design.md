@@ -256,3 +256,13 @@ The separate host-only implementation Apply completed with ESP-IDF v5.5.4. The t
 The final standalone configure and build exited 0. Offline image inspection confirmed ESP32-S3 image v1, DOUT, 80 MHz, 16 MB, valid checksums/hashes, app secure version 0, and a 160832-byte app. The default build layout places a factory app at `0x10000`; this differs from the preserved original `ota_0` at `0x20000` and is explicitly rejected as a device-write layout.
 
 Task 3.4 remains incomplete. App-only compatibility is source-plausible and the app fits geometrically in the original slot, but current `otadata` state, the future exact offset/range, and actual preserved-bootloader acceptance of the v5.5.4 DOUT image remain unresolved. First Flash remains `NO-GO`; device and Flash authorization remain `NONE`.
+
+## Host-Only App Compatibility Review (2026-07-26)
+
+A later host-only review rehashed the primary D: and E: recovery copies, extracted only the original bootloader, partition table, `otadata`, and `ota_0` into `%TEMP%`, and parsed the historical OTA selection with the ESP-IDF v5.5.4 structure, state enum, CRC behavior, and slot formula.
+
+The 2026-07-10 snapshot has one valid OTA entry: sequence 1, state `VALID`, valid CRC, selecting `ota_0`; its second entry is erased. The exact candidate app-only geometry is `0x00020000-0x0004743F`, with end-exclusive `0x00047440` and `0x003C8BC0` bytes remaining in the historical slot. The candidate does not depend on a factory subtype, OTA/NVS APIs, assets, PHY, network, storage, or external peripherals.
+
+The compatibility decision is **B — PLAUSIBLE BUT NOT PROVEN**. The historical metadata is not current state, the local shallow ESP-IDF checkout has no v5.5.3 source, the original bootloader is `v5.5.3-dirty`, current security/anti-rollback state is unreviewed, and the exact preserved bootloader has not loaded the v5.5.4 DOUT candidate. Task 3.4 remains incomplete.
+
+The exact host evidence is recorded in `docs/hardware/pcb-v1-app-only-compatibility-assessment.md`. A separate `DRAFT / HOST-ONLY REVIEW / NOT AUTHORIZED / DO NOT EXECUTE` package is in `docs/hardware/pcb-v1-first-flash-review-package.md`; it contains an input-field manifest but no executable Flash command. First Flash remains `NO-GO`, and device/Flash authorization remain `NONE`.
