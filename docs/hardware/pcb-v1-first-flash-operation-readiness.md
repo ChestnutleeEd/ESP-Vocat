@@ -15,7 +15,8 @@
 - First Flash: **NO-GO**
 - Device access authorization: **NONE**
 - Flash authorization: **NONE**
-- Flash Authorization Readiness: **NOT READY FOR FLASH AUTHORIZATION**
+- Flash Authorization Readiness:
+  **READY FOR EXPLICIT HUMAN FLASH AUTHORIZATION**
 
 This document contains reviewed fields and source findings, not an executable
 device command.
@@ -35,12 +36,14 @@ bytes after the candidate image. This distinction is material and is included
 in the rollback plan.
 
 All host-side artifact, geometry, ancillary-read, header-preservation,
-observation, and rollback inputs are now reviewed. One operational blocker
-remains: esptool v4.12.dev3 hard-codes up to two whole-image attempts after a
-serial exception and defaults to three attempts for a failed data block. The
-current OpenSpec requires no automatic Flash retry and no retry behavior. The
-CLI exposes no switch that disables the outer whole-image retry. A separate
-one-shot execution mechanism therefore still requires design and review.
+observation, rollback, and single-attempt execution inputs are now reviewed.
+Stock esptool v4.12.dev3 still defaults to two whole-operation attempts and
+three attempts for a failed data block, but the repository-owned fail-closed
+harness now locks the exact audited installation and forces whole-operation,
+block, connection, port-open, sync, and reset-reopen counts to one before any
+future serial open. Sixteen pure-host tests passed, including actual one-call
+assertions for synthetic outer, block, and sync failures. The installed
+esptool package remained unchanged.
 
 ## 2. Current Authorization Status
 
@@ -300,9 +303,15 @@ No bootloader image is part of the packet.
 
 Write-stage decision:
 
-- before connection: reviewed default-reset entry to the ROM loader;
+- before connection: explicit `usb_reset` entry for the reviewed integrated
+  USB Serial/JTAG transport;
 - after the write result: `no_reset`, leaving the device in the ROM loader;
 - no monitor is combined with the write.
+
+The explicit USB reset selection avoids esptool's PID-discovery port
+enumeration. The single-attempt harness also replaces both esptool port-list
+entry points with fail-closed denials. A future authorization must state this
+reset policy exactly.
 
 Observation-stage decision:
 
@@ -348,6 +357,48 @@ Timeout policy:
 
 These timeout values must be rechecked if any esptool configuration file
 appears before authorization.
+
+## 18A. Single-Attempt Harness Decision
+
+Selected mechanism: **B — process-local fail-closed override**.
+
+Tracked harness:
+
+`tools/first_flash/esptool_single_attempt.py`
+
+Pure-host tests:
+
+`tests/host/test_esptool_single_attempt.py`
+
+Audit report:
+
+`docs/hardware/pcb-v1-esptool-single-attempt-execution-mechanism.md`
+
+The harness supports only the exact audited Python 3.13.9 / esptool
+v4.12.dev3 installation and canonical package path. It validates the console
+executable hash, complete Python source-tree digest, relevant source-file
+hashes, retry-loop markers, function signatures, default constants, and
+absence of an esptool config override. Unknown versions or structures are
+rejected before device logic.
+
+Effective attempts:
+
+| Controlled path | Stock value | Harness value |
+|---|---:|---:|
+| whole write operation | 2 | 1 |
+| failed data block | 3 | 1 |
+| connection | 7 | 1 |
+| initial port open | 1 | 1 |
+| sync transmission per connection | 5 | 1 |
+| reset reopen/reset sequence | 3 | 1 |
+
+The process-local changes are restored on exit and the installed package is
+rehashed afterward. No site-packages or executable file is modified.
+
+No authorization file exists in this review. Device mode refuses without a
+future external, independent authorization document containing the exact
+device, port, artifact/hash/range/envelope, operation policy, recovery fields,
+observation handoff, verbatim human statement, and acknowledged risks.
 
 ## 19. Observation Plan
 
@@ -443,8 +494,9 @@ byte in `ota_0`, removes the candidate and all mixed/stale tail bytes, and
 requires no inference about the vendor image's logical end.
 
 Level 1 requires a fresh exact-port review, its own write authorization,
-pre-write SHA-256 verification, the same one-shot retry resolution, post-write
-MD5, a controlled reset, and separate original-firmware boot observation.
+pre-write SHA-256 verification, revalidation of the same single-attempt
+harness and installed-tool integrity, post-write MD5, a controlled reset, and
+separate original-firmware boot observation.
 It does not restore any other partition.
 
 ## 24. Full-Recovery Escalation
@@ -486,7 +538,7 @@ of the candidate can close its remaining runtime-compatibility blocker.
 - [x] Stub, compression, header, reset, verification, timeout, and observation
   policies reviewed.
 - [x] Level 1 and Level 2 recovery scopes separated.
-- [ ] A reviewed execution mechanism enforces one whole-image attempt and one
+- [x] A reviewed execution mechanism enforces one whole-image attempt and one
   block attempt without modifying the installed esptool package.
 - [ ] Exact device and `COM7` reconfirmed for the operation.
 - [ ] Exact packet explicitly authorized.
@@ -500,11 +552,12 @@ Any future authorization must state:
 - current exact port, with `COM7` reconfirmed rather than assumed;
 - esptool v4.12.dev3 and ROM/no-stub policy;
 - no-compression policy;
+- repository harness version/source/integrity guards;
 - exact staged candidate path, size, and SHA-256;
 - image start, length, end-exclusive, last byte, and sector envelope;
 - preserved and excluded regions;
 - header mode/frequency/size preservation;
-- before/after reset policy and separate monitor-start reset;
+- explicit USB-reset/no-post-reset policy and separate monitor-start reset;
 - built-in MD5 verification scope;
 - all ancillary security/eFuse/OTP/MAC/Flash-ID/SFDP/register reads and
   volatile effects in Sections 12-13;
@@ -520,13 +573,17 @@ Generic continuation language is not authorization.
 ## 29. Go/No-Go Decision
 
 Flash Authorization Readiness:
-**NOT READY FOR FLASH AUTHORIZATION**.
+**READY FOR EXPLICIT HUMAN FLASH AUTHORIZATION**.
 
-Reason: the stock v4.12.dev3 CLI does not satisfy the Change's no-retry
-requirement. `WRITE_FLASH_ATTEMPTS` is hard-coded to 2, while failed block
-writes default to 3 attempts. The block count is configuration-controlled, but
-the outer whole-image count has no CLI/config option. No future executable
-mechanism has yet been reviewed to enforce exactly one attempt at both levels.
+Reason: the exact-version, exact-source process-local harness forces all
+reviewed operation, block, connection, open, sync, and reset retry paths to
+one, refuses missing authorization and artifact/range/hash mismatches before
+serial logic, denies port enumeration, filters sensitive connection output,
+and passed all 16 pure-host tests. The installed esptool package and executable
+remained unchanged. No unresolved host execution-parameter blocker remains.
+
+This readiness state does not create an authorization packet, select a current
+port, grant device access, or change the First Flash decision.
 
 Independent of readiness:
 
@@ -555,9 +612,12 @@ Repository:
 - `docs/HARDWARE_PROFILE.md`
 - `docs/hardware/pcb-v1-current-boot-chain-readonly-snapshot.md`
 - `docs/hardware/pcb-v1-app-only-compatibility-assessment.md`
+- `docs/hardware/pcb-v1-esptool-single-attempt-execution-mechanism.md`
 - `docs/hardware/pcb-v1-first-flash-review-package.md`
 - `docs/hardware/pcb-v1-recovery-and-first-flash-readiness.md`
 - `tests/build/pcb-v1-first-flash-smoke-test-host-build.md`
+- `tests/host/test_esptool_single_attempt.py`
+- `tools/first_flash/esptool_single_attempt.py`
 - `firmware/main/main.c`
 - `firmware/sdkconfig`
 

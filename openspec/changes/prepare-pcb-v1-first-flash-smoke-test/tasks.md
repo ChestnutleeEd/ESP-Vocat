@@ -69,9 +69,22 @@
   `FUTURE RECONFIRMATION REQUIRED`, the staged candidate and rollback hashes,
   image and erase geometry, partition containment, ancillary esptool reads,
   fixed observation/stop criteria, and two-level recovery. The recorded result
-  is `NO-GO`. Flash Authorization Readiness is also
-  `NOT READY FOR FLASH AUTHORIZATION` because stock esptool v4.12.dev3 retains
-  automatic retry behavior that conflicts with the no-retry boundary.
+  is `NO-GO`. At the initial operation-readiness review, Flash Authorization
+  Readiness was `NOT READY FOR FLASH AUTHORIZATION` because stock esptool
+  v4.12.dev3 retained automatic retry behavior that conflicted with the
+  no-retry boundary.
+
+  The 2026-07-26 host-only single-attempt review resolved that execution
+  blocker with the exact-version, exact-source process-local harness in
+  `tools/first_flash/esptool_single_attempt.py`. Sixteen pure-host tests in
+  `tests/host/test_esptool_single_attempt.py` passed; synthetic outer, block,
+  and sync failures each produced exactly one call, no real serial open or port
+  enumeration occurred, and the installed esptool remained unchanged. The
+  controlling audit is
+  `docs/hardware/pcb-v1-esptool-single-attempt-execution-mechanism.md`.
+  Flash Authorization Readiness is now
+  `READY FOR EXPLICIT HUMAN FLASH AUTHORIZATION`. This does not change the
+  recorded `NO-GO` result or create device/Flash authorization.
 
 ## 9. Explicit user authorization
 
@@ -90,6 +103,12 @@
 
 - [ ] 11.1 **[DEVICE WRITE]** Execute only the exact authorized single-image, single-range Flash operation as a standalone command with no monitor, erase, restore, eFuse, bootloader, partition-table, or retry behavior.
 - [ ] 11.2 **[DEVICE WRITE]** Preserve the complete actual result, then stop further writes whether the command succeeds or fails; success means only that the exact write command reported success.
+
+  The host precondition for retry control is implemented and host-tested:
+  whole-operation, block, connection, open, sync, and reset-reopen attempts
+  are forced to one before any future serial open, with exact version/source
+  guards and an external authorization lock. Task 11.1 remains unchecked
+  because no authorization file exists and no device write occurred.
 
 ## 12. Serial observation
 

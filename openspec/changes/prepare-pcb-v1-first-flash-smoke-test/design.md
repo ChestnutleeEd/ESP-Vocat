@@ -241,9 +241,12 @@ This smoke test does not exercise animation, frame time, display memory, audio t
 - Does the generated explicit-Octal app contain the expected DOUT header and remain compatible with that preserved bootloader?
 - Should a later artifact ever use a 32 MB header when the first write and preserved layout require no address above 16 MB?
 - Which mode/clock/routing evidence would be required before any later PSRAM enablement?
-- Can a separately reviewed execution mechanism enforce one whole-image attempt
-  and one block attempt with esptool v4.12.dev3 without modifying the installed
-  package?
+
+The host-execution question is resolved: the separately reviewed process-local
+harness enforces one whole-operation attempt, one block attempt, and one
+connection/open/sync/reset-reopen attempt without modifying the installed
+package. This resolution does not answer the remaining device-compatibility
+questions above.
 
 The host-only observation duration is fixed at 60 seconds with a 15-second
 startup and USB-re-enumeration deadline; future authorization must explicitly
@@ -308,13 +311,58 @@ Future authorization must explicitly include the normal esptool security-info,
 eFuse/OTP/MAC, chip-feature, USB-mode, Flash-ID/SFDP, volatile-register, MD5,
 and reset side effects.
 
-Source review found a remaining conflict with this design's no-retry boundary:
-stock esptool v4.12.dev3 hard-codes two outer whole-image attempts after serial
-exceptions and defaults to three failed-block attempts. The CLI does not expose
-a switch for the outer count. Until a separate one-shot execution mechanism is
-designed and reviewed, Flash Authorization Readiness is
-**NOT READY FOR FLASH AUTHORIZATION**.
+Source review found that stock esptool v4.12.dev3 hard-codes two outer
+whole-image attempts after serial exceptions and defaults to three
+failed-block attempts. The CLI does not expose a switch for the outer count.
+This host blocker is now resolved by the exact-version, exact-source
+process-local harness described below. Flash Authorization Readiness is
+**READY FOR EXPLICIT HUMAN FLASH AUTHORIZATION**.
 
 Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**. Task 3.4 remains
 incomplete. First Flash remains `NO-GO`; device access and Flash authorization
 remain `NONE`.
+
+## Host-Only Single-Attempt Execution Mechanism (2026-07-26)
+
+The tracked harness is
+`tools/first_flash/esptool_single_attempt.py`; its pure-host tests are
+`tests/host/test_esptool_single_attempt.py`. The controlling audit is
+`docs/hardware/pcb-v1-esptool-single-attempt-execution-mechanism.md`.
+
+No public esptool interface controls every relevant retry. The selected
+solution is therefore a process-local fail-closed override, not an installed
+package modification. Before any future serial open it requires the exact
+Python 3.13.9 / esptool v4.12.dev3 interpreter, executable, canonical package
+path, source-tree digest, relevant source-file hashes, signatures, constants,
+and retry-loop markers. It rejects unknown versions/structures and any
+esptool configuration file.
+
+The harness forces these values to one:
+
+- whole write operation;
+- Flash data block;
+- connection;
+- initial port open;
+- sync transmission per connection;
+- reset reopen/reset sequence.
+
+It uses an exact authorized port and explicit USB reset for the integrated USB
+Serial/JTAG transport, while denying both esptool port-enumeration entry
+points. Normal distinct-block sequencing, acknowledgement consumption,
+additional replies from one sync request, and one post-write ROM MD5 are not
+classified as retries.
+
+Future device mode remains locked behind a separate external authorization
+document. Missing authorization, version/source drift, artifact/hash/range or
+erase-envelope mismatch, staging-manifest mismatch, retry-policy mismatch, or
+failed sensitive-output filtering stops before device logic. The constructed
+device argument list is neither printed nor saved.
+
+Sixteen pure-host tests passed. Synthetic first failures produced exactly one
+outer `flash_begin()` call, one block `check_command()` call, and one `sync()`
+call. Real serial-open and port-enumeration calls were zero. Pre/post source
+and executable hashes matched, so the installed esptool remained unchanged.
+
+This closes only the host automatic-retry blocker. No authorization file,
+device access, Flash, monitor, rollback, runtime acceptance, or Task 3.4
+completion occurred.

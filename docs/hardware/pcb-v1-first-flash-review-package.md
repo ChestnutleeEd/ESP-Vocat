@@ -16,7 +16,8 @@
 - First Flash: **NO-GO**
 - Device access authorization: **NONE**
 - Flash authorization: **NONE**
-- Flash Authorization Readiness: **NOT READY FOR FLASH AUTHORIZATION**
+- Flash Authorization Readiness:
+  **READY FOR EXPLICIT HUMAN FLASH AUTHORIZATION**
 
 This package intentionally contains no executable or copyable Flash command.
 
@@ -31,6 +32,7 @@ Collect the current host-reviewed candidate manifest, preserved-region boundary,
 | Firmware Implementation Gate | `HOST-ONLY IMPLEMENTATION COMPLETED` |
 | Host configure/build | completed previously |
 | App-only host geometry review | completed |
+| Single-attempt host execution mechanism | completed and host-tested |
 | Preserved-bootloader compatibility | `PLAUSIBLE BUT NOT PROVEN` |
 | Human pre-Flash review | incomplete |
 | First Flash | `NO-GO` |
@@ -217,8 +219,8 @@ This historical selection explains why `0x00020000` is the only candidate app-on
 - exact deployed-bootloader acceptance risk reviewed by the user;
 - review of the esptool automatic eFuse/OTP/MAC connection-banner scope
   deviation recorded in the current snapshot report;
-- reviewed one-shot write mechanism with no automatic whole-image or block
-  retry;
+- operation-time revalidation of the reviewed single-attempt harness and its
+  exact esptool installation integrity;
 - operation-time reconfirmation of the fixed observation and rollback fields.
 
 No current-state device read is authorized by this package.
@@ -247,7 +249,7 @@ No current-state device read is authorized by this package.
 - [ ] Current security/anti-rollback state is reviewed.
 - [x] Exact observation window is host-reviewed.
 - [x] Separate Level 1 rollback packet is host-prepared.
-- [ ] One-shot no-retry execution mechanism is reviewed.
+- [x] One-shot no-retry execution mechanism is reviewed and host-tested.
 - [ ] Human pre-Flash review records a final decision.
 - [ ] Exact operation receives explicit user authorization.
 
@@ -304,7 +306,8 @@ Stop before any write on:
 - missing artifact or recovery asset;
 - current OTA/security evidence inconsistent with the package;
 - any command containing erase, bootloader, partition table, OTA metadata, PHY, assets, upper tail, eFuse, voltage, security, monitor, or unrelated image behavior;
-- unresolved one-shot/no-retry enforcement;
+- single-attempt harness version, source, structure, installation-integrity,
+  authorization, artifact, range, or output-filter guard failure;
 - package not explicitly reviewed by the user.
 
 After a future write, stop further device work on:
@@ -366,7 +369,8 @@ Every field below must later be stated and approved explicitly:
 | rollback plan | Level 1 app-only prepared; separately authorized |
 | esptool ancillary reads | reviewed; explicit future authorization required |
 | timeout policy | default 3-second command minimum; one connection/open attempt; scaled erase/MD5 timeouts |
-| retry policy | no retry required; stock CLI enforcement unresolved |
+| retry policy | whole operation, block, connect, open, sync, and reset-reopen all forced to 1 by the reviewed harness |
+| reset policy | explicit USB reset before connection; no reset after write |
 | acknowledged risks | not acknowledged for an operation |
 
 Generic continuation language is not authorization.
@@ -394,13 +398,15 @@ Reasons:
 - operation-specific device and port remain unreviewed, and current
   security/anti-rollback state is unreviewed;
 - vendor `v5.5.3-dirty` compatibility is unproven;
-- stock esptool v4.12.dev3 hard-codes whole-image and block retry behavior that
-  conflicts with the current no-retry OpenSpec boundary;
 - human review is incomplete;
 - Device access authorization is `NONE`;
 - Flash authorization is `NONE`.
 
-This draft may proceed only to human review. It does not permit device access or execution.
+The stock retry blocker is resolved by the exact-version, exact-source
+process-local harness and 16 passing pure-host tests. Flash Authorization
+Readiness is **READY FOR EXPLICIT HUMAN FLASH AUTHORIZATION**, but this draft
+may proceed only to human review. It does not permit device access or
+execution.
 
 ### Current Snapshot Note
 
@@ -427,6 +433,11 @@ Key decisions:
   `0x00020000-0x00047FFF`;
 - ROM loader / no stub;
 - no compression;
+- exact installed esptool v4.12.dev3 source/integrity lock;
+- whole-operation, block, connect, port-open, sync, and reset-reopen attempts
+  forced to one;
+- port enumeration denied;
+- explicit USB reset selected without PID enumeration;
 - Flash mode/frequency/size header fields kept;
 - write stage ends without reset; a separate monitor-start reset begins the
   observation window;
@@ -441,7 +452,11 @@ volatile watchdog handling, SPI attach, Flash RDID/capacity, possible XMC SFDP
 checks, Flash reset commands, volatile Flash parameters, and post-write MD5.
 The base MAC and unnecessary unique values must not be retained in Git.
 
-Flash Authorization Readiness is **NOT READY FOR FLASH AUTHORIZATION** because
-the stock CLI's automatic retry behavior has no reviewed one-shot enforcement.
+Flash Authorization Readiness is
+**READY FOR EXPLICIT HUMAN FLASH AUTHORIZATION** because the reviewed harness
+resolves the host retry and execution-parameter blocker without modifying the
+installed tool. The controlling evidence is
+`docs/hardware/pcb-v1-esptool-single-attempt-execution-mechanism.md`.
 Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**. Task 3.4 remains
-**NOT COMPLETED**. First Flash remains **NO-GO**.
+**NOT COMPLETED**. First Flash remains **NO-GO**; device and Flash
+authorization remain `NONE`.
