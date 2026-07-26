@@ -8,7 +8,7 @@
 - Task 3.4: **NOT COMPLETED**
 - Firmware Implementation Gate: **HOST-ONLY IMPLEMENTATION COMPLETED**
 - First Flash: **NO-GO**
-- Device access authorization: **CONSUMED AND CLOSED / NONE**
+- Device access authorization: **NONE**
 - Flash authorization: **NONE**
 
 ## 1. Executive Summary
@@ -412,3 +412,31 @@ uncertainty for bootloader/table/OTA/app headers is closed at the snapshot time,
 but the vendor `v5.5.3-dirty` changes, actual candidate boot acceptance, current
 security/anti-rollback review, and the scope deviation remain unresolved. Task
 3.4 remains incomplete. First Flash is `NO-GO`; Flash authorization is `NONE`.
+
+## 24. Operation-Package and Sector-Envelope Update
+
+The unchanged candidate was staged outside the immutable recovery directories
+at:
+
+- `D:\ESP-VoCat_First_Flash_Packages\2026-07-26`
+- `E:\ESP-VoCat_First_Flash_Packages\2026-07-26`
+
+Both candidate copies remain 160832 bytes with SHA-256
+`1B72A60DE9C9BB42DE401A58D7772B0525AFBC4DC3D8C85BB550D2D758F99DDC`.
+
+The image range remains `0x00020000-0x0004743F`, but the independently audited
+sector erase envelope is `0x00020000-0x00047FFF`, end-exclusive
+`0x00048000`. The envelope is `0x00028000` / 163840 bytes and affects sectors
+`0x20-0x47`. It remains wholly inside `ota_0`, but it would erase 3008 original
+bytes at `0x00047440-0x00047FFF` beyond the candidate image. Geometry remains
+compatible with the partition boundary; it is not runtime boot proof.
+
+A complete raw `ota_0` rollback artifact was independently extracted from both
+verified D: full backups and cross-volume staged. It is 4128768 bytes with
+SHA-256
+`C8A2FE4AB0F9B7C823F1DCFDFC926682C9DBF1B079056461DC6F18A93A345D0E`.
+
+These results do not promote compatibility. The preserved
+`v5.5.3-dirty` bootloader has still not started the v5.5.4 DOUT candidate.
+Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**, and Task 3.4 remains
+**NOT COMPLETED**.

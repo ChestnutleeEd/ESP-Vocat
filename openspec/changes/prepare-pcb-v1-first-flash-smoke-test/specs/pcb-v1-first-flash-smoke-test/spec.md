@@ -163,11 +163,26 @@ The workflow SHALL stop immediately on identity mismatch, hash mismatch, partiti
 - **THEN** further device writes cease, the actual output is preserved, and rollback is evaluated without claiming success
 
 ### Requirement: Rollback requirement
-If the pass/fail decision requires rollback, the workflow SHALL use only the reviewed same-device full recovery image under a separate exact authorization and SHALL verify original-device recovery before further hardware work.
+If the pass/fail decision requires rollback, the workflow SHALL first use only
+the reviewed complete raw original `ota_0` partition image under a separate
+exact authorization. It SHALL preserve the bootloader, partition table, NVS,
+`otadata`, `phy_init`, `ota_1`, assets, and upper unused region. A complete
+same-device full recovery image MAY be considered only as a higher-risk Level 2
+escalation after Level 1 cannot restore original boot behavior, and it SHALL
+require another independent review and exact authorization. The workflow SHALL
+verify original-device recovery before further hardware work.
 
 #### Scenario: Rollback is required
 - **WHEN** the smoke test fails or the user directs recovery after reviewing the failure
-- **THEN** no restore runs until its exact image, hash, port, range, same-device scope, and risks are explicitly authorized
+- **THEN** no Level 1 restore runs until the exact complete raw `ota_0` image,
+  hash, port, `0x00020000` start, `0x003F0000` length, same-device scope,
+  preserved regions, and risks are explicitly authorized
+
+#### Scenario: App-only rollback cannot restore original boot
+- **WHEN** the separately authorized Level 1 complete-`ota_0` restore cannot
+  restore original boot behavior
+- **THEN** the workflow stops and treats a 32 MiB same-device restore as
+  `NOT AUTHORIZED`, `HIGHER RISK`, and `SEPARATE REVIEW REQUIRED`
 
 ### Requirement: No hardware-completeness claim
 Successful compilation or serial startup MUST NOT be described as verification of Flash electrical mode, Flash voltage, PSRAM correctness, partition safety beyond the reviewed write, GPIO wiring, display, touch, audio, microphone, motor, network, product behavior, or full recovery.

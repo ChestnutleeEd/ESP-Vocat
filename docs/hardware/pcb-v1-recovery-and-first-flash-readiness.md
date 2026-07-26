@@ -264,3 +264,62 @@ Current state remains:
 - First Flash: **NO-GO**
 - Device access authorization: **NONE**
 - Flash authorization: **NONE**
+
+## 18. Isolated Operation Package and Rollback Readiness Update
+
+On 2026-07-26, the initially requested staging locations under
+`D:\ESP-VoCat_Backup` and `E:\ESP-VoCat_Backup` were rejected before writing
+because `PROJECT_CONSTITUTION.md` Section 4.1 prohibits placing build products
+or generated files inside either recovery-backup directory.
+
+The user then explicitly approved isolated package roots:
+
+- `D:\ESP-VoCat_First_Flash_Packages\2026-07-26`
+- `E:\ESP-VoCat_First_Flash_Packages\2026-07-26`
+
+Both resolve outside the repository and outside the immutable backup
+directories. Each contains only:
+
+1. `pcb_v1_first_flash_smoke_test.bin`
+2. `original_xiaozhi_ota_0_full_partition.bin`
+3. `FIRST_FLASH_PACKAGE_MANIFEST.txt`
+
+The candidate copies are each 160832 bytes with SHA-256
+`1B72A60DE9C9BB42DE401A58D7772B0525AFBC4DC3D8C85BB550D2D758F99DDC`.
+
+The full raw `ota_0` rollback image was independently extracted from each of
+the two verified D: full backups at offset `0x00020000` for length
+`0x003F0000`. Both extracted ranges matched. The staged D:/E: rollback files
+are each 4128768 bytes with SHA-256
+`C8A2FE4AB0F9B7C823F1DCFDFC926682C9DBF1B079056461DC6F18A93A345D0E`.
+
+D: and E: establish cross-volume staging redundancy only; separate physical
+disks are not proven. The staging packages are not long-term trusted recovery
+sources and do not replace the immutable full backups.
+
+Level 1 rollback now means restoring only the complete raw `ota_0` partition:
+
+- range:
+  `0x00020000-0x0040FFFF`;
+- end-exclusive:
+  `0x00410000`;
+- length:
+  `0x003F0000` / 4128768 bytes;
+- sector envelope:
+  identical to the partition range.
+
+This restores every captured `ota_0` byte without changing the bootloader,
+partition table, NVS, `otadata`, `phy_init`, `ota_1`, assets, or the upper
+16 MiB. Level 2 full-image recovery is
+**NOT AUTHORIZED / HIGHER RISK / SEPARATE REVIEW REQUIRED** and is considered
+only if Level 1 cannot restore the original boot.
+
+The detailed operation audit is
+`docs/hardware/pcb-v1-first-flash-operation-readiness.md`.
+Flash Authorization Readiness remains
+**NOT READY FOR FLASH AUTHORIZATION** because stock esptool v4.12.dev3 retains
+automatic whole-image and block retry paths that conflict with the current
+OpenSpec no-retry boundary. Compatibility remains
+**B — PLAUSIBLE BUT NOT PROVEN**. Task 3.4 remains **NOT COMPLETED**.
+First Flash remains **NO-GO**; device access and Flash authorization remain
+`NONE`.

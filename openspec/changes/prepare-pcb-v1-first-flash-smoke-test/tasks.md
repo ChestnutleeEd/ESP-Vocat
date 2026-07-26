@@ -59,9 +59,19 @@
 
 ## 8. Pre-flash human review
 
-- [ ] 8.1 **[READ-ONLY]** Present the exact physical device/PCB identity, user-supplied current port, custom image path/hash, offset/range, partition interpretation, recovery paths/hashes, risks, observation window, stop conditions, and rollback strategy for review.
+- [x] 8.1 **[READ-ONLY]** Present the exact physical device/PCB identity, user-supplied current port, custom image path/hash, offset/range, partition interpretation, recovery paths/hashes, risks, observation window, stop conditions, and rollback strategy for review.
 - [x] 8.2 **[READ-ONLY]** Reconfirm that historical COM7 is not assumed and that any change to device, port, image, hash, offset, range, recovery state, or command invalidates the packet.
-- [ ] 8.3 **[READ-ONLY]** Record a `GO` or `NO-GO` human-review result; retain `NO-GO` while any evidence, redundancy, compatibility, or recovery-rehearsal item is incomplete.
+- [x] 8.3 **[READ-ONLY]** Record a `GO` or `NO-GO` human-review result; retain `NO-GO` while any evidence, redundancy, compatibility, or recovery-rehearsal item is incomplete.
+
+  The complete host-only packet is recorded in
+  `docs/hardware/pcb-v1-first-flash-operation-readiness.md` and
+  `docs/hardware/pcb-v1-first-flash-review-package.md`. It includes `COM7` as
+  `FUTURE RECONFIRMATION REQUIRED`, the staged candidate and rollback hashes,
+  image and erase geometry, partition containment, ancillary esptool reads,
+  fixed observation/stop criteria, and two-level recovery. The recorded result
+  is `NO-GO`. Flash Authorization Readiness is also
+  `NOT READY FOR FLASH AUTHORIZATION` because stock esptool v4.12.dev3 retains
+  automatic retry behavior that conflicts with the no-retry boundary.
 
 ## 9. Explicit user authorization
 
@@ -94,9 +104,16 @@
 
 ## 14. Rollback if required
 
-- [ ] 14.1 **[READ-ONLY]** Prepare a separate exact same-device rollback packet containing port, full-image path/size/hash, complete range, privacy impact, risks, and observation plan; do not treat First Flash authorization as rollback authorization.
-- [ ] 14.2 **[DEVICE WRITE]** Only after a new explicit user authorization, restore the exact reviewed 32 MiB image as one separate operation without a preceding erase, automatic retry, or unrelated command.
+- [x] 14.1 **[READ-ONLY]** Prepare a separate exact same-device rollback packet containing the Level 1 complete raw original `ota_0` image path/size/hash/range, future-reconfirmed port, preserved regions, risks, and observation plan; keep Level 2 full-image recovery higher-risk and separately reviewed, and do not treat First Flash authorization as rollback authorization.
+- [ ] 14.2 **[DEVICE WRITE]** Only after a new explicit user authorization, restore the exact reviewed Level 1 complete raw original `ota_0` image as one separate operation without a preceding erase, automatic retry, or unrelated command; do not escalate to the 32 MiB Level 2 image without another independent review and authorization.
 - [ ] 14.3 **[DEVICE READ]** Observe and record original-device boot and required original-function recovery separately; stop the project hardware sequence if recovery cannot be verified.
+
+  Host-only Level 1 evidence is staged at the isolated D:/E: package roots.
+  The complete `ota_0` artifact is 4128768 bytes with SHA-256
+  `C8A2FE4AB0F9B7C823F1DCFDFC926682C9DBF1B079056461DC6F18A93A345D0E`;
+  its proposed range is `0x00020000-0x0040FFFF`. Level 2 remains
+  `NOT AUTHORIZED / HIGHER RISK / SEPARATE REVIEW REQUIRED`. No rollback or
+  observation was executed.
 
 ## 15. Final evidence recording
 

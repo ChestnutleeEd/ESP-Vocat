@@ -184,9 +184,16 @@ OpenSpec Apply may create firmware and prepare a non-executed command. It must s
 
 - On an authorization mismatch, connection mismatch, Flash failure, unexpected boot output, reset loop, panic, watchdog, or silence, stop all further writes.
 - Preserve the actual output and determine whether another write would increase risk.
-- If rollback is required and separately authorized, restore the reviewed full 32 MiB same-device image with no preceding erase.
-- Observe original-device boot and functionality in separate tasks.
-- If full recovery cannot be verified, stop the hardware sequence; do not continue to peripheral testing or formal firmware.
+- If rollback is required, Level 1 is a separately authorized complete raw
+  `ota_0` partition restore at `0x00020000` for `0x003F0000` bytes, with no
+  preceding erase or unrelated partition write.
+- Observe original-device boot and functionality in separate tasks after
+  Level 1.
+- Level 2 full 32 MiB same-device recovery is higher risk, not authorized by
+  Level 1, and requires a new independent review only if Level 1 cannot restore
+  original boot behavior.
+- If recovery cannot be verified, stop the hardware sequence; do not continue
+  to peripheral testing or formal firmware.
 
 ## Risk Analysis
 
@@ -223,7 +230,7 @@ The authorization checkpoint is a hard boundary after all host-only work and hum
 7. Separately connect and check device identity; any mismatch invalidates authorization.
 8. Perform at most one exact authorized Flash write.
 9. Observe serial output separately for ready marker, reset/panic/watchdog absence, and the bounded stability window.
-10. Pass/fail decision and, if required, separately authorized full-image rollback.
+10. Pass/fail decision and, if required, separately authorized Level 1 complete-`ota_0` rollback, with Level 2 full-image recovery only after escalation review.
 11. Evidence recording that distinguishes compiled, host-tested, device-tested, restored, and unverified claims.
 
 This smoke test does not exercise animation, frame time, display memory, audio tasks, or product workloads. It must nevertheless report heap/PSRAM initialization failures and watchdog/reset behavior visible in startup logs; performance validation remains future work.
@@ -234,7 +241,13 @@ This smoke test does not exercise animation, frame time, display memory, audio t
 - Does the generated explicit-Octal app contain the expected DOUT header and remain compatible with that preserved bootloader?
 - Should a later artifact ever use a 32 MB header when the first write and preserved layout require no address above 16 MB?
 - Which mode/clock/routing evidence would be required before any later PSRAM enablement?
-- What exact observation duration will be accepted at pre-Flash review?
+- Can a separately reviewed execution mechanism enforce one whole-image attempt
+  and one block attempt with esptool v4.12.dev3 without modifying the installed
+  package?
+
+The host-only observation duration is fixed at 60 seconds with a 15-second
+startup and USB-re-enumeration deadline; future authorization must explicitly
+accept it.
 
 The E: location question is resolved at the volume-path level. Whether D: and E: are on different physical disks was not investigated and is not claimed.
 
@@ -266,3 +279,42 @@ The 2026-07-10 snapshot has one valid OTA entry: sequence 1, state `VALID`, vali
 The compatibility decision is **B — PLAUSIBLE BUT NOT PROVEN**. The historical metadata is not current state, the local shallow ESP-IDF checkout has no v5.5.3 source, the original bootloader is `v5.5.3-dirty`, current security/anti-rollback state is unreviewed, and the exact preserved bootloader has not loaded the v5.5.4 DOUT candidate. Task 3.4 remains incomplete.
 
 The exact host evidence is recorded in `docs/hardware/pcb-v1-app-only-compatibility-assessment.md`. A separate `DRAFT / HOST-ONLY REVIEW / NOT AUTHORIZED / DO NOT EXECUTE` package is in `docs/hardware/pcb-v1-first-flash-review-package.md`; it contains an input-field manifest but no executable Flash command. First Flash remains `NO-GO`, and device/Flash authorization remain `NONE`.
+
+## Host-Only Operation Readiness Review (2026-07-26)
+
+The candidate and a complete raw original `ota_0` rollback image were staged
+under the user-approved, backup-isolated roots:
+
+- `D:\ESP-VoCat_First_Flash_Packages\2026-07-26`
+- `E:\ESP-VoCat_First_Flash_Packages\2026-07-26`
+
+The candidate copies are 160832 bytes with SHA-256
+`1B72A60DE9C9BB42DE401A58D7772B0525AFBC4DC3D8C85BB550D2D758F99DDC`.
+The rollback image was independently extracted from both verified D: full
+backups at `0x00020000` for `0x003F0000` bytes. Both extractions and both
+staged copies match SHA-256
+`C8A2FE4AB0F9B7C823F1DCFDFC926682C9DBF1B079056461DC6F18A93A345D0E`.
+
+The candidate image range is `0x00020000-0x0004743F`; its 4 KiB sector erase
+envelope is `0x00020000-0x00047FFF`. Both remain inside `ota_0`, but the
+envelope erases 3008 original bytes beyond the image. This is explicitly
+covered by the complete-partition Level 1 rollback.
+
+The reviewed operational policy uses the ESP32-S3 ROM loader without a RAM
+stub, no compression, preserved image-header fields, no post-write reset, a
+separate monitor-start reset, unconditional post-write ROM MD5, a 60-second
+observation window, and a 15-second startup/USB-re-enumeration deadline.
+Future authorization must explicitly include the normal esptool security-info,
+eFuse/OTP/MAC, chip-feature, USB-mode, Flash-ID/SFDP, volatile-register, MD5,
+and reset side effects.
+
+Source review found a remaining conflict with this design's no-retry boundary:
+stock esptool v4.12.dev3 hard-codes two outer whole-image attempts after serial
+exceptions and defaults to three failed-block attempts. The CLI does not expose
+a switch for the outer count. Until a separate one-shot execution mechanism is
+designed and reviewed, Flash Authorization Readiness is
+**NOT READY FOR FLASH AUTHORIZATION**.
+
+Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**. Task 3.4 remains
+incomplete. First Flash remains `NO-GO`; device access and Flash authorization
+remain `NONE`.

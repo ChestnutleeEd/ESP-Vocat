@@ -14,8 +14,9 @@
 - Task 3.4: **NOT COMPLETED**
 - Firmware Implementation Gate: **HOST-ONLY IMPLEMENTATION COMPLETED**
 - First Flash: **NO-GO**
-- Device access authorization: **CONSUMED AND CLOSED / NONE**
+- Device access authorization: **NONE**
 - Flash authorization: **NONE**
+- Flash Authorization Readiness: **NOT READY FOR FLASH AUTHORIZATION**
 
 This package intentionally contains no executable or copyable Flash command.
 
@@ -33,7 +34,7 @@ Collect the current host-reviewed candidate manifest, preserved-region boundary,
 | Preserved-bootloader compatibility | `PLAUSIBLE BUT NOT PROVEN` |
 | Human pre-Flash review | incomplete |
 | First Flash | `NO-GO` |
-| Device access authorization | `CONSUMED AND CLOSED / NONE` |
+| Device access authorization | `NONE` |
 | Flash authorization | `NONE` |
 
 ## 3. Exact Device Identity Required
@@ -49,9 +50,11 @@ Prior device evidence is historical and does not satisfy this operation-specific
 
 ## 4. Exact Port Required
 
-Current port: **NOT PROVIDED / NOT REVIEWED**.
+Candidate port field: `COM7` — **FUTURE RECONFIRMATION REQUIRED**.
 
-The historical COM assignment from earlier read-only work is not assumed, suggested, or authorized for this package. A user-supplied current port must be reviewed later. Any port change invalidates a future reviewed packet.
+`COM7` is not assumed to be permanent and is not authorized by this package.
+It must be reconfirmed immediately before any future operation. Any port change
+invalidates a future reviewed packet.
 
 ## 5. Candidate Artifact Manifest
 
@@ -59,6 +62,7 @@ The historical COM assignment from earlier read-only work is not assumed, sugges
 |---|---|
 | repository-relative path | `firmware/build/pcb_v1_first_flash_smoke_test.bin` |
 | file state | ignored generated artifact |
+| size | `0x00027440` / 160832 bytes |
 | target | ESP32-S3 |
 | image version | 1 |
 | entry point | `0x403752D0` |
@@ -100,6 +104,16 @@ This value is derived from the historical original `ota_0` table entry. It is no
 
 Last candidate byte: `0x0004743F`.
 
+Sector erase geometry:
+
+- sector size: `0x00001000` / 4096 bytes;
+- aligned erase start: `0x00020000` / 131072;
+- aligned erase end-exclusive: `0x00048000` / 294912;
+- aligned erase length: `0x00028000` / 163840 bytes;
+- affected sectors: `0x20-0x47` / 32-71.
+
+The image-byte range, erase envelope, and `ota_0` partition range are distinct.
+
 ## 10. Original ota_0 Capacity
 
 - Start: `0x00020000`
@@ -109,7 +123,7 @@ Last candidate byte: `0x0004743F`.
 
 ## 11. Preserved Regions
 
-A future app-only proposal must preserve:
+A future app-only proposal with the reviewed erase envelope preserves:
 
 - bootloader;
 - partition table;
@@ -119,7 +133,12 @@ A future app-only proposal must preserve:
 - all bytes of `ota_1`;
 - all bytes of `assets`;
 - the upper unused 16 MiB;
-- every gap and unrelated region outside the exact candidate app range.
+- every gap and unrelated region outside the sector envelope
+  `0x00020000-0x00047FFF`.
+
+The image range ends at `0x0004743F`, but sector erasure extends through
+`0x00047FFF`. The 3008 original bytes at
+`0x00047440-0x00047FFF` are not preserved by a future candidate write.
 
 ## 12. Regions Explicitly Excluded
 
@@ -147,7 +166,21 @@ Rehashed during this host-only review:
 | `D:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi\esp-vocat_full_flash_32MB_2026-07-10.bin` | 33554432 |
 | `E:\ESP-VoCat_Backup\2026-07-10_original_xiaozhi\esp-vocat_full_flash_32MB_2026-07-10.bin` | 33554432 |
 
-The same-name `verify` copies remain recorded recovery assets, but this round's minimal rehash covered the two primary cross-volume copies above. D: and E: are distinct volume paths; separate physical disks are not claimed.
+The same-name `verify` copies were also rehashed and matched. D: and E: are
+distinct volume paths; separate physical disks are not claimed.
+
+Host-only staging packages:
+
+- `D:\ESP-VoCat_First_Flash_Packages\2026-07-26`
+- `E:\ESP-VoCat_First_Flash_Packages\2026-07-26`
+
+Each contains only the candidate, the complete raw `ota_0` rollback image, and
+a path-specific manifest. The staged candidate copies retain size 160832 and
+SHA-256
+`1B72A60DE9C9BB42DE401A58D7772B0525AFBC4DC3D8C85BB550D2D758F99DDC`.
+The staged rollback copies are 4128768 bytes with SHA-256
+`C8A2FE4AB0F9B7C823F1DCFDFC926682C9DBF1B079056461DC6F18A93A345D0E`.
+The staging directories are outside the immutable backup directories.
 
 ## 14. Recovery Hashes
 
@@ -184,8 +217,9 @@ This historical selection explains why `0x00020000` is the only candidate app-on
 - exact deployed-bootloader acceptance risk reviewed by the user;
 - review of the esptool automatic eFuse/OTP/MAC connection-banner scope
   deviation recorded in the current snapshot report;
-- exact observation duration;
-- complete rollback packet.
+- reviewed one-shot write mechanism with no automatic whole-image or block
+  retry;
+- operation-time reconfirmation of the fixed observation and rollback fields.
 
 No current-state device read is authorized by this package.
 
@@ -200,14 +234,20 @@ No current-state device read is authorized by this package.
 - [x] Historical backup OTA metadata parsed and clearly time-scoped.
 - [x] Current bootloader/table/OTA/header snapshot collected and compared.
 - [x] Two primary cross-volume recovery files rehashed.
+- [x] D:/E: isolated staging packages created and payload hashes matched.
+- [x] Exact sector erase envelope reviewed.
+- [x] Ancillary connection reads and volatile effects reviewed.
+- [x] Exact 60-second observation window host-reviewed.
+- [x] Level 1 full-`ota_0` rollback artifact staged and reviewed.
 - [ ] Compatibility classification reaches A.
 - [ ] Exact current device is reviewed.
 - [ ] Exact current port is reviewed.
 - [x] Current OTA selection and OTA header-window state are reviewed at the
   2026-07-26 snapshot time.
 - [ ] Current security/anti-rollback state is reviewed.
-- [ ] Exact observation window is approved.
-- [ ] Separate rollback packet is approved.
+- [x] Exact observation window is host-reviewed.
+- [x] Separate Level 1 rollback packet is host-prepared.
+- [ ] One-shot no-retry execution mechanism is reviewed.
 - [ ] Human pre-Flash review records a final decision.
 - [ ] Exact operation receives explicit user authorization.
 
@@ -226,17 +266,35 @@ No current-state device read is authorized by this package.
 
 ## 19. Observation Plan
 
-Observation remains a separate future `DEVICE READ` operation after, and only after, an independently authorized write.
+Observation remains a separate future `DEVICE READ` operation after, and only
+after, an independently authorized write.
 
-Required future fields:
+- Interface: integrated USB Serial/JTAG at 115200.
+- Port: `COM7`, **FUTURE RECONFIRMATION REQUIRED**.
+- Write stage remains in the ROM loader after its result.
+- The separately opened monitor intentionally performs one startup hard reset.
+- Observation lasts 60 seconds from that reset.
+- The complete fixed application sequence and ready marker must appear within
+  15 seconds, once and in order.
+- USB re-enumeration is allowed up to 15 seconds only if the exact reviewed
+  port returns.
+- No input, logging toggle, display, touch, audio, motor, network, or
+  peripheral test is allowed.
 
-- exact console interface and settings;
-- exact observation duration: **UNRESOLVED**;
-- expected identity/version/safety/ready-marker lines;
-- capture of silence, unexpected output, reset, panic, watchdog, and allocation failures;
-- no device-control input;
-- close the observation at the approved time;
-- no display, touch, audio, motor, network, or peripheral test.
+Exact expected application output:
+
+```text
+ESP-VoCat PCB V1.0 Smoke Test Candidate
+Compile-time ESP-IDF version: 5.5.4
+PCB target: ESP-VoCat PCB V1.0
+Host-built candidate
+Device execution not yet authorized
+PSRAM intentionally disabled
+No peripheral initialization
+Ready marker: PCB_V1_SMOKE_TEST_CANDIDATE_READY
+```
+
+The application then emits no periodic output.
 
 ## 20. Stop Conditions
 
@@ -246,30 +304,42 @@ Stop before any write on:
 - missing artifact or recovery asset;
 - current OTA/security evidence inconsistent with the package;
 - any command containing erase, bootloader, partition table, OTA metadata, PHY, assets, upper tail, eFuse, voltage, security, monitor, or unrelated image behavior;
-- compatibility remaining below classification A;
+- unresolved one-shot/no-retry enforcement;
 - package not explicitly reviewed by the user.
 
 After a future write, stop further device work on:
 
 - tool failure;
 - partial or uncertain write;
-- silence past the approved timeout;
+- missing ready marker after 15 seconds;
 - unexpected output;
 - reset loop, panic, watchdog, or allocation failure.
+- USB disappearance longer than 15 seconds or re-enumeration under a different
+  port.
 
 No automatic retry or widened range is allowed.
 
 ## 21. Rollback Preconditions
 
-Rollback is not included in First Flash authorization. A separate future rollback packet must contain:
+Rollback is not included in First Flash authorization.
 
-- same exact device and current port;
-- exact full-image path, 33554432-byte size, and expected SHA-256;
-- full range and privacy impact;
-- no preceding erase;
-- one operation only and no automatic retry;
-- separate observation plan;
-- explicit rollback authorization.
+Level 1 is the default app-only rollback:
+
+- artifact: `original_xiaozhi_ota_0_full_partition.bin`;
+- size: `0x003F0000` / 4128768 bytes;
+- SHA-256:
+  `C8A2FE4AB0F9B7C823F1DCFDFC926682C9DBF1B079056461DC6F18A93A345D0E`;
+- proposed range:
+  `0x00020000-0x0040FFFF`, end-exclusive `0x00410000`;
+- no preceding erase, unrelated partition, or automatic retry;
+- separate authorization and original-firmware boot observation.
+
+The complete raw partition is used because it reconstructs every captured
+`ota_0` byte and removes mixed candidate/vendor tail data without guessing the
+original image's effective length.
+
+Level 2 full-backup recovery is **NOT AUTHORIZED / HIGHER RISK / SEPARATE
+REVIEW REQUIRED** and may be considered only if Level 1 fails.
 
 Original-device recovery has not been executed or verified.
 
@@ -283,7 +353,7 @@ Every field below must later be stated and approved explicitly:
 |---|---|
 | exact physical device | not supplied |
 | exact PCB revision | historical V1.0 evidence only; operation-specific confirmation required |
-| exact current port | not supplied |
+| exact current port | `COM7`; future reconfirmation required |
 | exact artifact path | candidate recorded; not authorized |
 | exact SHA-256 | candidate recorded; not authorized |
 | exact offset | candidate recorded; not authorized |
@@ -291,9 +361,12 @@ Every field below must later be stated and approved explicitly:
 | exact end-exclusive | candidate recorded; not authorized |
 | preserved regions | recorded; human review pending |
 | recovery assets/hashes | recorded; final revalidation pending |
-| observation window | unresolved |
-| stop conditions | draft |
-| rollback plan | separate packet required |
+| observation window | 60 seconds; 15-second startup/re-enumeration deadline |
+| stop conditions | host-reviewed |
+| rollback plan | Level 1 app-only prepared; separately authorized |
+| esptool ancillary reads | reviewed; explicit future authorization required |
+| timeout policy | default 3-second command minimum; one connection/open attempt; scaled erase/MD5 timeouts |
+| retry policy | no retry required; stock CLI enforcement unresolved |
 | acknowledged risks | not acknowledged for an operation |
 
 Generic continuation language is not authorization.
@@ -321,9 +394,10 @@ Reasons:
 - operation-specific device and port remain unreviewed, and current
   security/anti-rollback state is unreviewed;
 - vendor `v5.5.3-dirty` compatibility is unproven;
-- observation duration is unresolved;
+- stock esptool v4.12.dev3 hard-codes whole-image and block retry behavior that
+  conflicts with the current no-retry OpenSpec boundary;
 - human review is incomplete;
-- Device access authorization is `CONSUMED AND CLOSED / NONE`;
+- Device access authorization is `NONE`;
 - Flash authorization is `NONE`.
 
 This draft may proceed only to human review. It does not permit device access or execution.
@@ -336,5 +410,38 @@ explicit Flash ranges matched the historical backup, but esptool's standard
 connection path implicitly read eFuse/OTP-derived chip-description and MAC
 registers. The MAC was not displayed or retained; the deviation still requires
 human review. The snapshot authorization is consumed and closed; device access
-authorization is now `CONSUMED AND CLOSED / NONE`. This does not change the
+authorization is consumed and closed; current device access authorization is
+`NONE`. This does not change the
 package from `NO-GO`.
+
+## 25. Operation Readiness Source Audit
+
+The controlling detailed audit is
+`docs/hardware/pcb-v1-first-flash-operation-readiness.md`.
+
+Key decisions:
+
+- candidate image range:
+  `0x00020000-0x0004743F`;
+- erase envelope:
+  `0x00020000-0x00047FFF`;
+- ROM loader / no stub;
+- no compression;
+- Flash mode/frequency/size header fields kept;
+- write stage ends without reset; a separate monitor-start reset begins the
+  observation window;
+- normal unencrypted write uses the ROM MD5 comparison;
+- all security-info, chip/eFuse/OTP/MAC, USB-mode, Flash-ID/SFDP, volatile
+  register, and reset side effects require explicit future authorization.
+
+The ancillary authorization scope includes ROM security-info flags,
+Flash-encryption count, key-purpose codes, chip ID/API revision, chip
+revision/package, embedded Flash/PSRAM features, base MAC, USB-mode register,
+volatile watchdog handling, SPI attach, Flash RDID/capacity, possible XMC SFDP
+checks, Flash reset commands, volatile Flash parameters, and post-write MD5.
+The base MAC and unnecessary unique values must not be retained in Git.
+
+Flash Authorization Readiness is **NOT READY FOR FLASH AUTHORIZATION** because
+the stock CLI's automatic retry behavior has no reviewed one-shot enforcement.
+Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**. Task 3.4 remains
+**NOT COMPLETED**. First Flash remains **NO-GO**.
