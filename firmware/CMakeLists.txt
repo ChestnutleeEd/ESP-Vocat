@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(hello_world_build_baseline)
+idf_build_set_property(MINIMAL_BUILD ON)
+project(pcb_v1_first_flash_smoke_test)
