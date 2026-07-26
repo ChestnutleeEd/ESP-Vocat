@@ -21,6 +21,14 @@
 
   The 2026-07-26 host-only compatibility assessment parsed the historical backup `otadata`: entry 0 is sequence 1 / `VALID` / CRC-valid and historically selects `ota_0`; entry 1 is erased. The exact candidate range `0x00020000-0x0004743F` fits and has no partition overlap, and the app has no factory/OTA/NVS/assets dependency. Compatibility remains classification B, **PLAUSIBLE BUT NOT PROVEN**, because the snapshot is not current state, vendor `v5.5.3-dirty` changes are unavailable, current security/anti-rollback state is unknown, and the exact preserved bootloader has not loaded the v5.5.4 DOUT candidate. No bootloader, table, OTA-layout, or tail change is proposed. Task 3.4 therefore remains incomplete; First Flash remains `NO-GO`.
 
+  A separately authorized 2026-07-26 current snapshot later found the exact bootloader, table, `otadata`, `ota_0` header window, and erased `ota_1` header window byte-identical to the historical backup. Current sequence 1 remains `VALID`/CRC-valid and selects `ota_0`. This closes the listed live-layout uncertainty at snapshot time, but not the vendor-dirty or actual candidate-boot risk. The esptool connection path also performed implicit eFuse/OTP/MAC banner reads outside the literal boundary; values were redacted and not retained, but the deviation prevents promotion to classification A. Task 3.4 remains incomplete.
+
+  The exact blocker remains that vendor `v5.5.3-dirty` Bootloader modifications
+  are unknown and the preserved Bootloader has not actually started the
+  candidate DOUT app. The current read-only snapshot is not runtime
+  compatibility proof. First Flash still requires an independent human review
+  and explicit operation-specific authorization.
+
 ## 4. Firmware implementation
 
 - [x] 4.1 **[WRITE]** Restate the exact serial-only implementation scope, expected changed files, allowlisted inputs, assumptions, unresolved hardware facts, and acceptance criteria before editing.
@@ -65,6 +73,8 @@
 - [ ] 10.1 **[DEVICE READ]** After exact authorization, connect only to the authorized port as a separate operation and stop without writing if the port cannot be opened exactly as reviewed.
 - [ ] 10.2 **[DEVICE READ]** Confirm the authorized ESP32-S3 / ESP-VoCat PCB V1.0 identity using the smallest reviewed read-only handshake or existing serial identity evidence; collect no unrelated unique identifiers.
 - [ ] 10.3 **[DEVICE READ]** Compare the observed identity and connection state with the authorization packet; any difference invalidates authorization and returns the workflow to pre-Flash review.
+
+  The current boot-chain snapshot authorization was not a First Flash packet, so Tasks 10.1-10.3 remain unchecked. Its five explicit Flash ranges succeeded on user-supplied `COM7`, but esptool automatically read eFuse/OTP-derived description and base-MAC registers for its connection banner. No MAC value was emitted into the repository, no persistent write occurred, and device work stopped after the final hard reset. See `docs/hardware/pcb-v1-current-boot-chain-readonly-snapshot.md`.
 
 ## 11. First Flash
 

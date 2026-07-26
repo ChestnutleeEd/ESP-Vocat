@@ -2,11 +2,13 @@
 
 - Assessment date: 2026-07-26
 - OpenSpec Change: `prepare-pcb-v1-first-flash-smoke-test`
-- Scope: host-only compatibility review
-- Device access: none
+- Scope: host-only compatibility review with a later sanitized current-state snapshot
+- Device access: completed only for the separately authorized read-only snapshot
 - Compatibility classification: **B — PLAUSIBLE BUT NOT PROVEN**
+- Task 3.4: **NOT COMPLETED**
+- Firmware Implementation Gate: **HOST-ONLY IMPLEMENTATION COMPLETED**
 - First Flash: **NO-GO**
-- Device access authorization: **NONE**
+- Device access authorization: **CONSUMED AND CLOSED / NONE**
 - Flash authorization: **NONE**
 
 ## 1. Executive Summary
@@ -17,11 +19,18 @@ One app-only candidate range is geometrically and structurally coherent with the
 
 The historical 2026-07-10 `otadata` snapshot contains one valid entry: `ota_seq=1`, state `VALID`, valid CRC, selecting `ota_0`; its second entry is erased. No `INVALID`, `ABORTED`, or `PENDING_VERIFY` state is present in that snapshot.
 
-Compatibility is nevertheless **PLAUSIBLE BUT NOT PROVEN**. The current device's OTA selection and security state were not read, the locally available ESP-IDF checkout does not contain v5.5.3 source for comparison, the preserved bootloader identifies itself as vendor-modified `v5.5.3-dirty`, and that exact binary has never loaded this v5.5.4 DOUT candidate. Task 3.4 remains incomplete.
+Compatibility is nevertheless **PLAUSIBLE BUT NOT PROVEN**. A later sanitized
+read-only snapshot confirmed that the current bootloader, partition table,
+`otadata`, and OTA header windows match the historical backup and that current
+`otadata` selects `ota_0`. The current security state was not reviewed, the
+locally available ESP-IDF checkout does not contain v5.5.3 source for
+comparison, the preserved bootloader identifies itself as vendor-modified
+`v5.5.3-dirty`, and that exact binary has never loaded this v5.5.4 DOUT
+candidate. Task 3.4 remains incomplete.
 
 ## 2. Scope
 
-This assessment:
+The original host-only assessment:
 
 - revalidates the existing ignored candidate app without configure or build;
 - minimally parses historical OTA metadata from a verified full backup;
@@ -29,13 +38,17 @@ This assessment:
 - calculates a candidate app-only range;
 - records compatibility evidence and residual risks.
 
-It does not select a live device, current port, executable command, or authorized write. It does not inspect current Flash, current `otadata`, eFuses, serial output, or runtime behavior.
+It did not select a live device, current port, executable command, or authorized
+write. A later, separately authorized snapshot inspected only the exact current
+Flash ranges recorded in Section 23. It did not inspect the current security
+eFuses, execute the candidate, observe serial output, or authorize a write.
 
 ## 3. Safety Boundary
 
-- Host-only and offline.
-- No COM enumeration or opening.
-- No device connection, reset, query, monitor, Flash, erase, restore, or eFuse operation.
+- The original compatibility analysis was host-only and offline.
+- The later snapshot used only its five explicitly authorized current-Flash
+  ranges, ended with a hard reset, and then closed device access.
+- No monitor, Flash write, erase, restore, or explicit eFuse command occurred.
 - No `idf.py`, reconfigure, or build operation.
 - No firmware or generated configuration change.
 - Backup files remained immutable.
@@ -266,8 +279,9 @@ The range has no overlap with the partition table, NVS, `otadata`, PHY, `ota_1`,
 
 - `v5.5.3-dirty` vendor modifications are unknown.
 - The exact deployed bootloader has not loaded the candidate.
-- The current OTA entry and selected slot are unknown.
-- The current live contents of `ota_0`/`ota_1` are unknown.
+- The current OTA entry selects `ota_0` at the snapshot time.
+- The current `ota_0` header matches history and the current `ota_1` header
+  window is erased; neither full app was read in the current snapshot.
 - Current Secure Boot, Flash Encryption, and anti-rollback/eFuse state were not re-read.
 - DOUT/OPI behavior is source-supported but not runtime-tested on this exact boot chain.
 - A partial app write could leave the historically selected slot unbootable while the historical second slot was erased.
@@ -285,6 +299,8 @@ Evidence now available:
 
 - exact preserved bootloader and partition metadata;
 - historical standard OTA entry and selected historical slot;
+- current bootloader/table/header windows matching history and current
+  `otadata` sequence 1 / `VALID` / CRC-valid selection of `ota_0`;
 - exact candidate app metadata, segments, size, hash, revision bounds, secure version, and range;
 - source explanation for image loading, app-header Flash settings, OTA slot mapping, and version compatibility;
 - direct dependency-closure review.
@@ -293,8 +309,11 @@ Acceptance not fully met:
 
 - vendor `v5.5.3-dirty` modifications remain unknown;
 - exact preserved-bootloader runtime acceptance is untested;
-- current OTA/security state is unknown;
-- no exact current device/port review exists.
+- current security/anti-rollback state was not reviewed;
+- the completed current read-only snapshot does not prove runtime
+  compatibility, and its device authorization is consumed and closed;
+- First Flash still requires independent human review and explicit
+  operation-specific authorization.
 
 No bootloader, partition-table, OTA-layout, or unused-tail change is proposed. Task 3.4 remains unchecked.
 
@@ -304,12 +323,18 @@ No bootloader, partition-table, OTA-layout, or unused-tail change is proposed. T
 
 Host evidence supports a standard app image at the historical `ota_0` geometry and identifies no explicit format, revision, secure-version, subtype, dependency, or overlap incompatibility.
 
-The evidence is insufficient for classification A because current state and the vendor-modified preserved bootloader remain unverified. It is not classification C because no definite incompatibility was found.
+The evidence is insufficient for classification A because the vendor-modified
+preserved bootloader has not actually started the candidate and the current
+security/anti-rollback state remains unreviewed. The current read-only evidence
+does not constitute runtime compatibility proof. It is not classification C
+because no definite incompatibility was found.
 
 ## 20. Remaining Blockers
 
-- current exact PCB V1.0 identity and user-supplied current port;
-- current OTA selection/state and live target-slot contents;
+- operation-specific PCB V1.0 identity and user-supplied port for any future
+  First Flash review;
+- operation-time revalidation that the reviewed current snapshot has not
+  become stale;
 - current security/anti-rollback evidence sufficient for the exact operation;
 - exact preserved-bootloader runtime acceptance of the candidate;
 - human review of the draft First Flash package;
@@ -358,3 +383,32 @@ Offline tools:
 - esptool.py v4.12.dev3 `image_info --version 2`, with no port;
 - ESP-IDF v5.5.4 `gen_esp32part.py`;
 - a transient in-memory OTA parser implementing the documented struct, state enum, CRC, and selection formula.
+
+## 23. Current Boot-Chain Snapshot Update
+
+On 2026-07-26 the user authorized five exact Flash reads on the ESP-VoCat PCB
+V1.0 at `COM7`: the bootloader window, partition table, `otadata`, and the first
+4 KiB of `ota_0` and `ota_1`. All five explicit ranges exited 0, used
+`--no-stub`, and the final operation completed a hard reset.
+
+The current bootloader, partition table, `otadata`, `ota_0` header window, and
+`ota_1` header window are each byte-identical to the corresponding 2026-07-10
+recovery-image range. Current `otadata` still has sequence 1 / `VALID` /
+CRC-valid sector 0 selecting `ota_0`; sector 1 is erased. The current `ota_0`
+header remains the original ESP32-S3 DIO / 80 MHz / 16 MB, secure-version-0
+Xiaozhi 2.2.6 image. The current `ota_1` header window is all `0xFF`.
+
+The complete sanitized evidence is in
+`docs/hardware/pcb-v1-current-boot-chain-readonly-snapshot.md`.
+
+The esptool connection path also implicitly read eFuse/OTP-derived chip
+description and base-MAC registers for its standard banner. No MAC value was
+displayed or retained, and no additional Flash range or persistent write was
+identified, but this exceeded the literal read-only authorization boundary and
+is recorded as an ancillary scope deviation.
+
+Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**. The live-state
+uncertainty for bootloader/table/OTA/app headers is closed at the snapshot time,
+but the vendor `v5.5.3-dirty` changes, actual candidate boot acceptance, current
+security/anti-rollback review, and the scope deviation remain unresolved. Task
+3.4 remains incomplete. First Flash is `NO-GO`; Flash authorization is `NONE`.

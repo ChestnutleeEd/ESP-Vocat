@@ -11,8 +11,10 @@
 - Package date: 2026-07-26
 - OpenSpec Change: `prepare-pcb-v1-first-flash-smoke-test`
 - Compatibility classification: **B — PLAUSIBLE BUT NOT PROVEN**
+- Task 3.4: **NOT COMPLETED**
+- Firmware Implementation Gate: **HOST-ONLY IMPLEMENTATION COMPLETED**
 - First Flash: **NO-GO**
-- Device access authorization: **NONE**
+- Device access authorization: **CONSUMED AND CLOSED / NONE**
 - Flash authorization: **NONE**
 
 This package intentionally contains no executable or copyable Flash command.
@@ -31,7 +33,7 @@ Collect the current host-reviewed candidate manifest, preserved-region boundary,
 | Preserved-bootloader compatibility | `PLAUSIBLE BUT NOT PROVEN` |
 | Human pre-Flash review | incomplete |
 | First Flash | `NO-GO` |
-| Device access authorization | `NONE` |
+| Device access authorization | `CONSUMED AND CLOSED / NONE` |
 | Flash authorization | `NONE` |
 
 ## 3. Exact Device Identity Required
@@ -168,13 +170,20 @@ This historical selection explains why `0x00020000` is the only candidate app-on
 
 ## 16. Current-State Evidence Still Required
 
-- exact current device/PCB identity;
-- exact user-supplied current port;
-- current OTA selection/state;
-- current contents/status of both app slots;
+- operation-specific device/PCB confirmation for a future First Flash packet;
+- operation-specific user-supplied port for a future First Flash packet;
+- acknowledgment that the 2026-07-26 snapshot found the current bootloader,
+  table, `otadata`, and both OTA header windows byte-identical to the historical
+  image;
+- acknowledgment that current `otadata` selected `ota_0` and the current
+  `ota_1` header window was erased;
 - current security/anti-rollback state sufficient for the exact operation;
+- operation-time confirmation that the 2026-07-26 snapshot has not become
+  stale;
 - reconfirmed recovery-file set immediately before authorization;
 - exact deployed-bootloader acceptance risk reviewed by the user;
+- review of the esptool automatic eFuse/OTP/MAC connection-banner scope
+  deviation recorded in the current snapshot report;
 - exact observation duration;
 - complete rollback packet.
 
@@ -189,11 +198,14 @@ No current-state device read is authorized by this package.
 - [x] Candidate dependencies do not require OTA, NVS, assets, network, or peripherals.
 - [x] Preserved/excluded regions are explicit.
 - [x] Historical backup OTA metadata parsed and clearly time-scoped.
+- [x] Current bootloader/table/OTA/header snapshot collected and compared.
 - [x] Two primary cross-volume recovery files rehashed.
 - [ ] Compatibility classification reaches A.
 - [ ] Exact current device is reviewed.
 - [ ] Exact current port is reviewed.
-- [ ] Current OTA/security state is reviewed.
+- [x] Current OTA selection and OTA header-window state are reviewed at the
+  2026-07-26 snapshot time.
+- [ ] Current security/anti-rollback state is reviewed.
 - [ ] Exact observation window is approved.
 - [ ] Separate rollback packet is approved.
 - [ ] Human pre-Flash review records a final decision.
@@ -201,7 +213,8 @@ No current-state device read is authorized by this package.
 
 ## 18. Flash Operation Risks
 
-- The current selected slot may differ from the historical snapshot.
+- The 2026-07-26 selected slot matched the historical snapshot, but that
+  evidence can become stale before a future write.
 - A partial app write could make the selected slot unbootable.
 - Historical `ota_1` was erased and may not provide a fallback.
 - Vendor `v5.5.3-dirty` bootloader changes are unknown.
@@ -305,11 +318,23 @@ No executable command is present in this package.
 Reasons:
 
 - compatibility remains classification B;
-- current device, port, OTA, and security state are unreviewed;
+- operation-specific device and port remain unreviewed, and current
+  security/anti-rollback state is unreviewed;
 - vendor `v5.5.3-dirty` compatibility is unproven;
 - observation duration is unresolved;
 - human review is incomplete;
-- Device access authorization is `NONE`;
+- Device access authorization is `CONSUMED AND CLOSED / NONE`;
 - Flash authorization is `NONE`.
 
 This draft may proceed only to human review. It does not permit device access or execution.
+
+### Current Snapshot Note
+
+The separately authorized 2026-07-26 read-only snapshot is recorded in
+`docs/hardware/pcb-v1-current-boot-chain-readonly-snapshot.md`. Its five
+explicit Flash ranges matched the historical backup, but esptool's standard
+connection path implicitly read eFuse/OTP-derived chip-description and MAC
+registers. The MAC was not displayed or retained; the deviation still requires
+human review. The snapshot authorization is consumed and closed; device access
+authorization is now `CONSUMED AND CLOSED / NONE`. This does not change the
+package from `NO-GO`.
