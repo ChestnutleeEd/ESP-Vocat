@@ -366,3 +366,19 @@ and executable hashes matched, so the installed esptool remained unchanged.
 This closes only the host automatic-retry blocker. No authorization file,
 device access, Flash, monitor, rollback, runtime acceptance, or Task 3.4
 completion occurred.
+
+## Final Host-Only Human Authorization Review (2026-07-26)
+
+The final pure-host review in
+`docs/hardware/pcb-v1-first-flash-human-authorization-review.md` reverified the
+unchanged repository/D:/E: candidate, D:/E: complete raw `ota_0` rollback and
+full-backup provenance, exact package contents, manifests, geometry,
+containment, single-attempt harness, installed-tool integrity, all 16 host
+tests, ancillary reads, volatile effects, sensitive-output handling,
+observation, stop criteria, and both recovery levels.
+
+The decision is **READY TO REQUEST EXPLICIT USER FLASH AUTHORIZATION**. The
+record is **UNSIGNED / NOT AUTHORIZED / DO NOT EXECUTE** and creates no valid
+authorization material. No new Task is completed. Compatibility remains
+**B — PLAUSIBLE BUT NOT PROVEN**; Task 3.4 remains incomplete; First Flash
+remains `NO-GO`; device access and Flash authorization remain `NONE`.

@@ -460,3 +460,19 @@ installed tool. The controlling evidence is
 Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**. Task 3.4 remains
 **NOT COMPLETED**. First Flash remains **NO-GO**; device and Flash
 authorization remain `NONE`.
+
+## 26. Final Host-Only Human Authorization Review
+
+The final review is recorded in
+`docs/hardware/pcb-v1-first-flash-human-authorization-review.md`.
+It independently reverified all candidate, rollback, manifest, backup,
+geometry, harness, ancillary-read, volatile-effect, observation, stop, and
+recovery inputs. Its decision is
+**READY TO REQUEST EXPLICIT USER FLASH AUTHORIZATION**.
+
+The record is **UNSIGNED / NOT AUTHORIZED / DO NOT EXECUTE** and contains only
+an unfilled human-readable statement template. It creates no executor-readable
+authorization, token, signature, or command. No new Task is completed.
+Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**, Task 3.4 remains
+**NOT COMPLETED**, First Flash remains **NO-GO**, and device/Flash
+authorization remain `NONE`.

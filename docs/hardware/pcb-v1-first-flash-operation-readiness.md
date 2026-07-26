@@ -646,3 +646,18 @@ Local ESP-IDF Monitor:
 - `esp_idf_monitor/base/serial_reader.py`
 - `esp_idf_monitor/base/reset.py`
 - `esp_idf_monitor/base/logger.py`
+
+## 32. Final Host-Only Human Authorization Review
+
+The final pure-host review is recorded in
+`docs/hardware/pcb-v1-first-flash-human-authorization-review.md`.
+It reverified the candidate, rollback provenance, exact package contents,
+manifests, geometry, containment, single-attempt harness, 16 host tests,
+installed-tool integrity, ancillary reads, volatile effects, observation,
+stop criteria, and both recovery levels.
+
+Decision: **READY TO REQUEST EXPLICIT USER FLASH AUTHORIZATION**.
+The record remains **UNSIGNED / NOT AUTHORIZED / DO NOT EXECUTE**. It creates
+no authority. Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**; Task 3.4
+remains **NOT COMPLETED**; First Flash remains **NO-GO**; device access and
+Flash authorization remain `NONE`.

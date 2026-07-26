@@ -140,3 +140,14 @@
 - [x] 15.2 **[READ-ONLY]** Distinguish implemented, compiled, host-tested, device-written, serial-observed, restored, verified, failed, and not tested states; explicitly retain all untested peripherals as `UNVERIFIED`.
 - [x] 15.3 **[READ-ONLY]** Run OpenSpec strict validation, Git diff checks, generated-output ignore checks, and a scope audit confirming no recovery binary, dump, slice, NVS data, sdkconfig output, device identifier, or unrelated file is staged.
 - [x] 15.4 **[WRITE]** Submit only the reviewed source, configuration, documentation, and test-record changes after user-requested Git authorization, without archiving this Change until all applicable tasks and recovery evidence are complete.
+
+  The final 2026-07-26 pure-host review is recorded in
+  `docs/hardware/pcb-v1-first-flash-human-authorization-review.md`. It
+  reverified the unchanged candidate and rollback copies, full-backup
+  provenance, manifests, geometry, single-attempt controls, 16 host tests,
+  installed esptool integrity, ancillary reads, volatile effects,
+  observation/stop criteria, and recovery boundaries. Its decision is
+  `READY TO REQUEST EXPLICIT USER FLASH AUTHORIZATION`; the record remains
+  `UNSIGNED / NOT AUTHORIZED / DO NOT EXECUTE`. This is additional evidence
+  for already completed host-review tasks and completes no new Task, Task 3.4,
+  explicit authorization, or device task.
