@@ -553,3 +553,23 @@ First Flash remains **STOPPED / INCONCLUSIVE**, Compatibility remains
 **B — PLAUSIBLE BUT NOT PROVEN**, Task 3.4 remains **NOT COMPLETED**, and all
 current device/Flash/startup/observation/rollback authorization remains
 `NONE`.
+
+## 29. Startup-Only Authorization Review Update
+
+The final host-only startup review is
+`docs/hardware/pcb-v1-startup-only-authorization-review.md`.
+
+It is marked **FINAL HOST-ONLY STARTUP REVIEW / UNSIGNED / NOT AUTHORIZED /
+DO NOT EXECUTE**. Its decision is
+**READY TO REQUEST STARTUP-ONLY AUTHORIZATION**, not authorization itself.
+
+The package now has a pure-host-tested fail-closed observer design with one
+exact COM handle, one DTR/RTS startup reset, zero serial data writes, zero
+enumeration, zero retry/reopen, sensitive-output filtering, a 15-second ready
+deadline, and a 60-second bounded window. Any USB handle loss stops rather
+than following a port.
+
+No device state changed in this review. First Flash remains
+**STOPPED / INCONCLUSIVE**, Compatibility remains
+**B — PLAUSIBLE BUT NOT PROVEN**, Task 3.4 remains **NOT COMPLETED**, and
+device/Flash/startup/observation/rollback authorization remains `NONE`.

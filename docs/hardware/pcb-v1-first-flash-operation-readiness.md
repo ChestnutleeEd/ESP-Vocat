@@ -762,3 +762,22 @@ Decision:
 - Task 3.4 remains **NOT COMPLETED**;
 - device, Flash, startup/observation, and rollback authorization remain
   `NONE`.
+
+## 35. Final Startup-Only Review
+
+The 2026-07-27 final host-only review is recorded in
+`docs/hardware/pcb-v1-startup-only-authorization-review.md`.
+
+Decision: **READY TO REQUEST STARTUP-ONLY AUTHORIZATION**.
+
+The decision is unsigned and unauthorized. It authorizes no port access,
+reset, startup, observation, readback, Flash, or rollback. It preserves First
+Flash as **STOPPED / INCONCLUSIVE**, Compatibility as
+**B — PLAUSIBLE BUT NOT PROVEN**, Task 3.4 as **NOT COMPLETED**, and all
+current device/Flash/startup/observation/rollback authorization as `NONE`.
+
+The reviewed startup harness uses one exact port-open attempt and one reset
+attempt on one handle, with zero enumeration, alternate-port selection,
+serial data write, retry, or reopen. Stock Monitor is not approved. USB handle
+loss, missing ready marker at 15 seconds, or any reset/panic/watchdog/security
+or persistent-write indication stops without another device action.

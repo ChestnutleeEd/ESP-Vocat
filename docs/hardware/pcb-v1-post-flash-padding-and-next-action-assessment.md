@@ -788,3 +788,31 @@ Flash manufacturer evidence:
   prohibited for this review.
 - No binary, extracted slice, raw dump, or temporary output is added to Git.
 - This report deliberately ends before any device action or authorization.
+
+## 27. Final Startup-Only Authorization Review Update
+
+The recommended next review was completed host-only on 2026-07-27 in
+`docs/hardware/pcb-v1-startup-only-authorization-review.md`.
+
+Its decision is **READY TO REQUEST STARTUP-ONLY AUTHORIZATION**. The document
+is **FINAL HOST-ONLY STARTUP REVIEW / UNSIGNED / NOT AUTHORIZED / DO NOT
+EXECUTE** and creates no device authority.
+
+Stock ESP-IDF Monitor was rejected because it can enumerate, list alternate
+ports, reopen after USB loss, and select reset behavior from enumerated PID
+data. The reviewed replacement in
+`tools/startup_observation/startup_observer.py` uses one exact COM name, one
+read-only handle, one DTR/RTS startup reset, no enumeration, no retry, no
+reopen, no serial data write, no raw-log file, a 15-second ready deadline, and
+a 60-second window. Any handle loss stops immediately.
+
+The startup-chain conclusion is unchanged: no App main-array/partition,
+`otadata`, NVS, PHY, filesystem, or core-dump write is intended. Volatile
+MXIC ODS/STR-OPI initialization, conditional non-volatile BP clearing if an
+unexpected protected state exists, unchanged-field physical-effect
+uncertainty, and vendor `v5.5.3-dirty` residual risk remain fully disclosed.
+
+This update performs no startup, observation, readback, Flash, or rollback.
+First Flash remains **STOPPED / INCONCLUSIVE**, Compatibility remains
+**B — PLAUSIBLE BUT NOT PROVEN**, Task 3.4 remains **NOT COMPLETED**, and all
+device/Flash/startup/observation/rollback authorization remains `NONE`.

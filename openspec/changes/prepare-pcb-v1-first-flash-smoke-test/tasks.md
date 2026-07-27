@@ -205,3 +205,20 @@ reread. The next review recommendation is **STARTUP-ONLY AUTHORIZATION
 REVIEW**, not immediate rollback. This note creates no authorization and completes no
 checkbox. Task 3.4, Tasks 10.1-10.3, 11.1, 12.1-12.3, 14.2, and 14.3 remain
 unchecked. Progress remains 38/48.
+
+## Startup-only host review note (2026-07-27)
+
+The final host-only startup review in
+`docs/hardware/pcb-v1-startup-only-authorization-review.md` concludes
+**READY TO REQUEST STARTUP-ONLY AUTHORIZATION** and remains
+**UNSIGNED / NOT AUTHORIZED / DO NOT EXECUTE**.
+
+The pure-host-tested observer at
+`tools/startup_observation/startup_observer.py` enforces one exact port-open
+attempt, one reset, zero enumeration, zero serial data writes, zero retry or
+reopen, a 15-second ready deadline, and a 60-second bounded window. This note
+creates no authorization and completes no checkbox. Task 3.4, Tasks
+10.1-10.3, 11.1, 12.1-12.3, 14.2, and 14.3 remain unchecked. Progress remains
+38/48; First Flash remains **STOPPED / INCONCLUSIVE**; Compatibility remains
+**B — PLAUSIBLE BUT NOT PROVEN**; device/Flash/startup/observation/rollback
+authorization remains `NONE`.

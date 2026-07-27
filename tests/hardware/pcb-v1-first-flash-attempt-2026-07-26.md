@@ -277,3 +277,21 @@ and no reset or observation followed. This attempt remains
 **STOPPED / INCONCLUSIVE**; Task 3.4 remains **NOT COMPLETED**; all current
 device, Flash, startup/observation, and rollback authorization remains
 `NONE`.
+
+## 9. Final Host-Only Startup Review
+
+The recommendation was reviewed without device access on 2026-07-27. The
+controlling document is
+`docs/hardware/pcb-v1-startup-only-authorization-review.md`.
+
+Decision: **READY TO REQUEST STARTUP-ONLY AUTHORIZATION**.
+
+The review is **UNSIGNED / NOT AUTHORIZED / DO NOT EXECUTE**. No port was
+enumerated or opened, no reset or observation occurred, and no Flash,
+readback, rollback, or restore operation followed. The fail-closed observer
+was tested only with host fakes.
+
+This attempt remains **STOPPED / INCONCLUSIVE**. Compatibility remains
+**B — PLAUSIBLE BUT NOT PROVEN**. Task 3.4 remains **NOT COMPLETED**.
+Device access, startup/observation, Flash, and rollback authorization all
+remain `NONE`.

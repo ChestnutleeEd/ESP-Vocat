@@ -424,3 +424,25 @@ device/Flash/startup/observation/rollback authorization remains `NONE`.
 Immediate Level 1 rollback is not recommended before the bounded candidate
 startup opportunity because it adds a complete 4128768-byte `ota_0` erase and
 write yet still requires later startup observation.
+
+## Final Host-Only Startup Authorization Review (2026-07-27)
+
+The final startup-only review is recorded in
+`docs/hardware/pcb-v1-startup-only-authorization-review.md`. Its decision is
+**READY TO REQUEST STARTUP-ONLY AUTHORIZATION** while remaining
+**UNSIGNED / NOT AUTHORIZED / DO NOT EXECUTE**.
+
+ESP-IDF Monitor is not eligible for this bounded operation because its source
+contains port enumeration, alternate-port reporting, PID-based reset
+selection, and reconnect/reopen behavior. The new fail-closed host tool in
+`tools/startup_observation/startup_observer.py` uses one exact COM handle,
+one DTR/RTS startup reset, zero serial data writes, zero enumeration, zero
+retry/reopen, bounded sensitive-output filtering, a 15-second ready deadline,
+and a 60-second window. USB handle loss stops immediately.
+
+The review does not complete Task 3.4 or any device task. Runtime evidence
+from an actually authorized candidate startup and complete bounded
+observation remains necessary. First Flash remains
+**STOPPED / INCONCLUSIVE**, Compatibility remains
+**B — PLAUSIBLE BUT NOT PROVEN**, and all current device/Flash/startup/
+observation/rollback authorization remains `NONE`.
