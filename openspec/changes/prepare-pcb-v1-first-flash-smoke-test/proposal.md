@@ -60,3 +60,27 @@ None. In particular, `esp-idf-host-build-baseline` remains unchanged.
 - **Tests:** A later Apply must add host-only configure/build evidence, static safety review, artifact-layout review, and—only after exact authorization—serial observation and rollback evidence.
 - **Dependencies:** Reuses the installed ESP-IDF v5.5.4 and OpenSpec 1.6.0; no install or upgrade is allowed.
 - **Hardware operations:** The Change models later device connection and a first Flash as gated tasks, but the current proposal authorizes neither. Erase, eFuse, motor, audio, microphone, power-control, and security operations remain prohibited.
+
+## Observed outcome and closure disposition
+
+The Change's evidence preparation, minimal serial-only firmware
+implementation, host review, and bounded startup validation were partially
+completed. One First Flash attempt was stopped because the ROM no-stub
+transport extended 960 bytes of `0xFF` beyond the authorized candidate
+semantic range, so the write result remains **STOPPED / INCONCLUSIVE —
+RANGE-SCOPE DEVIATION**.
+
+The later independently authorized startup observation and runtime validation
+are **PASS** and **PASS FOR THIS MINIMAL SMOKE TEST**, respectively. Those
+bounded results do not repair the First Flash exact-range nonconformance or
+verify any excluded peripheral.
+
+Device operations for this Change are closed, all current device
+authorizations are `NONE`, and prior one-time authorizations cannot be reused.
+Any First Flash retry and Recovery verification belong to separate successor
+Changes with new review and authorization. The current primary state is
+**DEVICE OPERATIONS CLOSED — DOCUMENTATION CLOSURE PENDING**, and archive
+eligibility remains **NOT ARCHIVE-READY — DOCUMENTATION CLOSURE PENDING**.
+
+See the controlling
+[`PCB V1.0 First-Flash Change Closure Disposition`](../../../docs/hardware/pcb-v1-first-flash-change-closure-disposition.md).

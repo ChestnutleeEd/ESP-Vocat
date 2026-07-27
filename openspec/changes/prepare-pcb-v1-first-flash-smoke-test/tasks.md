@@ -117,14 +117,25 @@
 ## 10. Device connection
 
 - [ ] 10.1 **[DEVICE READ]** After exact authorization, connect only to the authorized port as a separate operation and stop without writing if the port cannot be opened exactly as reviewed.
+
+  Disposition: **HISTORICAL-PROCESS-GAP** — The authorized port was opened only inside the 2026-07-26 WRITE invocation, not as the required separate connection operation. Keep unchecked; do not replay this step in this Change. Any future connection requires a successor Change and new authorization.
+
 - [ ] 10.2 **[DEVICE READ]** Confirm the authorized ESP32-S3 / ESP-VoCat PCB V1.0 identity using the smallest reviewed read-only handshake or existing serial identity evidence; collect no unrelated unique identifiers.
+
+  Disposition: **HISTORICAL-PROCESS-GAP** — Device identity was observed through the WRITE invocation's esptool banner, not through the separately scoped minimum read-only identity step. Keep unchecked; future identity verification requires a successor Change and new authorization.
+
 - [ ] 10.3 **[DEVICE READ]** Compare the observed identity and connection state with the authorization packet; any difference invalidates authorization and returns the workflow to pre-Flash review.
+
+  Disposition: **HISTORICAL-PROCESS-GAP** — The identity/connection match was evaluated within the WRITE invocation rather than closed as an independent pre-write gate. The consumed authorization cannot be reused.
 
   The current boot-chain snapshot authorization was not a First Flash packet, so Tasks 10.1-10.3 remain unchecked. Its five explicit Flash ranges succeeded on user-supplied `COM7`, but esptool automatically read eFuse/OTP-derived description and base-MAC registers for its connection banner. No MAC value was emitted into the repository, no persistent write occurred, and device work stopped after the final hard reset. See `docs/hardware/pcb-v1-current-boot-chain-readonly-snapshot.md`.
 
 ## 11. First Flash
 
 - [ ] 11.1 **[DEVICE WRITE]** Execute only the exact authorized single-image, single-range Flash operation as a standalone command with no monitor, erase, restore, eFuse, bootloader, partition-table, or retry behavior.
+
+  Disposition: **APPLICABLE-INCOMPLETE** — One authorized write invocation occurred, but ROM no-stub transmitted 960 bytes of `0xFF` beyond the authorized candidate byte range. Exact-range conformance was not achieved. No retry is permitted in this Change; any retry requires a successor Change and new authorization.
+
 - [x] 11.2 **[DEVICE WRITE]** Preserve the complete actual result, then stop further writes whether the command succeeds or fails; success means only that the exact write command reported success.
 
   One harness invocation connected to exact `COM7`, confirmed ESP32-S3 QFN56
@@ -176,7 +187,12 @@
 
 - [x] 14.1 **[READ-ONLY]** Prepare a separate exact same-device rollback packet containing the Level 1 complete raw original `ota_0` image path/size/hash/range, future-reconfirmed port, preserved regions, risks, and observation plan; keep Level 2 full-image recovery higher-risk and separately reviewed, and do not treat First Flash authorization as rollback authorization.
 - [ ] 14.2 **[DEVICE WRITE]** Only after a new explicit user authorization, restore the exact reviewed Level 1 complete raw original `ota_0` image as one separate operation without a preceding erase, automatic retry, or unrelated command; do not escalate to the 32 MiB Level 2 image without another independent review and authorization.
+
+  Disposition: **CONDITION-NOT-TRIGGERED** — The later startup/runtime result passed for this minimal smoke test, so failure-driven Level 1 rollback was not triggered. It was not authorized or performed. Any future restore belongs to a separate Recovery verification Change.
+
 - [ ] 14.3 **[DEVICE READ]** Observe and record original-device boot and required original-function recovery separately; stop the project hardware sequence if recovery cannot be verified.
+
+  Disposition: **CONDITION-NOT-TRIGGERED** — No Level 1 rollback occurred, so post-rollback original-device observation was not triggered. Recovery verification remains a separate future Change and cannot reuse any prior authorization.
 
   Host-only Level 1 evidence is staged at the isolated D:/E: package roots.
   The complete `ota_0` artifact is 4128768 bytes with SHA-256
@@ -191,6 +207,8 @@
 - [x] 15.2 **[READ-ONLY]** Distinguish implemented, compiled, host-tested, device-written, serial-observed, restored, verified, failed, and not tested states; explicitly retain all untested peripherals as `UNVERIFIED`.
 - [x] 15.3 **[READ-ONLY]** Run OpenSpec strict validation, Git diff checks, generated-output ignore checks, and a scope audit confirming no recovery binary, dump, slice, NVS data, sdkconfig output, device identifier, or unrelated file is staged.
 - [x] 15.4 **[WRITE]** Submit only the reviewed source, configuration, documentation, and test-record changes after user-requested Git authorization, without archiving this Change until all applicable tasks and recovery evidence are complete.
+
+  Closure interpretation: Task 15.4 records the reviewed submission and the fact that this Change was not prematurely archived. It does not establish archive readiness, complete the remaining unchecked tasks, or change the First Flash result. Any stopped/partial Change archive disposition requires a separate review after documentation closure.
 
   The final 2026-07-26 pure-host review is recorded in
   `docs/hardware/pcb-v1-first-flash-human-authorization-review.md`. It
@@ -256,6 +274,8 @@ reopen, a 15-second ready deadline, and a 60-second bounded window. This note
 
 | Item | State |
 |---|---|
+| Primary status | **DEVICE OPERATIONS CLOSED — DOCUMENTATION CLOSURE PENDING** |
+| Implementation status | **PARTIALLY COMPLETED — TERMINATED WITH EVIDENCE PRESERVED** |
 | Firmware candidate runtime | **PASS — minimal smoke test only** |
 | Runtime validation | **PASS FOR THIS MINIMAL SMOKE TEST** |
 | Preserved Bootloader compatibility | **PROVEN FOR THE TESTED CANDIDATE** |
@@ -263,13 +283,24 @@ reopen, a 15-second ready deadline, and a 60-second bounded window. This note
 | OpenSpec | **42/48** |
 | First Flash attempt | **STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIATION** |
 | Startup observation | **PASS** |
-| Device access authorization | **CONSUMED AND CLOSED / NONE** |
-| Startup/observation authorization | **CONSUMED AND CLOSED / NONE** |
+| Tasks 10.1-10.3 | **HISTORICAL-PROCESS-GAP — unchecked** |
+| Task 11.1 | **APPLICABLE-INCOMPLETE — unchecked** |
+| Tasks 14.2-14.3 | **CONDITION-NOT-TRIGGERED — unchecked** |
+| Rollback | **CONDITION NOT TRIGGERED / NOT AUTHORIZED / NOT PERFORMED** |
+| Device operations | **CLOSED — NO CURRENT AUTHORIZATION** |
+| Device access authorization | **NONE** |
+| Startup/observation authorization | **NONE** |
 | Flash authorization | **NONE** |
 | Readback authorization | **NONE** |
 | Rollback authorization | **NONE** |
 | Restore authorization | **NONE** |
+| Archive eligibility | **NOT ARCHIVE-READY — DOCUMENTATION CLOSURE PENDING** |
 
 The current six pending tasks are 10.1-10.3, 11.1, 14.2, and 14.3. No
 rollback, restore, Level 1 rollback, Level 2 recovery, Change archive, or
 other uncompleted final-closure task is marked complete.
+
+The controlling closure disposition is
+[`pcb-v1-first-flash-change-closure-disposition.md`](../../../docs/hardware/pcb-v1-first-flash-change-closure-disposition.md).
+All current device authorizations are `NONE`; no device retry or recovery may
+occur in this Change, and the Change is not currently eligible for archive.

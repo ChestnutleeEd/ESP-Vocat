@@ -778,6 +778,58 @@ Affected areas:
 - recovery testing;
 - project constitution.
 ---
+## DEC-024: Close device operations for the PCB V1.0 First Flash Change and separate retry from recovery verification
+Date:
+2026-07-27
+Status:
+Accepted
+Context:
+The 2026-07-26 First Flash attempt produced a range-scope deviation: the ROM
+no-stub transport sent 960 bytes of `0xFF` beyond the authorized candidate
+semantic range. A later independently authorized observation passed startup
+and runtime validation for the bounded minimal smoke test, but the First Flash
+write result remains **STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIATION**.
+Every one-time device authorization has been consumed and closed. Continuing
+device work in the current Change would mix the historical attempt, new
+authority, and the separate recovery path.
+Decision:
+- stop all device operations in the current Change and limit it to
+  documentation closure;
+- assign any First Flash retry to an independent successor Change with fresh
+  review and authorization;
+- assign recovery verification to a separate successor Change with its own
+  review, authorization, startup observation, and original-function evidence;
+- perform no immediate rollback and no retry in the current Change;
+- reuse no prior authorization;
+- preserve DEC-023 and the complete original-recovery requirement before
+  formal custom-cat firmware work.
+Alternatives considered:
+- retry the write in the current Change;
+- perform an immediate rollback solely to close unchecked Tasks;
+- combine retry and recovery verification in one successor Change;
+- treat the bounded startup PASS as exact-range write acceptance.
+Consequences:
+- the current black screen does not establish display health or display
+  failure because the minimal smoke-test firmware did not initialize the
+  display;
+- the current Change remains at `42/48` and is **NOT ARCHIVE-READY —
+  DOCUMENTATION CLOSURE PENDING**;
+- every future device operation requires a new review and exact
+  authorization;
+- future retry or recovery evidence must not change the historical First
+  Flash attempt result;
+- the Level 2 32 MiB recovery milestone remains independently gated and is
+  not waived.
+Affected areas:
+- OpenSpec Change `prepare-pcb-v1-first-flash-smoke-test`;
+- First Flash retry planning;
+- recovery verification planning;
+- device-authorization boundaries;
+- DEC-023 recovery sequence.
+
+Controlling disposition:
+[`PCB V1.0 First-Flash Change Closure Disposition`](hardware/pcb-v1-first-flash-change-closure-disposition.md).
+---
 # Pending decisions
 The following topics remain open:
 - Windows companion application technology stack;

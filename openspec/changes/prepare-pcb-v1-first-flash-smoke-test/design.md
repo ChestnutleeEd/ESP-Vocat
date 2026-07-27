@@ -446,3 +446,64 @@ observation remains necessary. First Flash remains
 **STOPPED / INCONCLUSIVE**, Compatibility remains
 **B — PLAUSIBLE BUT NOT PROVEN**, and all current device/Flash/startup/
 observation/rollback authorization remains `NONE`.
+
+## Final observed outcome
+
+The final evidence preserves three distinct ranges:
+
+- candidate semantic range: `0x00020000-0x0004743F`, end-exclusive
+  `0x00047440`, length 160832 bytes;
+- actual ROM no-stub transport range: `0x00020000-0x000477FF`,
+  end-exclusive `0x00047800`, length 161792 bytes;
+- sector erase envelope: `0x00020000-0x00047FFF`, end-exclusive
+  `0x00048000`, length 163840 bytes.
+
+The transport completed its final 1024-byte ROM block by adding 960 bytes of
+`0xFF` over `0x00047440-0x000477FF`. Esptool's reported hash verification
+covers the 160832-byte candidate, while exact-range conformance remains
+unsatisfied because the transport extended beyond the authorized candidate
+semantic range. Both facts must remain recorded: candidate-range hash
+verification does not convert the First Flash result from **STOPPED /
+INCONCLUSIVE — RANGE-SCOPE DEVIATION** into a pass.
+
+The later startup observation is **PASS** only for the preserved boot chain
+loading this candidate, the eight fixed serial lines and ready marker, and
+the listed failure-free behavior during the bounded 60-second window. Runtime
+validation is **PASS FOR THIS MINIMAL SMOKE TEST** only. PSRAM, display,
+screen touch, top capacitive touch, audio, microphone, motor, network,
+storage, other peripherals, long-term behavior, power-cycle behavior,
+rollback, original-device recovery, and Level 2 full recovery remain
+unverified or not tested.
+
+## Device-operation closure
+
+This Change will not contact the device again. Device access, startup or
+observation, Flash, readback, rollback, and restore authorization are all
+`NONE`; every prior one-time authorization was consumed and closed and cannot
+be reused. Completing Tasks 10.1-10.3 now could not retroactively repair the
+historical pre-write process gap and is not permitted in this Change.
+
+## Successor Change boundaries
+
+- A future First Flash retry Change owns fresh device/identity review, an
+  exact candidate/transport/erase-envelope plan, a new authorization, one
+  independently bounded attempt, and separate startup/runtime evidence.
+- A future Recovery verification Change owns the independently reviewed
+  Level 1 complete original `ota_0` restore, original-device startup and
+  function verification, and any separately gated Level 2 32 MiB escalation.
+- This design supplies no device command and creates neither successor
+  Change.
+- Future retry or recovery results must not rewrite the historical First
+  Flash attempt as a pass.
+
+## Archive disposition
+
+The current state remains **NOT ARCHIVE-READY — DOCUMENTATION CLOSURE
+PENDING**. These documentation edits are not archive authorization, and the
+archive treatment of a stopped or partially completed Change still requires
+an independent review after documentation closure. The mandatory recovery
+milestone in DEC-023 and the project constitution remains in force before
+formal custom-cat firmware work.
+
+See the controlling
+[`PCB V1.0 First-Flash Change Closure Disposition`](../../../docs/hardware/pcb-v1-first-flash-change-closure-disposition.md).
