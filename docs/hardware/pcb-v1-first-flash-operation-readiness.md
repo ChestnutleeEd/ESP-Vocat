@@ -716,3 +716,49 @@ The complete sanitized record and source analysis are in
 `tests/hardware/pcb-v1-first-flash-attempt-2026-07-26.md`. Historical
 host-only readiness statements above remain evidence of their review-time
 state; this section supersedes their current operation status.
+
+## 34. Host-Only Post-Attempt Padding and Next-Action Assessment
+
+The pure-host assessment in
+`docs/hardware/pcb-v1-post-flash-padding-and-next-action-assessment.md`
+rehashed the verified historical full backup, audited the installed esptool
+v4.12.dev3 ROM-block path, parsed the candidate boundary, reviewed the
+MX25UM25645G programming/ECC semantics, and inspected candidate startup
+closure and mutation symbols.
+
+The historical 960-byte padding-corresponding range and 2048-byte erase-only
+tail contained 960 and 2048 non-`0xFF` bytes respectively, all inside the
+valid historical Xiaozhi App image. The preceding sector erase, not the later
+`0xFF` data value, is the operation that intended to remove those historical
+bytes. The 960-byte `0xFF` payload requests no additional logical NOR
+main-array `1`-to-`0` data-bit transition over the erased state. Actual tail
+readback, internal ECC/metadata, wear, disturb, and other physical effects
+remain unverified.
+
+The candidate's valid image, checksum, and appended hash end exactly at
+`0x00047440`; the standard non-Secure-Boot simple-hash path does not include
+the padding or erase-only tail. A Secure Boot v2 signature-enforcement path
+can hash the `0xFF` sector-alignment bytes and then expect a signature block;
+the preserved vendor configuration remains unverified.
+The candidate has no OTA/NVS/PHY/network/filesystem/core-dump or raw-Flash
+mutation path. Normal Octal-Flash startup does issue documented Flash
+configuration-register commands for volatile ODS and STR OPI state; the
+physical effect of a combined register write carrying unchanged non-volatile
+protection fields is not proven and must be disclosed in any future review.
+Standard second-stage initialization also conditionally clears non-volatile
+BP bits if protection is unexpectedly set; prior normal boots strongly support
+that this state is already clear, but it was not reread in this review.
+The exact `v5.5.3-dirty` vendor bootloader also remains unavailable for source
+audit.
+
+Decision:
+
+- **RECOMMEND STARTUP-ONLY AUTHORIZATION REVIEW**;
+- no authorization is created by that recommendation;
+- the device remains frozen until a new explicit user decision;
+- immediate Level 1 rollback is not recommended as the next technical action;
+- First Flash remains **STOPPED / INCONCLUSIVE**;
+- Compatibility remains **B — PLAUSIBLE BUT NOT PROVEN**;
+- Task 3.4 remains **NOT COMPLETED**;
+- device, Flash, startup/observation, and rollback authorization remain
+  `NONE`.

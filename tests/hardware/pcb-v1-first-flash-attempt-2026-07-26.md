@@ -238,3 +238,42 @@ Current safety state:
 | Observation authorization | `NONE` |
 | Rollback authorization | `NONE` |
 | Further automatic action | `NO-GO` |
+
+## 8. Later host-only padding and next-action assessment
+
+A later pure-host review, with no device access, is recorded in
+`docs/hardware/pcb-v1-post-flash-padding-and-next-action-assessment.md`.
+
+The verified historical full backup shows:
+
+| Historical range | Length | Non-`0xFF` bytes | SHA-256 |
+|---|---:|---:|---|
+| padding-corresponding `0x00047440-0x000477FF` | 960 | 960 | `4823FFB7303903B42D1653C1B1F76DF54004658877E57ED6CF5285DB0BB43E0F` |
+| erase-only `0x00047800-0x00047FFF` | 2048 | 2048 | `F3F93D0ED3E703DB10A6680DCA1007A57F5A5B2F7ED7422E480029D17B69CCB1` |
+
+Both ranges were inside the valid historical Xiaozhi App image. The recorded
+sector erase therefore intended to remove those old bytes before final-block
+padding. The later `0xFF` payload requests no additional logical NOR
+main-array `1`-to-`0` data-bit change over the erased state, but actual
+readback, internal ECC/metadata, wear, disturb, and other physical effects
+remain unverified.
+
+The candidate's valid checksum and appended-hash boundary ends exactly at
+absolute `0x00047440`; the 960-byte transport padding and 2048-byte erased
+tail are not part of the candidate. The standard non-Secure-Boot simple-hash
+path ignores those bytes; a Secure Boot v2 enforcement path can hash the
+`0xFF` sector alignment and then expect a signature block, with preserved
+vendor configuration still unverified. The candidate startup closure has no
+intentional partition/NVS/OTA/core-dump write path. Normal startup does
+perform volatile MXIC Flash configuration-register initialization, and the
+standard second-stage path conditionally clears non-volatile BP bits if an
+unexpected protected state is present. Prior normal boots strongly support an
+already-clear BP state, but it was not reread, and the exact vendor-dirty
+bootloader remains unavailable for source audit.
+
+The host-only recommendation is
+**RECOMMEND STARTUP-ONLY AUTHORIZATION REVIEW**. It is not an authorization
+and no reset or observation followed. This attempt remains
+**STOPPED / INCONCLUSIVE**; Task 3.4 remains **NOT COMPLETED**; all current
+device, Flash, startup/observation, and rollback authorization remains
+`NONE`.

@@ -179,3 +179,29 @@
   `UNSIGNED / NOT AUTHORIZED / DO NOT EXECUTE`. This is additional evidence
   for already completed host-review tasks and completes no new Task, Task 3.4,
   explicit authorization, or device task.
+
+## Post-attempt host-only assessment note (2026-07-27)
+
+The later assessment in
+`docs/hardware/pcb-v1-post-flash-padding-and-next-action-assessment.md`
+reverified the historical affected bytes and established that both the
+960-byte padding-corresponding range and 2048-byte erase-only tail contained
+valid non-`0xFF` historical Xiaozhi App bytes. The preceding sector erase
+already intended to remove those bytes. esptool sent the final 960 bytes as
+`0xFF`; this requests no additional logical main-array `1`-to-`0` data-bit
+transition, while physical readback, ECC/internal state, wear, disturb, and
+exact ROM handling remain unverified.
+
+The candidate image boundary ends exactly before the padding. The standard
+non-Secure-Boot simple-hash path ignores the tail; a Secure Boot v2
+enforcement path can hash the `0xFF` sector alignment and then expect a
+signature block, with preserved vendor configuration still unverified. Host
+component/symbol review found no intended OTA/NVS/partition/core-dump write
+path. Normal startup includes volatile MXIC Flash configuration-register
+initialization plus a conditional second-stage BP-unlock path, and retains
+residual vendor-dirty bootloader uncertainty. Prior normal boots strongly
+support that the non-volatile BP state is already clear, but it was not
+reread. The next review recommendation is **STARTUP-ONLY AUTHORIZATION
+REVIEW**, not immediate rollback. This note creates no authorization and completes no
+checkbox. Task 3.4, Tasks 10.1-10.3, 11.1, 12.1-12.3, 14.2, and 14.3 remain
+unchecked. Progress remains 38/48.

@@ -514,3 +514,42 @@ Current state:
 No startup reset, observation serial open, monitor, readback, independent
 verify, second write, independent erase, rollback, restore, or eFuse operation
 followed. **DO NOT CONTINUE WITHOUT NEW AUTHORIZATION.**
+
+## 28. Post-Attempt Host-Only Next-Action Review
+
+The controlling follow-up is
+`docs/hardware/pcb-v1-post-flash-padding-and-next-action-assessment.md`.
+It is marked **HOST-ONLY POST-ATTEMPT REVIEW / NO DEVICE ACCESS /
+NOT AUTHORIZED / DO NOT EXECUTE**.
+
+Offline evidence shows that the historical
+`0x00047440-0x000477FF` padding-corresponding range contained 960 non-`0xFF`
+bytes and the historical `0x00047800-0x00047FFF` erase-only tail contained
+2048 non-`0xFF` bytes. Both were valid original Xiaozhi App bytes and were
+already inside the recorded sector erase envelope. esptool sent `0xFF` in the
+first range, but its post-write MD5 covered only the exact 160832-byte
+candidate.
+
+The candidate parser-derived image end is exactly `0x00047440`; padding
+changes neither checksum nor appended hash. The standard non-Secure-Boot
+simple-hash path ignores the tail, while a Secure Boot v2 enforcement path
+can hash the `0xFF` sector alignment and then expect a signature; the vendor
+configuration remains unverified. NOR data-bit semantics support no
+additional logical main-array change from programming `0xFF` over erased
+`0xFF`, while physical readback, ECC/internal state, wear, disturb, and ROM
+all-`0xFF` optimization remain unverified.
+
+The host-side candidate startup audit found no partition, OTA, NVS, PHY,
+network, filesystem, or core-dump write path. It did identify normal volatile
+MXIC ODS/STR-OPI configuration-register initialization and preserves the
+conditional second-stage BP-unlock path plus residual `v5.5.3-dirty`
+bootloader uncertainty. Prior normal boots strongly support an already-clear
+BP state; no status register was reread in this review.
+
+The next-action decision is
+**RECOMMEND STARTUP-ONLY AUTHORIZATION REVIEW**. This is not an authorization.
+It does not permit reset, serial observation, readback, write, or rollback.
+First Flash remains **STOPPED / INCONCLUSIVE**, Compatibility remains
+**B — PLAUSIBLE BUT NOT PROVEN**, Task 3.4 remains **NOT COMPLETED**, and all
+current device/Flash/startup/observation/rollback authorization remains
+`NONE`.

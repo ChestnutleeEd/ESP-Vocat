@@ -382,3 +382,45 @@ record is **UNSIGNED / NOT AUTHORIZED / DO NOT EXECUTE** and creates no valid
 authorization material. No new Task is completed. Compatibility remains
 **B — PLAUSIBLE BUT NOT PROVEN**; Task 3.4 remains incomplete; First Flash
 remains `NO-GO`; device access and Flash authorization remain `NONE`.
+
+## Host-Only Post-Attempt Padding Assessment (2026-07-27)
+
+After the stopped one-invocation attempt, a new host-only assessment audited
+the exact historical bytes, installed esptool ROM-block path, MX25UM25645G
+programming semantics, candidate image boundary, bootloader verification
+boundary, and candidate startup write closure. No device access, reset,
+serial observation, readback, write, or rollback occurred.
+
+The historical `0x00047440-0x000477FF` range contained 960 non-`0xFF`
+bytes and the historical `0x00047800-0x00047FFF` range contained 2048
+non-`0xFF` bytes; both were inside the valid original Xiaozhi App image. The
+sector erase already intended to replace those 3008 historical bytes with the
+erased logical value. The later 960-byte `0xFF` transport padding requests no
+additional main-array `1`-to-`0` data-bit transition, but physical readback,
+ECC/internal metadata, wear, disturb, and exact ROM optimization remain
+unverified.
+
+The candidate's parser-derived image, checksum, and appended hash end exactly
+at absolute `0x00047440`; neither transport padding nor the erase-only tail is
+part of the candidate. The standard non-Secure-Boot simple-hash path ignores
+the later bytes; a Secure Boot v2 enforcement path can hash the `0xFF`
+sector-alignment range and then expect a signature block, and the vendor
+configuration remains unverified. The final component/symbol audit found no intended
+partition, OTA, NVS, PHY, network, filesystem, or core-dump write path.
+Normal Octal-Flash startup does issue volatile MXIC ODS/STR-OPI configuration
+register commands. The combined register-write physical effect on unchanged
+non-volatile protection fields and the exact `v5.5.3-dirty` bootloader remain
+residual uncertainties. Standard second-stage initialization also
+conditionally clears non-volatile BP bits if protection is unexpectedly set;
+prior normal boots strongly support that state is already clear, but it was
+not reread.
+
+The technical next-action decision is
+**RECOMMEND STARTUP-ONLY AUTHORIZATION REVIEW**. This is not authorization.
+The device remains frozen pending a new user decision. First Flash remains
+**STOPPED / INCONCLUSIVE**, Compatibility remains
+**B — PLAUSIBLE BUT NOT PROVEN**, Task 3.4 remains incomplete, and current
+device/Flash/startup/observation/rollback authorization remains `NONE`.
+Immediate Level 1 rollback is not recommended before the bounded candidate
+startup opportunity because it adds a complete 4128768-byte `ota_0` erase and
+write yet still requires later startup observation.
