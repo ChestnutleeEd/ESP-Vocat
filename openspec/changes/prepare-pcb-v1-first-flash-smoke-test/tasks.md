@@ -17,17 +17,29 @@
 - [x] 3.1 **[READ-ONLY]** Locate traceable device-test evidence for physical Flash capacity/interface/voltage and PSRAM mode/size, then reconcile it with the original bootloader/app declarations of DIO, 80 MHz, and 16 MB; stop if reconciliation is incomplete.
 - [x] 3.2 **[WRITE]** Record a PCB V1.0 configuration allowlist containing only reviewed ESP32-S3, serial, Flash, and optional PSRAM inputs, with every peripheral, GPIO, network, storage-mutation, OTA, and security feature defaulted off.
 - [x] 3.3 **[READ-ONLY]** Make and record the PSRAM gate decision; keep PSRAM disabled unless exact mode, size, clock, voltage domain, and ESP-IDF v5.5.4 options are all supported.
-- [ ] 3.4 **[READ-ONLY]** Decide whether one app-only write can be compatible with the preserved original bootloader and partition layout; stop rather than proposing a bootloader, partition-table, OTA-layout, or unused-tail change.
+- [x] 3.4 **[READ-ONLY]** Decide whether one app-only write can be compatible with the preserved original bootloader and partition layout; stop rather than proposing a bootloader, partition-table, OTA-layout, or unused-tail change.
 
-  The 2026-07-26 host-only compatibility assessment parsed the historical backup `otadata`: entry 0 is sequence 1 / `VALID` / CRC-valid and historically selects `ota_0`; entry 1 is erased. The exact candidate range `0x00020000-0x0004743F` fits and has no partition overlap, and the app has no factory/OTA/NVS/assets dependency. Compatibility remains classification B, **PLAUSIBLE BUT NOT PROVEN**, because the snapshot is not current state, vendor `v5.5.3-dirty` changes are unavailable, current security/anti-rollback state is unknown, and the exact preserved bootloader has not loaded the v5.5.4 DOUT candidate. No bootloader, table, OTA-layout, or tail change is proposed. Task 3.4 therefore remains incomplete; First Flash remains `NO-GO`.
+  The 2026-07-26 host-only compatibility assessment parsed the historical backup `otadata`: entry 0 is sequence 1 / `VALID` / CRC-valid and historically selects `ota_0`; entry 1 is erased. The exact candidate range `0x00020000-0x0004743F` fits and has no partition overlap, and the app has no factory/OTA/NVS/assets dependency. Compatibility was classification B, **PLAUSIBLE BUT NOT PROVEN**, at that interim stage because the snapshot was not current state, vendor `v5.5.3-dirty` changes were unavailable, current security/anti-rollback state was unknown, and the exact preserved bootloader had not loaded the v5.5.4 DOUT candidate. No bootloader, table, OTA-layout, or tail change was proposed. First Flash was `NO-GO` at that stage.
 
-  A separately authorized 2026-07-26 current snapshot later found the exact bootloader, table, `otadata`, `ota_0` header window, and erased `ota_1` header window byte-identical to the historical backup. Current sequence 1 remains `VALID`/CRC-valid and selects `ota_0`. This closes the listed live-layout uncertainty at snapshot time, but not the vendor-dirty or actual candidate-boot risk. The esptool connection path also performed implicit eFuse/OTP/MAC banner reads outside the literal boundary; values were redacted and not retained, but the deviation prevents promotion to classification A. Task 3.4 remains incomplete.
+  A separately authorized 2026-07-26 current snapshot later found the exact bootloader, table, `otadata`, `ota_0` header window, and erased `ota_1` header window byte-identical to the historical backup. Current sequence 1 remains `VALID`/CRC-valid and selects `ota_0`. This closed the listed live-layout uncertainty at snapshot time, but not the vendor-dirty or actual candidate-boot risk. The esptool connection path also performed implicit eFuse/OTP/MAC banner reads outside the literal boundary; values were redacted and not retained, but the deviation prevented promotion to classification A at that interim stage.
 
   The exact blocker remains that vendor `v5.5.3-dirty` Bootloader modifications
   are unknown and the preserved Bootloader has not actually started the
   candidate DOUT app. The current read-only snapshot is not runtime
   compatibility proof. First Flash still requires an independent human review
   and explicit operation-specific authorization.
+
+  A separately authorized 2026-07-27 startup reset and bounded observation
+  supplied the missing runtime evidence. The preserved boot chain selected
+  `ota_0`, loaded the exact candidate, reached all eight ordered App lines and
+  the ready marker once well inside 15 seconds, and remained stable on the
+  same handle for 60 seconds without a compatibility, security, reset, panic,
+  watchdog, allocation, Bootloader-fatal, or persistent-write symptom. No
+  bootloader, partition-table, OTA-layout, or unused-tail change was proposed
+  or performed. This completes Task 3.4 for bounded App-only compatibility;
+  it does not reclassify the range-deviating First Flash attempt as PASS.
+  Evidence:
+  `tests/hardware/pcb-v1-startup-observation-2026-07-27.md`.
 
 ## 4. Firmware implementation
 
@@ -129,25 +141,36 @@
 
 ## 12. Serial observation
 
-- [ ] 12.1 **[DEVICE READ]** Open serial observation as a separate operation at the exact reviewed settings and capture only the bounded startup window without issuing device-control commands.
-- [ ] 12.2 **[DEVICE READ]** Check for the expected smoke-test identity, version, target, disabled-feature summary, optional PSRAM result, and ready marker, while recording silence, unexpected output, resets, panics, watchdogs, or memory-allocation failures.
-- [ ] 12.3 **[DEVICE READ]** Continue for the full authorized observation duration and then close the serial connection; do not extend into display, touch, audio, motor, network, or other peripheral tests.
+- [x] 12.1 **[DEVICE READ]** Open serial observation as a separate operation at the exact reviewed settings and capture only the bounded startup window without issuing device-control commands.
+- [x] 12.2 **[DEVICE READ]** Check for the expected smoke-test identity, version, target, disabled-feature summary, optional PSRAM result, and ready marker, while recording silence, unexpected output, resets, panics, watchdogs, or memory-allocation failures.
+- [x] 12.3 **[DEVICE READ]** Continue for the full authorized observation duration and then close the serial connection; do not extend into display, touch, audio, motor, network, or other peripheral tests.
 
-  The separately authorized startup reset and 60-second observation were not
-  performed. The 960-byte final-block padding triggered the user's
-  possible-unauthorized-range stop condition immediately after the write
-  result. The last known state is ROM loader.
+  Under the earlier First Flash authorization, the startup reset and 60-second
+  observation were not performed because the 960-byte final-block padding
+  triggered the user's possible-unauthorized-range stop condition immediately
+  after the write result. The later independent startup-only authorization and
+  observation are recorded below and supersede that interim state.
+
+  Superseding runtime evidence: on 2026-07-27 the user independently
+  authorized exactly one startup reset and one same-handle read-only
+  observation on exact `COM7`. The reviewed observer opened once, reset once,
+  wrote no serial data, performed no enumeration/reopen/retry, observed the
+  eight exact App lines once and in order with one ready marker inside the
+  15-second deadline, and completed the full 60-second window without a
+  listed fatal or stability failure. Evidence:
+  `tests/hardware/pcb-v1-startup-observation-2026-07-27.md`.
 
 ## 13. Pass/fail decision
 
 - [x] 13.1 **[READ-ONLY]** Apply the serial-only acceptance criteria to the actual Flash and observation records and classify the result as pass, fail, or inconclusive without inferring untested hardware behavior.
 - [x] 13.2 **[READ-ONLY]** On any defined stop condition, freeze further device work, preserve evidence, and decide whether rollback should be proposed; do not retry or widen the write automatically.
 
-  Result: **STOPPED / INCONCLUSIVE**. No serial acceptance criterion was
-  evaluated because observation did not start. Device work is frozen. No
-  automatic rollback is proposed from this result; any Level 1 proposal
-  requires a new independent review and explicit authorization. Level 2
-  remains higher-risk and separately gated.
+  Result: **STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIATION** for the First
+  Flash attempt, followed by **PASS FOR THIS MINIMAL SMOKE TEST** for the
+  separately authorized bounded serial startup observation. Device work is
+  frozen. No automatic rollback is proposed from this result; any Level 1
+  proposal requires a new independent review and explicit authorization.
+  Level 2 remains higher-risk and separately gated.
 
 ## 14. Rollback if required
 
@@ -204,7 +227,8 @@ support that the non-volatile BP state is already clear, but it was not
 reread. The next review recommendation is **STARTUP-ONLY AUTHORIZATION
 REVIEW**, not immediate rollback. This note creates no authorization and completes no
 checkbox. Task 3.4, Tasks 10.1-10.3, 11.1, 12.1-12.3, 14.2, and 14.3 remain
-unchecked. Progress remains 38/48.
+  unchecked at the time of this earlier note. The later startup observation
+  completed Task 3.4 and Tasks 12.1-12.3, making the current progress 42/48.
 
 ## Startup-only host review note (2026-07-27)
 
@@ -217,8 +241,35 @@ The pure-host-tested observer at
 `tools/startup_observation/startup_observer.py` enforces one exact port-open
 attempt, one reset, zero enumeration, zero serial data writes, zero retry or
 reopen, a 15-second ready deadline, and a 60-second bounded window. This note
-creates no authorization and completes no checkbox. Task 3.4, Tasks
-10.1-10.3, 11.1, 12.1-12.3, 14.2, and 14.3 remain unchecked. Progress remains
-38/48; First Flash remains **STOPPED / INCONCLUSIVE**; Compatibility remains
-**B — PLAUSIBLE BUT NOT PROVEN**; device/Flash/startup/observation/rollback
-authorization remains `NONE`.
+  creates no authorization and completes no checkbox. At the time of this
+  earlier review, Task 3.4, Tasks 10.1-10.3, 11.1, 12.1-12.3, 14.2, and 14.3
+  were unchecked and the pre-observation progress was lower than the current
+  42/48. The later startup observation completed Task 3.4 and Tasks 12.1-12.3;
+  the current progress is 42/48.
+  First Flash remains **STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIATION**;
+  bounded preserved-Bootloader compatibility is now **PROVEN FOR THE TESTED
+  CANDIDATE**; device/Flash/startup/observation/rollback authorization
+  remains `NONE` except that the consumed startup/observation authorization
+  is recorded as **CONSUMED AND CLOSED / NONE**.
+
+## Final synchronized state — 2026-07-27
+
+| Item | State |
+|---|---|
+| Firmware candidate runtime | **PASS — minimal smoke test only** |
+| Runtime validation | **PASS FOR THIS MINIMAL SMOKE TEST** |
+| Preserved Bootloader compatibility | **PROVEN FOR THE TESTED CANDIDATE** |
+| Task 3.4 | **COMPLETED** |
+| OpenSpec | **42/48** |
+| First Flash attempt | **STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIATION** |
+| Startup observation | **PASS** |
+| Device access authorization | **CONSUMED AND CLOSED / NONE** |
+| Startup/observation authorization | **CONSUMED AND CLOSED / NONE** |
+| Flash authorization | **NONE** |
+| Readback authorization | **NONE** |
+| Rollback authorization | **NONE** |
+| Restore authorization | **NONE** |
+
+The current six pending tasks are 10.1-10.3, 11.1, 14.2, and 14.3. No
+rollback, restore, Level 1 rollback, Level 2 recovery, Change archive, or
+other uncompleted final-closure task is marked complete.

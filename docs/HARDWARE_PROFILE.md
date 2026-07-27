@@ -338,7 +338,8 @@ Exact affected ranges:
 - erased but not covered by transmitted data:
   `0x00047800-0x00047FFF`.
 
-Current evidence state:
+Evidence state at the end of the First Flash attempt, before the later
+startup observation:
 
 - candidate-byte transmission and candidate-range MD5: **CONFIRMED by the
   one esptool result**;
@@ -350,10 +351,10 @@ Current evidence state:
   **not read back in this attempt**;
 - Level 1 and Level 2 recovery: **NOT AUTHORIZED / NOT PERFORMED**.
 
-Current authorization and execution state:
+Authorization and execution state at the end of the First Flash attempt:
 
 - First Flash attempt: **STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIATION**;
-- runtime validation: **NOT PERFORMED**;
+- First Flash runtime validation: **NOT PERFORMED**;
 - device/Flash authorization: **CONSUMED AND CLOSED / NONE**;
 - startup-reset, observation, and rollback authorization: **NONE**;
 - last observed device state: **STAYING IN ROM BOOTLOADER**;
@@ -361,3 +362,96 @@ Current authorization and execution state:
 
 The controlling sanitized record is
 `tests/hardware/pcb-v1-first-flash-attempt-2026-07-26.md`.
+
+## 17. Candidate startup observation
+
+On 2026-07-27 the user separately authorized exactly one startup reset and
+one bounded read-only observation on exact `COM7`. The committed,
+pure-host-tested observer opened the endpoint once, released DTR, performed
+one RTS assert/deassert reset, and used the same read-only handle for the
+complete 60-second window.
+
+Observed result:
+
+- the preserved boot chain selected and loaded the candidate in `ota_0`;
+- all eight fixed candidate lines appeared once and in order;
+- the ready marker appeared once well inside the 15-second deadline;
+- the same handle remained valid for 60 seconds;
+- no repeated startup, panic, watchdog, allocation failure, ROM/Bootloader
+  fatal error, security rejection, or boot loop was observed;
+- no serial data was sent;
+- no port enumeration, reopen, retry, Flash readback, Flash write, erase,
+  eFuse operation, rollback, or restore occurred.
+
+Evidence classification:
+
+- preserved-bootloader loading of the exact candidate and bounded serial
+  startup stability: **CONFIRMED by the 2026-07-27 observation**;
+- ready-marker and fixed-log behavior: **CONFIRMED by the bounded
+  observation**;
+- absence of listed failures: **CONFIRMED only for the 60-second window**;
+- long-term stability, physical tail bytes, recovery, PSRAM, display, touch,
+  audio, microphone, motor, network, storage, and other peripheral behavior:
+  **UNVERIFIED / NOT TESTED**.
+
+The startup observation is **PASS**, but the 2026-07-26 First Flash attempt
+remains **STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIATION**. The startup and
+observation authorization is consumed and closed. No current device, Flash,
+readback, rollback, or recovery authorization exists.
+
+The controlling sanitized record is
+`tests/hardware/pcb-v1-startup-observation-2026-07-27.md`.
+
+## 18. Synchronized startup-observation closeout
+
+### Verified by the 2026-07-27 observation
+
+- ESP32-S3;
+- the preserved original Bootloader loaded the candidate;
+- DOUT / 80 MHz / 16 MB candidate App started;
+- USB Serial/JTAG output was normal;
+- the minimal App ran stably for 60 seconds;
+- PSRAM was intentionally disabled for this Smoke Test;
+- no peripheral hardware was initialized.
+
+### Not yet verified
+
+- PSRAM actual runtime;
+- display;
+- screen touch;
+- audio;
+- microphone;
+- motor;
+- Wi-Fi;
+- Bluetooth;
+- other GPIO and peripheral hardware;
+- long-term stability;
+- behavior after a power cycle;
+- rollback execution;
+- full recovery execution.
+
+The minimal Smoke Test PASS is not a pass for the complete PCB or all
+peripherals.
+
+| Item | State |
+|---|---|
+| Firmware candidate runtime | **PASS — minimal smoke test only** |
+| Runtime validation | **PASS FOR THIS MINIMAL SMOKE TEST** |
+| Preserved Bootloader compatibility | **PROVEN FOR THE TESTED CANDIDATE** |
+| Task 3.4 | **COMPLETED** |
+| OpenSpec | **42/48** |
+| First Flash attempt | **STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIATION** |
+| Startup observation | **PASS** |
+| Device access authorization | **CONSUMED AND CLOSED / NONE** |
+| Startup/observation authorization | **CONSUMED AND CLOSED / NONE** |
+| Flash authorization | **NONE** |
+| Readback authorization | **NONE** |
+| Rollback authorization | **NONE** |
+| Restore authorization | **NONE** |
+
+The observation counts were: COM7 opened once; reset once; serial writes zero;
+automatic enumeration, reopen, and retry zero; the original handle remained
+valid for the entire 60-second window; and no destructive USB re-enumeration
+was observed. The eight expected lines appeared once and in order, and the
+ready marker appeared once no later than approximately 0.201 seconds after
+reset release.
