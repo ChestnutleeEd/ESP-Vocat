@@ -12,10 +12,11 @@ The historical First Flash result remains `STOPPED / INCONCLUSIVE — RANGE-SCOP
 - Establish the exact display GPIO allowlist `{18, 14, 46, 13, 11, 12, 3, 44}`, with `GPIO_NUM_NC` for DC, and default-deny every other GPIO.
 - Establish an explicit PCB V1.2 and unrelated-feature denylist, including GPIO47 reset, GPIO9 LCD power/LCD_EN, GPIO45 DC, 80 MHz, complete BSP reuse, board auto-detection, touch, LVGL, audio, NVS brightness restore, and board-level peripheral initialization.
 - Lock the future component dependency to `espressif/esp_lcd_st77916` version `==1.0.1` and require integrity evidence for the resolved source.
-- Lock the vendor initialization sequence to the 365-entry table in historical Xiaozhi commit `49ac8a6da399f27a9546d4f73640b7f86c24bac6`, with an extraction/hash audit and no silent edits.
+- Lock the vendor initialization sequence to the 184-command table in historical Xiaozhi commit `49ac8a6da399f27a9546d4f73640b7f86c24bac6`, with an extraction/hash audit, a separately recorded 365-token legacy initializer count, and no silent edits.
 - Define a deterministic eleven-state initialization machine with `BACKLIGHT_POLICY_GATE`, one failure marker, no retry/reset loop, stable `FAIL_SAFE`, and GPIO44 held low on every normal and error path.
 - Define one 57,600-byte DMA-capable internal-memory strip buffer, a deterministic RGB test pattern, minimal bitmap text, and no full framebuffer, PSRAM, LVGL, filesystem, image asset, or network.
 - Define later, still-unchecked firmware implementation, host configure/build, static audit, artifact review, and successor handoff tasks.
+- Require two independent clean build directories from the complete current intended source state, byte-identical application images, and a repository-owned verification path that does not trust an existing ignored binary.
 - Record `RESOLVED FOR HOST IMPLEMENTATION — GPIO44 SHALL remain hard-disabled; non-zero backlight output and visual device execution remain NOT AUTHORIZED pending a separately reviewed successor Change.`
 - Prohibit LEDC, PWM frequency/resolution, brightness percentages, non-zero duty, fade, NVS brightness restore, dynamic brightness APIs, and hidden compile-time or runtime enable paths from the current implementation.
 
@@ -65,6 +66,8 @@ This Change is complete only when:
 Future completion of this Change may include firmware implementation, host configure/build, static validation, and artifact review, and may prove only source/configuration conformance, successful host compilation/linking, and artifact readiness. Its READY result must record `visual=UNVERIFIED` and `backlight=DISABLED_NOT_AUTHORIZED`. It must not claim that the screen lit, the backlight operated, the screen is healthy, colors/orientation are correct, refresh/DMA is stable on the device, or recovery succeeded.
 
 Future host validation must verify GPIO44-low-before-QSPI order, GPIO44-low invariance after every injected state failure, the exact `TEST_PATTERN_DRAW` -> `BACKLIGHT_POLICY_GATE` -> `READY` sequence, exact policy/READY markers, and absence of `ledc_*`, brightness/fade/NVS-display behavior, GPIO44-high output, non-zero duty, wrapper/alias bypass, `BACKLIGHT_LOW_ENABLE`, and compile-time/runtime enable gates. Artifact review must record `backlight=hard-disabled`, `visual=UNVERIFIED`, and `not-for-visual-validation`.
+
+Artifact completion additionally requires two independently configured clean build directories using the same complete intended source state and ESP-IDF v5.5.4 inputs. Their application binaries must have identical length and SHA-256. The artifact test must validate source/configuration/evidence consistency without depending on a previously existing ignored build output.
 
 ## Capabilities
 

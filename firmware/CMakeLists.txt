@@ -2,4 +2,4 @@ cmake_minimum_required(VERSION 3.16)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 idf_build_set_property(MINIMAL_BUILD ON)
-project(pcb_v1_first_flash_smoke_test)
+project(pcb_v1_minimal_display_smoke_test)

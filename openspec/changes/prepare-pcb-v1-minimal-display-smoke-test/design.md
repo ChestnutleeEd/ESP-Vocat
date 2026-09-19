@@ -78,7 +78,7 @@ Touch evidence has a retained conflict: the hardware profile/reference evidence 
 | Official ESP-VoCat V1.0 user guide | Git commit `2e9e9dcd066db0d34bbea93a5f7a4c5385ab1e1d` | [user_guide_v1.0.rst](https://github.com/espressif/esp-dev-kits/blob/2e9e9dcd066db0d34bbea93a5f7a4c5385ab1e1d/docs/en/esp-vocat/user_guide_v1.0.rst) | Separates V1.0/V1.2; identifies 1.85-inch 360 × 360 ST77916 QSPI display and GPIO44 backlight | `CONFIRMED` source content; `STRONGLY SUPPORTED` hardware | Does not prove this unit or full signal mapping | Hardware-design corroboration |
 | Official ESP-VoCat V1.0 schematic | PCB V1.0, published 2025-05-23, updated 2025-07-09 | [ESP-VoCat_SCH_V1_0.pdf](https://dl.espressif.com/AE/esp-dev-kits/ESP-VoCat_SCH_V1_0.pdf) | CLK18, CS14, D0/46, D1/13, D2/11, D3/12, reset3, backlight44; `LCD_BLK` drives AO3400A N-MOS Q2 gate, R5 10 kΩ pulls the gate to GND, and Q2 switches LEDK through R4 20Ω; labels GPIO9 `POWER_CTRL` | `CONFIRMED` document content; `STRONGLY SUPPORTED` hardware | Also labels GPIO45 `LCD_DC`; QSPI software sources use no DC; actual transient/population is not device-verified | Mapping and off-bias corroboration; conflict retained, not copied |
 | Official display-module specification | `UE018HV-RB39-A002A V1.0` | [module specification](https://dl.espressif.com/AE/esp-dev-kits/UE018HV-RB39-A002A%20%20V1.0%20SPEC.pdf) | Physical module/resolution; LEDA/LEDK interface; three parallel LEDs at 20 mA each, typical 3 V/60 mA/0.18 W backlight values | `CONFIRMED` document content; `UNVERIFIED` on this unit | Gives no PWM input range, safe percentage, recommended frequency, or audited vendor register table | Module identification; demonstrates non-zero-parameter evidence gap |
-| Historical Xiaozhi V1.0 board source | Commit `49ac8a6da399f27a9546d4f73640b7f86c24bac6`; Git blob `4e14c4a9f6a8cee1d9b724d97d88a6804fc0ef77` | [esp_vocat.cc](https://github.com/78/xiaozhi-esp32/blob/49ac8a6da399f27a9546d4f73640b7f86c24bac6/main/boards/esp-vocat/esp_vocat.cc) | Exact 365-entry `vendor_specific_init_yysj`, QSPI mode, RGB/16 bpp, reset selection, display setup | `CONFIRMED` source content; `STRONGLY SUPPORTED` hardware | Whole file also initializes prohibited peripherals and supports V1.2 | Initialization-table owner only; no whole-file reuse |
+| Historical Xiaozhi V1.0 board source | Commit `49ac8a6da399f27a9546d4f73640b7f86c24bac6`; Git blob `4e14c4a9f6a8cee1d9b724d97d88a6804fc0ef77` | [esp_vocat.cc](https://github.com/78/xiaozhi-esp32/blob/49ac8a6da399f27a9546d4f73640b7f86c24bac6/main/boards/esp-vocat/esp_vocat.cc) | Exact 184-command `vendor_specific_init_yysj` (365 legacy initializer tokens), QSPI mode, RGB/16 bpp, reset selection, display setup | `CONFIRMED` source content; `STRONGLY SUPPORTED` hardware | Whole file also initializes prohibited peripherals and supports V1.2 | Initialization-table owner only; no whole-file reuse |
 | Historical Xiaozhi V1.0 configuration | Commit `49ac8a6da399f27a9546d4f73640b7f86c24bac6`; Git blob `a4ae32fab3d91abb89c2a9af32b8f2e66c3031a1` | [config.h](https://github.com/78/xiaozhi-esp32/blob/49ac8a6da399f27a9546d4f73640b7f86c24bac6/main/boards/esp-vocat/config.h) | 360 × 360, `SPI2_HOST`, GPIO map, 40 MHz, reset3, backlight44, RGB565/RGB, zero offsets, no mirror/swap | `CONFIRMED` source content; `STRONGLY SUPPORTED` hardware | Also contains V1.2 reset47 branch | Exact V1.0 design extraction only |
 | Historical Xiaozhi backlight implementation | Commit `49ac8a6da399f27a9546d4f73640b7f86c24bac6` | [backlight.cc](https://github.com/78/xiaozhi-esp32/blob/49ac8a6da399f27a9546d4f73640b7f86c24bac6/main/boards/common/backlight.cc), [backlight.h](https://github.com/78/xiaozhi-esp32/blob/49ac8a6da399f27a9546d4f73640b7f86c24bac6/main/boards/common/backlight.h) | Historical product path uses active-high LEDC at 25 kHz/10-bit, initializes duty zero, then restores/fades a product brightness value | `CONFIRMED` source content only | Product defaults/restored 75% or fallback 10% are not first-test safety approvals | Frequency conflict and prohibited-product-behavior evidence only |
 | Historical commit metadata | Commit `49ac8a6da399f27a9546d4f73640b7f86c24bac6`, tree `17829eca4428cae0bab2a3e0e2b05af6b1df9762`, 2026-04-17 | [fixed commit](https://github.com/78/xiaozhi-esp32/commit/49ac8a6da399f27a9546d4f73640b7f86c24bac6) | Fixes the source identity used by this design | `CONFIRMED` host-source identity | Upstream project is not device evidence | Source lock |
@@ -89,7 +89,7 @@ Touch evidence has a retained conflict: the hardware profile/reference evidence 
 | Local ESP-IDF | Tag `v5.5.4`, commit `735507283d5b2f9fb363a1901172dbd9e847945d` | `components/esp_lcd/include/esp_lcd_panel_ops.h`, `components/esp_lcd/spi/esp_lcd_panel_io_spi.c`, `components/heap/include/esp_heap_caps.h`, `components/esp_driver_spi/include/driver/spi_common.h` | Half-open draw coordinates; queued color transfer; completion callback; DMA/internal caps; explicit max-transfer semantics | `CONFIRMED` local source facts | Cannot prove runtime DMA/display behavior | API and memory design |
 | Official ST77916 component v1.0.1 | Registry v1.0.1; registry source revision `6a112f4ddfeaf30ec360567ea9260a39e195c385`; driver blob `c286636deb6734469000b64235e3bda25683f350` | [registry v1.0.1](https://components.espressif.com/components/espressif/esp_lcd_st77916/versions/1.0.1/readme?language=en) | QSPI macro uses DC -1, 40 MHz example, 32 command bits, 8 parameter bits, quad mode; supports ESP-IDF `>5.0.4,!=5.1.1` | `CONFIRMED` component metadata/source | v1.0.1 does not propagate `tx_color` errors from `draw_bitmap` | Exact future dependency, with timeout mitigation |
 | Official ST77916 component v2.0.2 | Registry v2.0.2; registry source revision `91aeb7fb41e8a3e76aeb21371f9f83711c74cf3f`; SPI blob `d52eae7ef4f0c7a1f940f6c46cc56bd94d67c263` | [registry v2.0.2](https://components.espressif.com/components/espressif/esp_lcd_st77916/versions/2.0.2/readme?language=en) | Supports ESP-IDF >=5.4; preserves QSPI core and fixes `draw_bitmap` error propagation; 2.x adds MIPI structure | `CONFIRMED` component metadata/source | Larger API/source-lineage deviation from historical firmware | Rejected alternative and risk record |
-| Official ESP-Brookesia board source | Commit `5361118b9953800e4fe710e57e5314fccec9cbcf`; V1.0 setup Git blob `ff5f2fa177cbf7dafbae3a810b8566355f830371` | [V1.0 board snapshot](https://github.com/espressif/esp-brookesia/tree/5361118b9953800e4fe710e57e5314fccec9cbcf/hal/brookesia_hal_boards/boards/espressif/esp_vocat_board_v1_0) | Independently reproduces the 365-entry vendor table; V1.0 backlight precedent is 2 kHz, 10-bit, initial 0% | `CONFIRMED` source content; `STRONGLY SUPPORTED` hardware | Board YAML includes GPIO45 DC, GPIO9 LCD/SD power, wildcard dependencies, and unrelated peripherals | Table corroboration and off-state precedent only |
+| Official ESP-Brookesia board source | Commit `5361118b9953800e4fe710e57e5314fccec9cbcf`; V1.0 setup Git blob `ff5f2fa177cbf7dafbae3a810b8566355f830371` | [V1.0 board snapshot](https://github.com/espressif/esp-brookesia/tree/5361118b9953800e4fe710e57e5314fccec9cbcf/hal/brookesia_hal_boards/boards/espressif/esp_vocat_board_v1_0) | Independently reproduces the 184-command vendor table (365 legacy initializer tokens); V1.0 backlight precedent is 2 kHz, 10-bit, initial 0% | `CONFIRMED` source content; `STRONGLY SUPPORTED` hardware | Board YAML includes GPIO45 DC, GPIO9 LCD/SD power, wildcard dependencies, and unrelated peripherals | Table corroboration and off-state precedent only |
 
 Public sources are technical research inputs, not current-device validation. Fixed commits/versions are used wherever available; mutable pages are not the sole implementation basis.
 
@@ -207,10 +207,12 @@ This decision is resolved. No dependency is installed or resolved in this planni
 
 Four sequence candidates were compared:
 
-1. Historical Xiaozhi V1.0: an explicit 365-entry `vendor_specific_init_yysj` at fixed commit `49ac8a6...`.
+1. Historical Xiaozhi V1.0: an explicit 184-command `vendor_specific_init_yysj` at fixed commit `49ac8a6...`.
 2. Component v1.0.1 default: a generic component-owned sequence, available when no vendor override is provided.
-3. Current official ESP-Brookesia V1.0: a 365-entry `vendor_specific_init_default` at fixed commit `5361118...`.
-4. Current official ESP-Brookesia V1.2: textually the same 365-entry table at that commit.
+3. Current official ESP-Brookesia V1.0: a 184-command `vendor_specific_init_default` at fixed commit `5361118...`.
+4. Current official ESP-Brookesia V1.2: textually the same 184-command table at that commit.
+
+The earlier planning count of 365 was a legacy lexical count of every `{0x` initializer token: 184 outer `st77916_lcd_init_cmd_t` command initializers plus 181 non-empty parameter-array initializers. It was not the number of command elements. The corrected command count is 184; the legacy token count remains an independent audit value of 365. This correction changes no byte, command, delay, source lock, hardware authority, or safety boundary.
 
 After extracting only the initializer body and removing all whitespace, all three board-specific tables have SHA-256:
 
@@ -224,12 +226,12 @@ Table equality across current V1.0 and V1.2 corroborates the panel-module sequen
 
 ## Initialization ownership decision or blocker
 
-Decision: the future implementation must explicitly preserve the historical V1.0 365-entry table from:
+Decision: the future implementation must explicitly preserve the historical V1.0 184-command table from:
 
 - commit: `49ac8a6da399f27a9546d4f73640b7f86c24bac6`;
 - file: `main/boards/esp-vocat/esp_vocat.cc`;
 - symbol: `vendor_specific_init_yysj`;
-- range: the complete array initializer, all 365 entries, through the final 120 ms entry.
+- range: the complete array initializer, all 184 command elements, through the final 120 ms entry.
 
 The implementation must pass the preserved table through the v1.0.1 vendor configuration and must not rely on the component default. It must preserve command order, parameter bytes, per-entry delays, `0x21`, `0x11`, and the final 120 ms delay without silent cleanup, reformatting-based omission, or V1.2 BSP import.
 
@@ -239,7 +241,7 @@ The host audit must:
 2. extract the complete source initializer;
 3. remove all whitespace and verify the expected normalized SHA-256 above;
 4. apply the same normalization to the implementation initializer and require the same hash;
-5. count 365 command entries;
+5. count 184 command elements and separately verify the 365-token legacy initializer count;
 6. separately verify the final `0x21`, `0x11`, and 120 ms sequence;
 7. verify RGB565, RGB order, no mirror/swap, and zero offsets in panel configuration.
 
@@ -283,9 +285,9 @@ The machine is single-shot. Each successful state emits exactly one entry marker
 | `TEST_PATTERN_DRAW` | `LCD_SM_ENTER TEST_PATTERN_DRAW` | Allocate/fill one strip and draw five half-open windows covering rows 0..359; wait for each completion before buffer reuse | Every API call succeeds, every callback arrives within its bound, and all 360 rows are submitted exactly once | `LCD_SM_FAIL state=TEST_PATTERN_DRAW err=<CODE>` | Stop remaining strips; cleanup transfer resources; GPIO44 low | Forced low | No | `BACKLIGHT_POLICY_GATE` |
 | `BACKLIGHT_POLICY_GATE` | `LCD_SM_ENTER BACKLIGHT_POLICY_GATE`; `DISPLAY_BACKLIGHT_POLICY: DISABLED_NOT_AUTHORIZED` | Configure no LEDC/PWM, verify GPIO44 remains low, and record that current policy prohibits all non-zero output | The low invariant holds and the exact policy marker is emitted once | `LCD_SM_FAIL state=BACKLIGHT_POLICY_GATE err=<CODE>` | Best-effort retain/drive GPIO44 low and enter fail-safe | Forced low | No | `READY` |
 | `READY` | `LCD_SM_ENTER READY`; terminal `LCD_SM_READY visual=UNVERIFIED backlight=DISABLED_NOT_AUTHORIZED` | Retain display/IO resources, retain GPIO44 low, prevent reinvocation, and return logical terminal success to `main.c` | READY is recorded once and main enters a stable non-busy loop; no visual claim is made | Not applicable after terminal success | No later hardware actions | Forced low | No | Terminal |
-| `FAIL_SAFE` | No additional entry marker after the single failure marker | Best-effort retain/drive GPIO44 low; release strip, semaphore, panel, IO, and bus in reverse order while retaining GPIO44 low; record terminal failure | Main remains alive and no further display/peripheral action occurs | The originating `LCD_SM_FAIL...` is the only error marker | Stable non-busy loop; no reset, retry, boot loop, or other peripheral init | Forced low | No | Terminal |
+| `FAIL_SAFE` | No additional entry marker after the single failure marker | Best-effort retain/drive GPIO44 low; release strip, panel, panel IO, semaphore, and SPI bus in strict reverse creation order while retaining GPIO44 low; attempt every subsequent release even if an earlier cleanup API returns an error; record terminal failure | Main remains alive and no further display/peripheral action occurs | The originating `LCD_SM_FAIL...` is the only error marker | Stable non-busy loop; no reset, retry, boot loop, or other peripheral init | Forced low | No | Terminal |
 
-Idempotence means that once READY or FAIL_SAFE is recorded, a repeated function call returns the stored terminal result and performs no GPIO, bus, panel, reset, transfer, or backlight operation. Cleanup failures are recorded only as fields in the stored terminal context and do not emit a second failure marker or trigger a retry. On READY, resources remain owned and GPIO44 remains low; on FAIL_SAFE, GPIO44 remains explicitly held low even after other resources are released. A hard-disabled READY is a software terminal result, not a panel failure and not a visual success.
+Idempotence means that once READY or FAIL_SAFE is recorded, a repeated function call returns the stored terminal result and performs no GPIO, bus, panel, reset, transfer, or backlight operation. Resource creation order is SPI bus, semaphore, panel IO, panel, then strip; cleanup order is therefore strip, panel, panel IO, semaphore, then SPI bus. Every created resource receives at most one release attempt, and its local ownership field is cleared after that attempt so cleanup cannot retry or double-release it. Cleanup continues after an individual release error. The controlling return error is deterministic: an existing main-flow error has priority; otherwise the first cleanup error is returned, and later cleanup errors do not replace it. Cleanup failure does not emit a second failure marker or trigger a retry. On READY, resources remain owned and GPIO44 remains low; on FAIL_SAFE, GPIO44 remains explicitly held low before, throughout, and after cleanup. A hard-disabled READY is a software terminal result, not a panel failure and not a visual success.
 
 ## Backlight safety strategy
 
@@ -351,7 +353,7 @@ Each state entry appears at most once and in the state-machine order. After a fa
 
 ## Error handling and fail-safe
 
-Every API return, allocation, callback wait, configuration invariant, table hash/count check, and strip range is checked. One failure records its originating state/error, forces GPIO44 off, prevents later display states, performs best-effort reverse cleanup, and settles into stable FAIL_SAFE.
+Every API return, allocation, callback wait, configuration invariant, table hash/count check, and strip range is checked. One failure records its originating state/error, forces GPIO44 off, prevents later display states, performs best-effort cleanup in strict `strip -> panel -> panel IO -> semaphore -> SPI bus` order, and settles into stable FAIL_SAFE. A failed cleanup API does not stop later release attempts. The first cleanup error is retained when no earlier main-flow error exists; an originating main-flow error remains controlling when both occur.
 
 There is:
 
@@ -365,6 +367,52 @@ There is:
 - no continuation after an unrecognized denylist/configuration hit.
 
 A cleanup error cannot replace the original failure or trigger a second marker. The main task remains alive for later serial diagnosis but performs no device-control operation.
+
+## Host low-level fault-injection design
+
+Host fault injection is attached to the fake implementation of each real
+low-level API call. The state executor is always `execute_state`; the harness
+must not return an error merely because a state name matches a configured
+failure. A host-only call-site marker selects the stable point immediately
+before the real API is invoked, but it neither supplies nor changes the return
+value. The fake API records the call and parameters, applies the configured
+deterministic result, and records whether injection actually fired. A
+configured point that is never observed is a test failure.
+
+The audited implementation has 41 distinguishable call points. Thirty-six
+have an injectable result or behavior; five have no usable error channel and
+are verified for call count, order, handle, and lifetime only.
+
+| Group | Stable fault-point IDs | Fake API behavior |
+|---|---|---|
+| Initial GPIO | `FP_GPIO_PRELOAD_LOW`, `FP_GPIO_CONFIG_OUTPUT`, `FP_GPIO_REASSERT_LOW`, `FP_GPIO_READBACK_LOW` | `gpio_set_level`/`gpio_config` return deterministic errors; readback returns high |
+| Fail-safe GPIO | `FP_GPIO_HOLD_LOW` | `gpio_set_level` fails at the fake while cleanup remains best-effort |
+| SPI and synchronization | `FP_SPI_BUS_INITIALIZE`, `FP_SEMAPHORE_CREATE`, `FP_CALLBACK_SEMAPHORE_GIVE`, `FP_SEMAPHORE_WAIT_1` through `_5` | Bus error, null semaphore, callback notification recording, or callback-complete wait failure |
+| Panel creation/configuration | `FP_PANEL_IO_CREATE`, `FP_PANEL_CREATE`, `FP_PANEL_RESET`, `FP_PANEL_INIT`, `FP_PANEL_MIRROR`, `FP_PANEL_SWAP_XY`, `FP_PANEL_SET_GAP`, `FP_PANEL_DISPLAY_ON` | The corresponding fake ESP-IDF API returns its deterministic error without creating ownership on a failed create |
+| Allocation and draw guards | `FP_HEAP_ALLOCATE`, `FP_GPIO_DRAW_GUARD_1` through `_5` | Null internal-DMA allocation or a high GPIO44 guard read at the selected strip |
+| Draw submissions | `FP_DRAW_SUBMIT_1` through `_5` | The fake accepts the call with `ESP_OK` but suppresses completion for the selected strip, accurately modeling ST77916 v1.0.1's unpropagated `tx_color` failure; the upper layer then times out |
+| Success-only release calls | `FP_STRIP_FREE_SUCCESS`, `FP_SEMAPHORE_DELETE_SUCCESS` | Void/no-error calls are checked for the correct resource and order only |
+| Terminal guards | `FP_GPIO_POLICY_GUARD`, `FP_GPIO_READY_GUARD` | GPIO44 read returns high and blocks the policy/READY transition |
+| Failure cleanup | `FP_STRIP_FREE_CLEANUP`, `FP_PANEL_DELETE`, `FP_PANEL_IO_DELETE`, `FP_SEMAPHORE_DELETE_CLEANUP`, `FP_SPI_BUS_FREE` | Void releases are observed; failable deletes/free return deterministic errors and cleanup continues |
+
+Every one of the 36 injectable points has an explicit matrix case. Each case
+records the API and point ID, expected owning-resource bit set at injection,
+expected error, exact reverse cleanup sequence, READY prohibition, and final
+GPIO44-low state. The native assertions additionally compare the complete
+successful API sequence with the observed call order, compare every
+pre-failure prefix with that sequence, require one fake injection, require one
+failure marker, and reject a later state or READY marker.
+
+The five draw submissions and five semaphore waits are independent cases, so
+partial progress is exercised after zero through four completed strips.
+Callback-suppressed cases retain the strip, semaphore, panel, panel IO, and
+SPI bus while a transfer may remain in flight. Callback-complete/wait-failed
+cases clean those resources in reverse order because the callback has already
+ended the transfer. Separate lifecycle cases deliver a late and duplicate
+callback while resources are retained, and deliver a stale duplicate after
+cleanup; the persistent context and null-handle guard make both paths safe.
+No fake invents an error return for `free`, `vSemaphoreDelete`, or the ignored
+callback-notification return.
 
 ## Host-only build strategy
 
@@ -411,6 +459,12 @@ Pass conditions:
 Any unexplained match fails host validation. Documentation/spec text is excluded from firmware-symbol pass/fail only through an explicit path-scoped audit; it is never silently ignored.
 
 ## Future artifact audit
+
+### Reproducible artifact contract
+
+The application image must be reproduced from the complete current intended working-tree source, including required untracked implementation files, in at least two new build directories with independent generated sdkconfig, CMake cache, object, ELF, map, and BIN outputs. Neither build may consume a prior build directory or copied output artifact. The exact source-input digest, ESP-IDF/toolchain identity, target, sdkconfig basis, command, output size, and SHA-256 must be recorded for both builds.
+
+ESP-IDF v5.5.4 `CONFIG_APP_REPRODUCIBLE_BUILD` is the controlling mechanism for removing application compile time/date and source/build path variance. `CONFIG_APP_COMPILE_TIME_DATE` must consequently be absent from the resolved configuration. If independent BIN hashes differ, the manifest must not be updated until the binary difference is explained and corrected, or a separately justified meaningful invariant replaces raw-byte identity. A checked-in test may validate the recorded source/configuration/build evidence, but must not require a stale ignored BIN to happen to exist.
 
 Before any successor Change is proposed as executable, the host evidence package must record:
 

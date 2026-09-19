@@ -133,11 +133,11 @@ The future manifest SHALL declare `espressif/esp_lcd_st77916: "==1.0.1"` and SHA
 - **THEN** build acceptance SHALL fail
 
 ### Requirement: Locked initialization-sequence source
-The implementation SHALL preserve all 365 entries of `vendor_specific_init_yysj` from commit `49ac8a6da399f27a9546d4f73640b7f86c24bac6`, file `main/boards/esp-vocat/esp_vocat.cc`.
+The implementation SHALL preserve all 184 command elements of `vendor_specific_init_yysj` from commit `49ac8a6da399f27a9546d4f73640b7f86c24bac6`, file `main/boards/esp-vocat/esp_vocat.cc`. The formerly recorded value 365 SHALL be treated only as the legacy lexical count of all `{0x` initializer tokens (184 command initializers plus 181 non-empty parameter-array initializers), not as a command-element count.
 
 #### Scenario: Table identity matches
 - **WHEN** source and implementation initializer bodies are whitespace-normalized and hashed
-- **THEN** both SHALL have SHA-256 `e8a1f2ea307b51be59d3daa201bb444b5f5ddc2d8da2931fda6e91579c4522be`, 365 entries, and the final 0x21/0x11/120 ms sequence
+- **THEN** both SHALL have SHA-256 `e8a1f2ea307b51be59d3daa201bb444b5f5ddc2d8da2931fda6e91579c4522be`, 184 command elements, 365 legacy initializer tokens, and the final 0x21/0x11/120 ms sequence
 
 #### Scenario: Table is defaulted or altered
 - **WHEN** the component default is used, an entry differs, or the source cannot be reproduced
@@ -374,6 +374,17 @@ The future artifact review SHALL record binary SHA-256/size/header/segments, Fla
 #### Scenario: Range is inferred from file length
 - **WHEN** transport or erase scope is missing, ambiguous, or inferred only from candidate length
 - **THEN** successor handoff SHALL be blocked
+
+### Requirement: Reproducible clean-source artifact
+The application image SHALL be reproducible from the complete current intended working-tree source in two independent clean build directories using ESP-IDF v5.5.4 reproducible-build configuration. The verification contract SHALL NOT depend on an existing ignored BIN, stale CMake cache, prior ELF/MAP output, or copied artifact.
+
+#### Scenario: Independent clean builds agree
+- **WHEN** two new build directories independently configure and build the same recorded source/configuration/toolchain inputs
+- **THEN** their application BIN byte lengths and SHA-256 values SHALL be identical and both build identities SHALL be recorded
+
+#### Scenario: Artifact evidence is stale or non-reproducible
+- **WHEN** the clean-build outputs differ or the checked-in evidence cannot be tied to the recorded source/configuration inputs without reading an old ignored BIN
+- **THEN** artifact acceptance and successor handoff SHALL be blocked
 
 ### Requirement: Device access prohibition
 This Change SHALL NOT enumerate/open a serial port, identify/reset/monitor a device, or execute any device-management/read operation.

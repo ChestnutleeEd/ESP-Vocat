@@ -40,8 +40,10 @@ local-config/
 # ESP-IDF build and generated files
 # ------------------------------------------------------------
 firmware/build/
+firmware/build-*/
 firmware/sdkconfig
 firmware/sdkconfig.old
+firmware/sdkconfig.*
 firmware/dependencies.lock
 firmware/managed_components/
 firmware/.cache/

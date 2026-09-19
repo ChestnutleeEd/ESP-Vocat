@@ -6,6 +6,9 @@ CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
 CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
 # CONFIG_ESPTOOLPY_HEADER_FLASHSIZE_UPDATE is not set
 
+# Eliminate build time/date and source/build path variance from the app image.
+CONFIG_APP_REPRODUCIBLE_BUILD=y
+
 # PSRAM support is intentionally excluded from the minimal-build dependency closure.
 
 CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y

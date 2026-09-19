@@ -1,0 +1,339 @@
+{
+  "schema_version": 2,
+  "record_type": "host-only-artifact-review",
+  "artifact_role": "pcb-v1-minimal-display-smoke-test",
+  "review_date": "2026-09-19",
+  "source": {
+    "branch": "feat/prepare-pcb-v1-minimal-display-smoke-test",
+    "head": "5394afd180ed47b1145570feac7bc425584c43ea",
+    "app_version": "5394afd-dirty",
+    "pcb_revision": "V1.0",
+    "source_inputs": {
+      "algorithm": "sha256(path + NUL + uppercase-file-sha256 + LF)",
+      "aggregate_sha256": "40DC66C7AFD7C23BA750A0DC0E4B8FF885C447F4E7F95AC240EEA2D4D7E33EB4",
+      "files": [
+        {
+          "path": "firmware/CMakeLists.txt",
+          "bytes": 172,
+          "sha256": "70D47D5FE69AE6AD770B9A03F8279D951E4560492633ADA917DC17AF543357AA"
+        },
+        {
+          "path": "firmware/sdkconfig.defaults",
+          "bytes": 702,
+          "sha256": "1C609FD2D0EDB77C86D5D1A010D6AB76ABE459BC5CF038899E3B1DB7B29C1D8D"
+        },
+        {
+          "path": "firmware/main/CMakeLists.txt",
+          "bytes": 246,
+          "sha256": "776575A892246B610091878A4505B5656EC9FB438915902D9B58B3859D6A40D1"
+        },
+        {
+          "path": "firmware/main/idf_component.yml",
+          "bytes": 53,
+          "sha256": "0DAC6023E66D9277CE7188B5CB58422F95D1933A64A534B6D722DC52D5220BE2"
+        },
+        {
+          "path": "firmware/main/main.c",
+          "bytes": 1162,
+          "sha256": "F7EA24D3FBA7BF59E27A5A9C0FA77F23C549B53CEDA3CDC6A41C6BC629A41FE6"
+        },
+        {
+          "path": "firmware/main/pcb_v1_display.c",
+          "bytes": 23213,
+          "sha256": "A415DD494012E4F89BCC28EC8438916DCD193CD3D5D7428E4B219231F3F291F9"
+        },
+        {
+          "path": "firmware/main/pcb_v1_display.h",
+          "bytes": 864,
+          "sha256": "F09DAB85C799927E7850A48812D4823B2D283E0B07368757EE8BAAA7826C9370"
+        },
+        {
+          "path": "firmware/main/pcb_v1_display_test_pattern.c",
+          "bytes": 3504,
+          "sha256": "D0A8626CCF885C5AC996C1147A9E3E45DCAC5CF84371FDB7C3302341DBF129F5"
+        },
+        {
+          "path": "firmware/main/pcb_v1_display_test_pattern.h",
+          "bytes": 602,
+          "sha256": "08C9AA89DC882380893B48A4A14EFD01CB517DF15639339E9C44B37CA9FAE33F"
+        }
+      ]
+    }
+  },
+  "toolchain": {
+    "esp_idf": "v5.5.4",
+    "python": "3.13.9",
+    "target": "esp32s3",
+    "compiler": "xtensa-esp-elf-gcc 14.2.0 (esp-14.2.0_20260121)",
+    "cmake": "3.30.2",
+    "ninja": "1.12.1",
+    "final_build_mode": "two-independent-build-dirs-serial-ninja-j1"
+  },
+  "reproducibility": {
+    "status": "PASS_BYTE_IDENTICAL",
+    "root_cause": {
+      "old_hash_a": "2794C4FB28651AE543517ED9C3F222C5555812B73391DE5533975DAAD781CC10",
+      "old_hash_b": "5E638134758F208B197436CBD162C5B4C962F88E04C223BB0AD2061C60A2C785",
+      "old_size_bytes": 222000,
+      "difference": "CONFIG_APP_COMPILE_TIME_DATE embedded different app descriptor time/date values; the dependent ELF SHA field, image checksum, and appended validation hash then changed",
+      "old_resolved_config": "CONFIG_APP_REPRODUCIBLE_BUILD unset; CONFIG_APP_COMPILE_TIME_DATE enabled"
+    },
+    "resolved_config": {
+      "app_reproducible_build": true,
+      "app_compile_time_date": false,
+      "compiler_hide_paths_macros": true
+    },
+    "clean_builds": [
+      {
+        "id": "A",
+        "build_dir": "firmware/build-repro-a-20260919",
+        "sdkconfig": "firmware/sdkconfig.repro-a-20260919",
+        "configure_command": "python %IDF_PATH%/tools/idf.py -B build-repro-a-20260919 -D SDKCONFIG=sdkconfig.repro-a-20260919 -D IDF_TARGET=esp32s3 reconfigure",
+        "build_command": "ninja -C build-repro-a-20260919 -j1 all",
+        "ccache": "ESP-IDF configured default",
+        "source_input_sha256": "40DC66C7AFD7C23BA750A0DC0E4B8FF885C447F4E7F95AC240EEA2D4D7E33EB4",
+        "outputs": {
+          "resolved_sdkconfig": {
+            "bytes": 37381,
+            "sha256": "8F7AE6B6487C58CCAF561985CFDDFC2B7435891FE7F07B59C54160BD6939072B"
+          },
+          "app_bin": {
+            "bytes": 222000,
+            "sha256": "4E66B7EDCD38B5225B00E1DB790CA7DD9C842E765961E8929228105F9C10A05D"
+          },
+          "app_elf": {
+            "bytes": 3583264,
+            "sha256": "7D0EC306C0F277EF3A7A19BC1304A4C34C27D620B5BE08AAA472001A4372AA9E"
+          },
+          "app_map": {
+            "bytes": 2591216,
+            "sha256": "4482B6044071ED0CD54278B69C1E63D373861BB007F2D000B4378EE363D4BA6B"
+          },
+          "bootloader_bin": {
+            "bytes": 20784,
+            "sha256": "6847BAC793FD36FE314897918A54E089859222CC58B0CDFC02EF696E93B20116"
+          },
+          "partition_table_bin": {
+            "bytes": 3072,
+            "sha256": "7F00B6C042A89B15B0CAC534F82ED988CAF29278FF5700B0C511EB1B5BB7C820"
+          }
+        }
+      },
+      {
+        "id": "B",
+        "build_dir": "firmware/build-repro-b-20260919",
+        "sdkconfig": "firmware/sdkconfig.repro-b-20260919",
+        "configure_command": "python %IDF_PATH%/tools/idf.py -B build-repro-b-20260919 -D SDKCONFIG=sdkconfig.repro-b-20260919 -D IDF_TARGET=esp32s3 reconfigure",
+        "build_command": "CCACHE_DISABLE=1 ninja -C build-repro-b-20260919 -j1 all",
+        "ccache": "disabled for independent compiler execution",
+        "source_input_sha256": "40DC66C7AFD7C23BA750A0DC0E4B8FF885C447F4E7F95AC240EEA2D4D7E33EB4",
+        "outputs": {
+          "resolved_sdkconfig": {
+            "bytes": 37381,
+            "sha256": "8F7AE6B6487C58CCAF561985CFDDFC2B7435891FE7F07B59C54160BD6939072B"
+          },
+          "app_bin": {
+            "bytes": 222000,
+            "sha256": "4E66B7EDCD38B5225B00E1DB790CA7DD9C842E765961E8929228105F9C10A05D"
+          },
+          "app_elf": {
+            "bytes": 3583264,
+            "sha256": "7D0EC306C0F277EF3A7A19BC1304A4C34C27D620B5BE08AAA472001A4372AA9E"
+          },
+          "app_map": {
+            "bytes": 2591216,
+            "sha256": "4482B6044071ED0CD54278B69C1E63D373861BB007F2D000B4378EE363D4BA6B"
+          },
+          "bootloader_bin": {
+            "bytes": 20784,
+            "sha256": "6847BAC793FD36FE314897918A54E089859222CC58B0CDFC02EF696E93B20116"
+          },
+          "partition_table_bin": {
+            "bytes": 3072,
+            "sha256": "7F00B6C042A89B15B0CAC534F82ED988CAF29278FF5700B0C511EB1B5BB7C820"
+          }
+        }
+      }
+    ]
+  },
+  "dependency": {
+    "manifest_constraint": "espressif/esp_lcd_st77916 ==1.0.1",
+    "resolved_version": "1.0.1",
+    "registry_component_hash": "5fa0f8b1274576d4484e2b8d9358e2a5d09c721511bef0dce6a55b4206b5f0e9",
+    "repository_commit": "6a112f4ddfeaf30ec360567ea9260a39e195c385",
+    "source_sha256": "A9124AC8A582D32FEE40F60E6E5BE747253ACE5BC458D0E21972A84A416570FF",
+    "header_sha256": "21F444CDC25ED1CEEC379FE91FB5FD09D31EF179A946C9A7BD6F67D2E3599BFA"
+  },
+  "vendor_initialization": {
+    "source_commit": "49ac8a6da399f27a9546d4f73640b7f86c24bac6",
+    "source_file": "main/boards/esp-vocat/esp_vocat.cc",
+    "source_symbol": "vendor_specific_init_yysj",
+    "command_elements": 184,
+    "legacy_initializer_tokens": 365,
+    "whitespace_normalized_sha256": "e8a1f2ea307b51be59d3daa201bb444b5f5ddc2d8da2931fda6e91579c4522be",
+    "final_sequence": [
+      "0x21",
+      "0x11",
+      "0x00 delay 120 ms"
+    ]
+  },
+  "safety": {
+    "backlight": "hard-disabled",
+    "visual": "UNVERIFIED",
+    "usage": "not-for-visual-validation",
+    "device-execution": "NOT_AUTHORIZED",
+    "gpio_allowlist": [
+      3,
+      11,
+      12,
+      13,
+      14,
+      18,
+      44,
+      46
+    ],
+    "gpio44_high_path": false,
+    "ledc": false,
+    "nonzero_backlight_duty": false,
+    "psram": false,
+    "lvgl": false,
+    "touch": false,
+    "audio": false,
+    "network": false,
+    "motor": false,
+    "sd": false,
+    "nvs_brightness": false
+  },
+  "app_artifact": {
+    "canonical_filename": "pcb_v1_minimal_display_smoke_test.bin",
+    "sha256": "4E66B7EDCD38B5225B00E1DB790CA7DD9C842E765961E8929228105F9C10A05D",
+    "file_length_bytes": 222000,
+    "file_length_hex": "0x36330",
+    "size_tool_image_bytes": 221885,
+    "entry_point": "0x403754B8",
+    "segments": 6,
+    "checksum": "valid (0x71)",
+    "validation_hash": "1635e2fd1dbb2bfaf3639547b3606ab790b08583c0c578e4fcd959ddef503b6b",
+    "app_descriptor": {
+      "version": "5394afd-dirty",
+      "project": "pcb_v1_minimal_display_smoke_te",
+      "time": "",
+      "date": "",
+      "idf": "v5.5.4"
+    },
+    "header": {
+      "chip": "ESP32-S3",
+      "flash_mode": "DOUT",
+      "flash_frequency": "80m",
+      "flash_size": "16MB"
+    },
+    "segments_detail": [
+      {
+        "index": 0,
+        "length": "0x0C238",
+        "load_address": "0x3C020020",
+        "file_offset": "0x00000018",
+        "memory": "DROM"
+      },
+      {
+        "index": 1,
+        "length": "0x034CC",
+        "load_address": "0x3FC94D00",
+        "file_offset": "0x0000C258",
+        "memory": "DRAM"
+      },
+      {
+        "index": 2,
+        "length": "0x008E4",
+        "load_address": "0x40374000",
+        "file_offset": "0x0000F72C",
+        "memory": "IRAM"
+      },
+      {
+        "index": 3,
+        "length": "0x15EB0",
+        "load_address": "0x42000020",
+        "file_offset": "0x00010018",
+        "memory": "IROM"
+      },
+      {
+        "index": 4,
+        "length": "0x10408",
+        "load_address": "0x403748E4",
+        "file_offset": "0x00025ED0",
+        "memory": "IRAM"
+      },
+      {
+        "index": 5,
+        "length": "0x00020",
+        "load_address": "0x50000000",
+        "file_offset": "0x000362E0",
+        "memory": "RTC_DATA"
+      }
+    ]
+  },
+  "partition_evidence": {
+    "generated_host_build_layout": {
+      "app_name": "factory",
+      "app_start": "0x00010000",
+      "app_end": "0x00110000",
+      "app_capacity": "0x00100000",
+      "artifact_contained": true,
+      "device_write_use": "REJECTED_LAYOUT_INCOMPATIBLE_WITH_PRESERVED_ORIGINAL"
+    },
+    "preserved_original_layout": {
+      "app_name": "ota_0",
+      "app_start": "0x00020000",
+      "app_end": "0x00410000",
+      "app_capacity": "0x003F0000",
+      "artifact_contained": true,
+      "geometric_margin": "0x003B9CD0"
+    }
+  },
+  "candidate_range_model": {
+    "status": "HOST_ONLY_NON_EXECUTABLE_MODEL",
+    "semantic": {
+      "start": "0x00020000",
+      "end_exclusive": "0x00056330",
+      "size": "0x00036330"
+    },
+    "rom_no_stub_transport": {
+      "block_size_bytes": 1024,
+      "block_count": 217,
+      "final_semantic_bytes": 816,
+      "start": "0x00020000",
+      "end_exclusive": "0x00056400",
+      "transport_size": "0x00036400",
+      "padding_start": "0x00056330",
+      "padding_end_exclusive": "0x00056400",
+      "padding_bytes": 208,
+      "padding_value": "0xFF"
+    },
+    "erase_envelope": {
+      "sector_size_bytes": 4096,
+      "sector_count": 55,
+      "start": "0x00020000",
+      "end_exclusive": "0x00057000"
+    }
+  },
+  "recovery": {
+    "level_1": "complete original ota_0 restore; separate future review required",
+    "level_2": "complete 32 MiB restore; independent escalation gate required",
+    "full_image_bytes": 33554432,
+    "full_image_sha256": "72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001",
+    "copies_rehashed": 4,
+    "hash_match": true
+  },
+  "historical_status": {
+    "first_flash": "STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIATION",
+    "startup_observation": "PASS",
+    "minimal_runtime": "PASS FOR THIS MINIMAL SMOKE TEST"
+  },
+  "authorization": {
+    "contains_device_command": false,
+    "creates_device_authorization": false,
+    "consumes_prior_authorization": false,
+    "creates_successor_change": false,
+    "archive": false
+  }
+}
