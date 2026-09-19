@@ -12,6 +12,8 @@ enum {
     RESOURCE_IO = 1U << 2,
     RESOURCE_PANEL = 1U << 3,
     RESOURCE_STRIP = 1U << 4,
+    RESOURCE_LEDC_TIMER = 1U << 5,
+    RESOURCE_LEDC_CHANNEL = 1U << 6,
 };
 
 typedef struct {
@@ -25,6 +27,11 @@ typedef struct {
     int gpio_set_calls;
     int gpio_config_calls;
     int gpio_get_calls;
+    int ledc_timer_config_calls;
+    int ledc_channel_config_calls;
+    int ledc_duty_update_calls;
+    int ledc_duty_get_calls;
+    int ledc_stop_calls;
     int bus_init_calls;
     int bus_free_calls;
     int io_create_calls;
@@ -64,6 +71,9 @@ typedef struct {
     bool io_owned;
     bool panel_owned;
     bool strip_owned;
+    bool ledc_timer_owned;
+    bool ledc_channel_owned;
+    uint32_t ledc_duty;
     SemaphoreHandle_t semaphore_pointer;
     spi_host_device_t last_bus_host;
     int last_dma_channel;
@@ -76,6 +86,8 @@ typedef struct {
     size_t last_heap_size;
     uint32_t last_heap_capabilities;
     TickType_t last_wait_timeout;
+    ledc_timer_config_t last_ledc_timer_configuration;
+    ledc_channel_config_t last_ledc_channel_configuration;
 } fake_backend_t;
 
 typedef struct {
@@ -154,6 +166,12 @@ static unsigned int owned_resources(void)
     }
     if (g_fake.strip_owned) {
         resources |= RESOURCE_STRIP;
+    }
+    if (g_fake.ledc_timer_owned) {
+        resources |= RESOURCE_LEDC_TIMER;
+    }
+    if (g_fake.ledc_channel_owned) {
+        resources |= RESOURCE_LEDC_CHANNEL;
     }
     return resources;
 }
@@ -300,7 +318,9 @@ esp_err_t gpio_set_level(gpio_num_t gpio, uint32_t level)
 {
     CHECK(g_current_fault_point == FP_GPIO_PRELOAD_LOW ||
           g_current_fault_point == FP_GPIO_REASSERT_LOW ||
-          g_current_fault_point == FP_GPIO_HOLD_LOW);
+          g_current_fault_point == FP_GPIO_HOLD_LOW ||
+          g_current_fault_point == FP_GPIO_CLEANUP_PRELOAD_LOW ||
+          g_current_fault_point == FP_GPIO_CLEANUP_REASSERT_LOW);
     record_api_call("gpio_set_level");
     CHECK(gpio == GPIO_NUM_44);
     CHECK(level == 0);
@@ -319,7 +339,8 @@ esp_err_t gpio_set_level(gpio_num_t gpio, uint32_t level)
 
 esp_err_t gpio_config(const gpio_config_t *configuration)
 {
-    CHECK(g_current_fault_point == FP_GPIO_CONFIG_OUTPUT);
+    CHECK(g_current_fault_point == FP_GPIO_CONFIG_OUTPUT ||
+          g_current_fault_point == FP_GPIO_CLEANUP_CONFIG_OUTPUT);
     record_api_call("gpio_config");
     CHECK(configuration->pin_bit_mask == (1ULL << GPIO_NUM_44));
     CHECK(configuration->mode == GPIO_MODE_OUTPUT);
@@ -327,6 +348,10 @@ esp_err_t gpio_config(const gpio_config_t *configuration)
     if (should_inject()) {
         record_event("gpio_config_failed");
         return ESP_ERR_INVALID_ARG;
+    }
+    if (g_current_fault_point == FP_GPIO_CLEANUP_CONFIG_OUTPUT) {
+        g_fake.ledc_channel_owned = false;
+        g_fake.ledc_timer_owned = false;
     }
     record_event("gpio_config_output");
     return ESP_OK;
@@ -337,8 +362,7 @@ int gpio_get_level(gpio_num_t gpio)
     CHECK(g_current_fault_point == FP_GPIO_READBACK_LOW ||
           (g_current_fault_point >= FP_GPIO_DRAW_GUARD_1 &&
            g_current_fault_point <= FP_GPIO_DRAW_GUARD_5) ||
-          g_current_fault_point == FP_GPIO_POLICY_GUARD ||
-          g_current_fault_point == FP_GPIO_READY_GUARD);
+          g_current_fault_point == FP_GPIO_CLEANUP_READBACK_LOW);
     record_api_call("gpio_get_level");
     CHECK(gpio == GPIO_NUM_44);
     ++g_fake.gpio_get_calls;
@@ -347,6 +371,127 @@ int gpio_get_level(gpio_num_t gpio)
         return 1;
     }
     return g_fake.gpio_level;
+}
+
+esp_err_t ledc_timer_config(const ledc_timer_config_t *configuration)
+{
+    CHECK(g_current_fault_point == FP_LEDC_TIMER_CONFIG);
+    record_api_call("ledc_timer_config");
+    CHECK(configuration->speed_mode == LEDC_LOW_SPEED_MODE);
+    CHECK(configuration->duty_resolution == LEDC_TIMER_10_BIT);
+    CHECK(configuration->timer_num == LEDC_TIMER_0);
+    CHECK(configuration->freq_hz == 2000);
+    CHECK(configuration->clk_cfg == LEDC_USE_APB_CLK);
+    CHECK(!configuration->deconfigure);
+    CHECK(g_fake.draw_calls == 5);
+    CHECK(g_fake.callback_calls == 5);
+    CHECK(g_fake.gpio_level == 0);
+    ++g_fake.ledc_timer_config_calls;
+    g_fake.last_ledc_timer_configuration = *configuration;
+    if (should_inject()) {
+        record_event("ledc_timer_config_failed");
+        return ESP_FAIL;
+    }
+    g_fake.ledc_timer_owned = true;
+    record_event("ledc_timer_config");
+    return ESP_OK;
+}
+
+esp_err_t ledc_channel_config(const ledc_channel_config_t *configuration)
+{
+    CHECK(g_current_fault_point == FP_LEDC_CHANNEL_CONFIG);
+    record_api_call("ledc_channel_config");
+    CHECK(g_fake.ledc_timer_owned);
+    CHECK(configuration->gpio_num == GPIO_NUM_44);
+    CHECK(configuration->speed_mode == LEDC_LOW_SPEED_MODE);
+    CHECK(configuration->channel == LEDC_CHANNEL_0);
+    CHECK(configuration->intr_type == LEDC_INTR_DISABLE);
+    CHECK(configuration->timer_sel == LEDC_TIMER_0);
+    CHECK(configuration->duty == 0);
+    CHECK(configuration->hpoint == 0);
+    CHECK(configuration->sleep_mode == LEDC_SLEEP_MODE_NO_ALIVE_NO_PD);
+    CHECK(configuration->flags.output_invert == 0);
+    CHECK(g_fake.gpio_level == 0);
+    ++g_fake.ledc_channel_config_calls;
+    g_fake.last_ledc_channel_configuration = *configuration;
+    if (should_inject()) {
+        record_event("ledc_channel_config_failed");
+        return ESP_FAIL;
+    }
+    g_fake.ledc_channel_owned = true;
+    g_fake.ledc_duty = 0;
+    record_event("ledc_channel_config_zero");
+    return ESP_OK;
+}
+
+esp_err_t ledc_set_duty_and_update(ledc_mode_t speed_mode,
+                                   ledc_channel_t channel,
+                                   uint32_t duty,
+                                   uint32_t hpoint)
+{
+    CHECK(g_current_fault_point == FP_LEDC_ZERO_UPDATE ||
+          g_current_fault_point == FP_LEDC_ENABLE_UPDATE ||
+          g_current_fault_point == FP_LEDC_CLEANUP_ZERO_UPDATE);
+    record_api_call("ledc_set_duty_and_update");
+    CHECK(speed_mode == LEDC_LOW_SPEED_MODE);
+    CHECK(channel == LEDC_CHANNEL_0);
+    CHECK(hpoint == 0);
+    CHECK(duty == 0 || duty == 10);
+    CHECK(g_fake.ledc_channel_owned);
+    if (duty != 0) {
+        CHECK(g_current_fault_point == FP_LEDC_ENABLE_UPDATE);
+        CHECK(g_fake.ledc_duty == 0);
+        CHECK(g_fake.draw_calls == 5);
+        CHECK(g_fake.callback_calls == 5);
+    }
+    ++g_fake.ledc_duty_update_calls;
+    if (should_inject()) {
+        record_event(duty == 0 ? "ledc_zero_update_failed"
+                               : "ledc_enable_update_failed");
+        return ESP_FAIL;
+    }
+    g_fake.ledc_duty = duty;
+    record_event(duty == 0 ? "ledc_duty_zero" : "ledc_duty_ten");
+    return ESP_OK;
+}
+
+uint32_t ledc_get_duty(ledc_mode_t speed_mode, ledc_channel_t channel)
+{
+    CHECK(g_current_fault_point == FP_LEDC_ZERO_VERIFY ||
+          g_current_fault_point == FP_LEDC_ENABLE_VERIFY);
+    record_api_call("ledc_get_duty");
+    CHECK(speed_mode == LEDC_LOW_SPEED_MODE);
+    CHECK(channel == LEDC_CHANNEL_0);
+    CHECK(g_fake.ledc_channel_owned);
+    ++g_fake.ledc_duty_get_calls;
+    if (should_inject()) {
+        record_event("ledc_duty_verify_failed");
+        return LEDC_ERR_DUTY;
+    }
+    record_event(g_fake.ledc_duty == 0 ? "ledc_verify_zero"
+                                       : "ledc_verify_ten");
+    return g_fake.ledc_duty;
+}
+
+esp_err_t ledc_stop(ledc_mode_t speed_mode,
+                    ledc_channel_t channel,
+                    uint32_t idle_level)
+{
+    CHECK(g_current_fault_point == FP_LEDC_STOP);
+    record_api_call("ledc_stop");
+    CHECK(speed_mode == LEDC_LOW_SPEED_MODE);
+    CHECK(channel == LEDC_CHANNEL_0);
+    CHECK(idle_level == 0);
+    CHECK(g_fake.ledc_channel_owned);
+    ++g_fake.ledc_stop_calls;
+    record_event("ledc_stop_low");
+    if (should_inject()) {
+        return ESP_FAIL;
+    }
+    g_fake.ledc_duty = 0;
+    g_fake.ledc_channel_owned = false;
+    g_fake.ledc_timer_owned = false;
+    return ESP_OK;
 }
 
 esp_err_t spi_bus_initialize(spi_host_device_t host,
@@ -775,6 +920,8 @@ static void check_cleanup_context_cleared(const display_context_t *context)
     CHECK(context->transfer_done == NULL);
     CHECK(!context->bus_initialized);
     CHECK(!context->transfer_in_flight);
+    CHECK(!context->ledc_timer_configured);
+    CHECK(!context->ledc_channel_configured);
 }
 
 typedef struct {
@@ -842,10 +989,29 @@ static const fault_point_info_t s_fault_points[FP_COUNT] = {
         "FP_SEMAPHORE_DELETE_SUCCESS", "vSemaphoreDelete", false},
     [FP_PANEL_DISPLAY_ON] = {
         "FP_PANEL_DISPLAY_ON", "esp_lcd_panel_disp_on_off", true},
-    [FP_GPIO_POLICY_GUARD] = {
-        "FP_GPIO_POLICY_GUARD", "gpio_get_level", true},
-    [FP_GPIO_READY_GUARD] = {
-        "FP_GPIO_READY_GUARD", "gpio_get_level", true},
+    [FP_LEDC_TIMER_CONFIG] = {
+        "FP_LEDC_TIMER_CONFIG", "ledc_timer_config", true},
+    [FP_LEDC_CHANNEL_CONFIG] = {
+        "FP_LEDC_CHANNEL_CONFIG", "ledc_channel_config", true},
+    [FP_LEDC_ZERO_UPDATE] = {
+        "FP_LEDC_ZERO_UPDATE", "ledc_set_duty_and_update", true},
+    [FP_LEDC_ZERO_VERIFY] = {
+        "FP_LEDC_ZERO_VERIFY", "ledc_get_duty", true},
+    [FP_LEDC_ENABLE_UPDATE] = {
+        "FP_LEDC_ENABLE_UPDATE", "ledc_set_duty_and_update", true},
+    [FP_LEDC_ENABLE_VERIFY] = {
+        "FP_LEDC_ENABLE_VERIFY", "ledc_get_duty", true},
+    [FP_LEDC_CLEANUP_ZERO_UPDATE] = {
+        "FP_LEDC_CLEANUP_ZERO_UPDATE", "ledc_set_duty_and_update", true},
+    [FP_LEDC_STOP] = {"FP_LEDC_STOP", "ledc_stop", true},
+    [FP_GPIO_CLEANUP_PRELOAD_LOW] = {
+        "FP_GPIO_CLEANUP_PRELOAD_LOW", "gpio_set_level", true},
+    [FP_GPIO_CLEANUP_CONFIG_OUTPUT] = {
+        "FP_GPIO_CLEANUP_CONFIG_OUTPUT", "gpio_config", true},
+    [FP_GPIO_CLEANUP_REASSERT_LOW] = {
+        "FP_GPIO_CLEANUP_REASSERT_LOW", "gpio_set_level", true},
+    [FP_GPIO_CLEANUP_READBACK_LOW] = {
+        "FP_GPIO_CLEANUP_READBACK_LOW", "gpio_get_level", true},
     [FP_STRIP_FREE_CLEANUP] = {
         "FP_STRIP_FREE_CLEANUP", "free", false},
     [FP_PANEL_DELETE] = {"FP_PANEL_DELETE", "esp_lcd_panel_del", true},
@@ -894,8 +1060,12 @@ static const pcb_v1_display_fault_point_t s_happy_api_sequence[] = {
     FP_SEMAPHORE_WAIT_5,
     FP_STRIP_FREE_SUCCESS,
     FP_SEMAPHORE_DELETE_SUCCESS,
-    FP_GPIO_POLICY_GUARD,
-    FP_GPIO_READY_GUARD,
+    FP_LEDC_TIMER_CONFIG,
+    FP_LEDC_CHANNEL_CONFIG,
+    FP_LEDC_ZERO_UPDATE,
+    FP_LEDC_ZERO_VERIFY,
+    FP_LEDC_ENABLE_UPDATE,
+    FP_LEDC_ENABLE_VERIFY,
 };
 
 typedef enum {
@@ -1035,11 +1205,32 @@ static const state_fault_case_t s_state_fault_cases[] = {
      RESOURCE_BUS | RESOURCE_SEMAPHORE | RESOURCE_IO | RESOURCE_PANEL |
          RESOURCE_STRIP,
      CLEANUP_FULL, 5, 5},
-    {FP_GPIO_POLICY_GUARD, PCB_V1_DISPLAY_STATE_BACKLIGHT_POLICY_GATE,
-     ESP_ERR_INVALID_STATE, RESOURCE_BUS | RESOURCE_IO | RESOURCE_PANEL,
+    {FP_LEDC_TIMER_CONFIG, PCB_V1_DISPLAY_STATE_BACKLIGHT_PWM_PREPARE,
+     ESP_FAIL, RESOURCE_BUS | RESOURCE_IO | RESOURCE_PANEL,
      CLEANUP_PANEL_IO_BUS, 5, 5},
-    {FP_GPIO_READY_GUARD, PCB_V1_DISPLAY_STATE_READY,
-     ESP_ERR_INVALID_STATE, RESOURCE_BUS | RESOURCE_IO | RESOURCE_PANEL,
+    {FP_LEDC_CHANNEL_CONFIG, PCB_V1_DISPLAY_STATE_BACKLIGHT_PWM_PREPARE,
+     ESP_FAIL,
+     RESOURCE_BUS | RESOURCE_IO | RESOURCE_PANEL | RESOURCE_LEDC_TIMER,
+     CLEANUP_PANEL_IO_BUS, 5, 5},
+    {FP_LEDC_ZERO_UPDATE, PCB_V1_DISPLAY_STATE_BACKLIGHT_PWM_PREPARE,
+     ESP_FAIL,
+     RESOURCE_BUS | RESOURCE_IO | RESOURCE_PANEL | RESOURCE_LEDC_TIMER |
+         RESOURCE_LEDC_CHANNEL,
+     CLEANUP_PANEL_IO_BUS, 5, 5},
+    {FP_LEDC_ZERO_VERIFY, PCB_V1_DISPLAY_STATE_BACKLIGHT_PWM_PREPARE,
+     ESP_ERR_INVALID_STATE,
+     RESOURCE_BUS | RESOURCE_IO | RESOURCE_PANEL | RESOURCE_LEDC_TIMER |
+         RESOURCE_LEDC_CHANNEL,
+     CLEANUP_PANEL_IO_BUS, 5, 5},
+    {FP_LEDC_ENABLE_UPDATE, PCB_V1_DISPLAY_STATE_BACKLIGHT_LOW_ENABLE,
+     ESP_FAIL,
+     RESOURCE_BUS | RESOURCE_IO | RESOURCE_PANEL | RESOURCE_LEDC_TIMER |
+         RESOURCE_LEDC_CHANNEL,
+     CLEANUP_PANEL_IO_BUS, 5, 5},
+    {FP_LEDC_ENABLE_VERIFY, PCB_V1_DISPLAY_STATE_BACKLIGHT_LOW_ENABLE,
+     ESP_ERR_INVALID_STATE,
+     RESOURCE_BUS | RESOURCE_IO | RESOURCE_PANEL | RESOURCE_LEDC_TIMER |
+         RESOURCE_LEDC_CHANNEL,
      CLEANUP_PANEL_IO_BUS, 5, 5},
 };
 
@@ -1112,7 +1303,7 @@ static void check_failure_markers(const state_fault_case_t *test_case)
     CHECK(log_count(failure) == 1);
     CHECK(log_count(
               "LCD_SM_READY visual=UNVERIFIED "
-              "backlight=DISABLED_NOT_AUTHORIZED") == 0);
+              "backlight=LOW_FIXED_TEST_ONLY") == 0);
 
     bool reached_failure_state = false;
     for (size_t index = 0;
@@ -1133,8 +1324,6 @@ static void check_failure_markers(const state_fault_case_t *test_case)
         }
     }
     CHECK(reached_failure_state);
-    CHECK(log_count("DISPLAY_BACKLIGHT_POLICY: DISABLED_NOT_AUTHORIZED") ==
-          (test_case->failed_state == PCB_V1_DISPLAY_STATE_READY ? 1 : 0));
 }
 
 static void run_cleanup_success_case(bool has_strip,
@@ -1224,6 +1413,14 @@ static void test_success_path(void)
     CHECK(result.terminal_state == PCB_V1_DISPLAY_STATE_READY);
     CHECK(result.error == ESP_OK);
     CHECK(g_fake.gpio_level == 0);
+    CHECK(g_fake.ledc_timer_config_calls == 1);
+    CHECK(g_fake.ledc_channel_config_calls == 1);
+    CHECK(g_fake.ledc_duty_update_calls == 2);
+    CHECK(g_fake.ledc_duty_get_calls == 2);
+    CHECK(g_fake.ledc_stop_calls == 0);
+    CHECK(g_fake.ledc_timer_owned);
+    CHECK(g_fake.ledc_channel_owned);
+    CHECK(g_fake.ledc_duty == 10);
     CHECK(g_fake.bus_init_calls == 1);
     CHECK(g_fake.io_create_calls == 1);
     CHECK(g_fake.panel_create_calls == 1);
@@ -1241,6 +1438,23 @@ static void test_success_path(void)
     CHECK(event_index("gpio_set_low") >= 0);
     CHECK(event_index("gpio_config_output") > event_index("gpio_set_low"));
     CHECK(event_index("bus_init") > event_index("gpio_config_output"));
+    CHECK(event_index("ledc_timer_config") > event_index("semaphore_delete_success"));
+    CHECK(event_index("ledc_channel_config_zero") >
+          event_index("ledc_timer_config"));
+    CHECK(event_index("ledc_duty_zero") >
+          event_index("ledc_channel_config_zero"));
+    CHECK(event_index("ledc_verify_zero") > event_index("ledc_duty_zero"));
+    CHECK(event_index("ledc_duty_ten") > event_index("ledc_verify_zero"));
+    CHECK(event_index("ledc_verify_ten") > event_index("ledc_duty_ten"));
+    CHECK(log_count(
+              "DISPLAY_BACKLIGHT_CONFIG gpio=44 polarity=ACTIVE_HIGH "
+              "frequency_hz=2000 resolution_bits=10 initial_duty=0") == 1);
+    CHECK(log_count(
+              "DISPLAY_BACKLIGHT_ENABLED raw_duty=10 max_duty=1023 "
+              "percent=0.98 visual=UNVERIFIED") == 1);
+    CHECK(log_count(
+              "LCD_SM_READY visual=UNVERIFIED "
+              "backlight=LOW_FIXED_TEST_ONLY") == 1);
 
     static const int expected_boundaries[] = {0, 80, 160, 240, 320, 360};
     for (int index = 0; index < 5; ++index) {
@@ -1345,18 +1559,42 @@ static void test_each_failable_cleanup_api_continues(void)
         esp_err_t expected_error;
         unsigned int owned_at_injection;
         unsigned int retained_after_failure;
+        bool with_ledc;
     } cases[] = {
-        {FP_GPIO_HOLD_LOW, ESP_OK,
+        {FP_LEDC_CLEANUP_ZERO_UPDATE, ESP_FAIL,
+         RESOURCE_BUS | RESOURCE_SEMAPHORE | RESOURCE_IO | RESOURCE_PANEL |
+             RESOURCE_STRIP | RESOURCE_LEDC_TIMER | RESOURCE_LEDC_CHANNEL,
+         0, true},
+        {FP_LEDC_STOP, ESP_FAIL,
+         RESOURCE_BUS | RESOURCE_SEMAPHORE | RESOURCE_IO | RESOURCE_PANEL |
+             RESOURCE_STRIP | RESOURCE_LEDC_TIMER | RESOURCE_LEDC_CHANNEL,
+         0, true},
+        {FP_GPIO_CLEANUP_PRELOAD_LOW, ESP_FAIL,
          RESOURCE_BUS | RESOURCE_SEMAPHORE | RESOURCE_IO | RESOURCE_PANEL |
              RESOURCE_STRIP,
-         0},
+         0, true},
+        {FP_GPIO_CLEANUP_CONFIG_OUTPUT, ESP_ERR_INVALID_ARG,
+         RESOURCE_BUS | RESOURCE_SEMAPHORE | RESOURCE_IO | RESOURCE_PANEL |
+             RESOURCE_STRIP,
+         0, true},
+        {FP_GPIO_CLEANUP_REASSERT_LOW, ESP_FAIL,
+         RESOURCE_BUS | RESOURCE_SEMAPHORE | RESOURCE_IO | RESOURCE_PANEL |
+             RESOURCE_STRIP,
+         0, true},
+        {FP_GPIO_CLEANUP_READBACK_LOW, ESP_ERR_INVALID_STATE,
+         RESOURCE_BUS | RESOURCE_SEMAPHORE | RESOURCE_IO | RESOURCE_PANEL |
+             RESOURCE_STRIP,
+         0, true},
+        {FP_GPIO_HOLD_LOW, ESP_OK,
+         RESOURCE_BUS | RESOURCE_SEMAPHORE | RESOURCE_IO | RESOURCE_PANEL,
+         0, false},
         {FP_PANEL_DELETE, ESP_FAIL,
          RESOURCE_BUS | RESOURCE_SEMAPHORE | RESOURCE_IO | RESOURCE_PANEL,
-         RESOURCE_PANEL},
+         RESOURCE_PANEL, false},
         {FP_PANEL_IO_DELETE, ESP_ERR_INVALID_STATE,
          RESOURCE_BUS | RESOURCE_SEMAPHORE | RESOURCE_IO,
-         RESOURCE_IO},
-        {FP_SPI_BUS_FREE, ESP_ERR_TIMEOUT, RESOURCE_BUS, RESOURCE_BUS},
+         RESOURCE_IO, false},
+        {FP_SPI_BUS_FREE, ESP_ERR_TIMEOUT, RESOURCE_BUS, RESOURCE_BUS, false},
     };
 
     for (size_t failure = 0;
@@ -1365,6 +1603,13 @@ static void test_each_failable_cleanup_api_continues(void)
         reset_backend();
         display_context_t context =
             make_cleanup_context(true, true, true, true, true);
+        if (cases[failure].with_ledc) {
+            context.ledc_timer_configured = true;
+            context.ledc_channel_configured = true;
+            g_fake.ledc_timer_owned = true;
+            g_fake.ledc_channel_owned = true;
+            g_fake.ledc_duty = 10;
+        }
         configure_fault(cases[failure].point);
 
         const esp_err_t result = cleanup_failed_run(&context, ESP_OK);
@@ -1381,6 +1626,7 @@ static void test_each_failable_cleanup_api_continues(void)
         CHECK(g_fake.semaphore_delete_calls == 1);
         CHECK(g_fake.bus_free_calls == 1);
         CHECK(g_fake.gpio_level == 0);
+        CHECK(g_fake.ledc_duty == 0);
         CHECK(g_fake.gpio_high_writes == 0);
         check_cleanup_context_cleared(&context);
         CHECK(owned_resources() == cases[failure].retained_after_failure);
@@ -1542,6 +1788,12 @@ static void test_fault_point_inventory_and_coverage(void)
         CHECK(!covered[point]);
         covered[point] = true;
     }
+    covered[FP_LEDC_CLEANUP_ZERO_UPDATE] = true;
+    covered[FP_LEDC_STOP] = true;
+    covered[FP_GPIO_CLEANUP_PRELOAD_LOW] = true;
+    covered[FP_GPIO_CLEANUP_CONFIG_OUTPUT] = true;
+    covered[FP_GPIO_CLEANUP_REASSERT_LOW] = true;
+    covered[FP_GPIO_CLEANUP_READBACK_LOW] = true;
     covered[FP_GPIO_HOLD_LOW] = true;
     covered[FP_PANEL_DELETE] = true;
     covered[FP_PANEL_IO_DELETE] = true;
@@ -1555,10 +1807,10 @@ static void test_fault_point_inventory_and_coverage(void)
         CHECK(covered[point]);
         ++covered_failable;
     }
-    CHECK((size_t)(FP_COUNT - 1) == 41);
-    CHECK(failable_count == 36);
+    CHECK((size_t)(FP_COUNT - 1) == 51);
+    CHECK(failable_count == 46);
     CHECK(covered_failable == failable_count);
-    CHECK(sizeof(s_state_fault_cases) / sizeof(s_state_fault_cases[0]) == 32);
+    CHECK(sizeof(s_state_fault_cases) / sizeof(s_state_fault_cases[0]) == 36);
 }
 
 int main(void)
@@ -1574,9 +1826,9 @@ int main(void)
     test_run_once_idempotence();
     test_failed_run_once_idempotence();
     test_fault_point_inventory_and_coverage();
-    printf("FAULT_MATRIX_C_TEST PASS points=41 failable=36 "
-           "cases=36 passed=36 uncovered=0\n");
-    printf("CLEANUP_C_TEST PASS order_cases=5 fault_cases=4 priority_cases=1\n");
+    printf("FAULT_MATRIX_C_TEST PASS points=51 failable=46 "
+           "cases=46 passed=46 uncovered=0\n");
+    printf("CLEANUP_C_TEST PASS order_cases=5 fault_cases=10 priority_cases=1\n");
     printf("HOST_C_TEST PASS assertions=%d\n", g_assertions);
     return 0;
 }

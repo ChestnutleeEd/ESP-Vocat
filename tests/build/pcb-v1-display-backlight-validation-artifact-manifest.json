@@ -1,0 +1,389 @@
+{
+  "schema_version": 2,
+  "record_type": "host-only-artifact-review",
+  "artifact_role": "pcb-v1-display-backlight-validation",
+  "review_date": "2026-09-20",
+  "source": {
+    "branch": "feat/validate-pcb-v1-display-backlight-on-hardware",
+    "head": "a0b7c726d90448af0f811b7f6c996897e2a16c8a",
+    "app_version": "a0b7c72-dirty",
+    "pcb_revision": "V1.0",
+    "source_inputs": {
+      "algorithm": "sha256(path + NUL + uppercase-file-sha256 + LF)",
+      "aggregate_sha256": "E9928883A0E81503537BC5444A21358FEABF69FFFD5D200527A4177050FDDD32",
+      "files": [
+        {
+          "path": "firmware/CMakeLists.txt",
+          "bytes": 172,
+          "sha256": "70D47D5FE69AE6AD770B9A03F8279D951E4560492633ADA917DC17AF543357AA"
+        },
+        {
+          "path": "firmware/sdkconfig.defaults",
+          "bytes": 702,
+          "sha256": "1C609FD2D0EDB77C86D5D1A010D6AB76ABE459BC5CF038899E3B1DB7B29C1D8D"
+        },
+        {
+          "path": "firmware/main/CMakeLists.txt",
+          "bytes": 270,
+          "sha256": "6F54DCEA20B06A516C3B5A62722121BCC7F722C2923EC8ADCB2C493CEC18B701"
+        },
+        {
+          "path": "firmware/main/idf_component.yml",
+          "bytes": 53,
+          "sha256": "0DAC6023E66D9277CE7188B5CB58422F95D1933A64A534B6D722DC52D5220BE2"
+        },
+        {
+          "path": "firmware/main/main.c",
+          "bytes": 1182,
+          "sha256": "A94195774CB61FA71C484F4F5FD91E6AA7AA0C89445E42F3CFD55031C9A54828"
+        },
+        {
+          "path": "firmware/main/pcb_v1_display.c",
+          "bytes": 27778,
+          "sha256": "2854E8ED2210D23A2A2A01B20FB2698FBF9E2F2ADE707F5C5335F9FBCD67405F"
+        },
+        {
+          "path": "firmware/main/pcb_v1_display.h",
+          "bytes": 911,
+          "sha256": "9E9D2757520B059FD6F8533BCF23763D6118515351C0EEBEC99C5FD0413A0783"
+        },
+        {
+          "path": "firmware/main/pcb_v1_display_test_pattern.c",
+          "bytes": 3504,
+          "sha256": "D0A8626CCF885C5AC996C1147A9E3E45DCAC5CF84371FDB7C3302341DBF129F5"
+        },
+        {
+          "path": "firmware/main/pcb_v1_display_test_pattern.h",
+          "bytes": 602,
+          "sha256": "08C9AA89DC882380893B48A4A14EFD01CB517DF15639339E9C44B37CA9FAE33F"
+        }
+      ]
+    }
+  },
+  "toolchain": {
+    "esp_idf": "v5.5.4",
+    "python": "3.13.9",
+    "target": "esp32s3",
+    "compiler": "xtensa-esp-elf-gcc 14.2.0 (esp-14.2.0_20260121)",
+    "cmake": "3.30.2",
+    "ninja": "1.12.1",
+    "final_build_mode": "two-independent-build-dirs-serial-ninja-j1"
+  },
+  "reproducibility": {
+    "status": "PASS_BYTE_IDENTICAL",
+    "resolved_config": {
+      "app_reproducible_build": true,
+      "app_compile_time_date": false,
+      "compiler_hide_paths_macros": true,
+      "console_usb_serial_jtag": true,
+      "console_uart_number": -1,
+      "partition_table_offset": "0x8000",
+      "spiram": false,
+      "secure_boot": false,
+      "flash_encryption": false
+    },
+    "clean_builds": [
+      {
+        "id": "A",
+        "build_dir": "firmware/build-backlight-repro-a-20260920-r1",
+        "sdkconfig": "firmware/sdkconfig.backlight-repro-a-20260920-r1",
+        "configure_command": "python %IDF_PATH%/tools/idf.py -B build-backlight-repro-a-20260920-r1 -D SDKCONFIG=sdkconfig.backlight-repro-a-20260920-r1 -D IDF_TARGET=esp32s3 reconfigure",
+        "build_command": "ninja -C build-backlight-repro-a-20260920-r1 -j1 all",
+        "ccache": "disabled by configured build",
+        "source_input_sha256": "E9928883A0E81503537BC5444A21358FEABF69FFFD5D200527A4177050FDDD32",
+        "outputs": {
+          "resolved_sdkconfig": {
+            "bytes": 37381,
+            "sha256": "8F7AE6B6487C58CCAF561985CFDDFC2B7435891FE7F07B59C54160BD6939072B"
+          },
+          "app_bin": {
+            "bytes": 231360,
+            "sha256": "FEE9C3D1AA77CD0DF1B2C2D55A86B7BEAA2871E5E8443B9D458B10324FF8F362"
+          },
+          "app_elf": {
+            "bytes": 3679252,
+            "sha256": "53648E19C03173F4AD049875BECD8AB814F6523AD9588ED500DE3F302FA8FE3A"
+          },
+          "app_map": {
+            "bytes": 2644596,
+            "sha256": "9C4250E4FBEDFD78AF6CA089681197458B00545FA72150C7C4793BAE0BDAA1DA"
+          },
+          "bootloader_bin": {
+            "bytes": 20784,
+            "sha256": "6847BAC793FD36FE314897918A54E089859222CC58B0CDFC02EF696E93B20116"
+          },
+          "partition_table_bin": {
+            "bytes": 3072,
+            "sha256": "7F00B6C042A89B15B0CAC534F82ED988CAF29278FF5700B0C511EB1B5BB7C820"
+          }
+        }
+      },
+      {
+        "id": "B",
+        "build_dir": "firmware/build-backlight-repro-b-20260920-r1",
+        "sdkconfig": "firmware/sdkconfig.backlight-repro-b-20260920-r1",
+        "configure_command": "python %IDF_PATH%/tools/idf.py -B build-backlight-repro-b-20260920-r1 -D SDKCONFIG=sdkconfig.backlight-repro-b-20260920-r1 -D IDF_TARGET=esp32s3 reconfigure",
+        "build_command": "CCACHE_DISABLE=1 ninja -C build-backlight-repro-b-20260920-r1 -j1 all",
+        "ccache": "disabled for independent compiler execution",
+        "source_input_sha256": "E9928883A0E81503537BC5444A21358FEABF69FFFD5D200527A4177050FDDD32",
+        "outputs": {
+          "resolved_sdkconfig": {
+            "bytes": 37381,
+            "sha256": "8F7AE6B6487C58CCAF561985CFDDFC2B7435891FE7F07B59C54160BD6939072B"
+          },
+          "app_bin": {
+            "bytes": 231360,
+            "sha256": "FEE9C3D1AA77CD0DF1B2C2D55A86B7BEAA2871E5E8443B9D458B10324FF8F362"
+          },
+          "app_elf": {
+            "bytes": 3679252,
+            "sha256": "53648E19C03173F4AD049875BECD8AB814F6523AD9588ED500DE3F302FA8FE3A"
+          },
+          "app_map": {
+            "bytes": 2644596,
+            "sha256": "9C4250E4FBEDFD78AF6CA089681197458B00545FA72150C7C4793BAE0BDAA1DA"
+          },
+          "bootloader_bin": {
+            "bytes": 20784,
+            "sha256": "6847BAC793FD36FE314897918A54E089859222CC58B0CDFC02EF696E93B20116"
+          },
+          "partition_table_bin": {
+            "bytes": 3072,
+            "sha256": "7F00B6C042A89B15B0CAC534F82ED988CAF29278FF5700B0C511EB1B5BB7C820"
+          }
+        }
+      }
+    ]
+  },
+  "dependency": {
+    "manifest_constraint": "espressif/esp_lcd_st77916 ==1.0.1",
+    "resolved_version": "1.0.1",
+    "registry_component_hash": "5fa0f8b1274576d4484e2b8d9358e2a5d09c721511bef0dce6a55b4206b5f0e9",
+    "repository_commit": "6a112f4ddfeaf30ec360567ea9260a39e195c385",
+    "source_sha256": "A9124AC8A582D32FEE40F60E6E5BE747253ACE5BC458D0E21972A84A416570FF",
+    "header_sha256": "21F444CDC25ED1CEEC379FE91FB5FD09D31EF179A946C9A7BD6F67D2E3599BFA"
+  },
+  "vendor_initialization": {
+    "source_commit": "49ac8a6da399f27a9546d4f73640b7f86c24bac6",
+    "source_file": "main/boards/esp-vocat/esp_vocat.cc",
+    "source_symbol": "vendor_specific_init_yysj",
+    "command_elements": 184,
+    "legacy_initializer_tokens": 365,
+    "whitespace_normalized_sha256": "e8a1f2ea307b51be59d3daa201bb444b5f5ddc2d8da2931fda6e91579c4522be",
+    "final_sequence": [
+      "0x21",
+      "0x11",
+      "0x00 delay 120 ms"
+    ]
+  },
+  "backlight_contract": {
+    "gpio": 44,
+    "topology": "AO3400A low-side LEDK gate with external 10k pull-down; strongly supported, physically unverified",
+    "polarity": "active-high",
+    "speed_mode": "LEDC_LOW_SPEED_MODE",
+    "clock": "LEDC_USE_APB_CLK",
+    "frequency_hz": 2000,
+    "resolution_bits": 10,
+    "timer": 0,
+    "channel": 0,
+    "initial_duty": 0,
+    "validation_duty": 10,
+    "max_duty": 1023,
+    "percent": 0.98,
+    "hpoint": 0,
+    "output_invert": false,
+    "fade": false,
+    "dynamic_brightness": false,
+    "fail_safe": "LEDC zero update, idle-low stop, then direct GPIO44 low/pull-down restore before display cleanup"
+  },
+  "safety": {
+    "backlight": "low-fixed-test-only",
+    "visual": "UNVERIFIED",
+    "usage": "visual-validation-candidate",
+    "device-execution": "NOT_AUTHORIZED",
+    "gpio_allowlist": [
+      3,
+      11,
+      12,
+      13,
+      14,
+      18,
+      44,
+      46
+    ],
+    "gpio44_high_path": "controlled-pwm-only",
+    "ledc": true,
+    "nonzero_backlight_duty": 10,
+    "psram": false,
+    "lvgl": false,
+    "touch": false,
+    "audio": false,
+    "network": false,
+    "motor": false,
+    "sd": false,
+    "nvs_brightness": false
+  },
+  "predecessor_artifact": {
+    "artifact_role": "pcb-v1-minimal-display-smoke-test",
+    "usage": "not-for-visual-validation",
+    "backlight": "hard-disabled",
+    "sha256": "4E66B7EDCD38B5225B00E1DB790CA7DD9C842E765961E8929228105F9C10A05D",
+    "distinct_from_successor": true
+  },
+  "app_artifact": {
+    "canonical_filename": "pcb_v1_minimal_display_smoke_test.bin",
+    "sha256": "FEE9C3D1AA77CD0DF1B2C2D55A86B7BEAA2871E5E8443B9D458B10324FF8F362",
+    "file_length_bytes": 231360,
+    "file_length_hex": "0x387C0",
+    "size_tool_image_bytes": 231213,
+    "entry_point": "0x403754D4",
+    "segments": 6,
+    "checksum": "valid (0xDE)",
+    "validation_hash": "b1f1cff8ac37531bfd8698d64a3eae798c7faddec457a3943c16062b0207e59c",
+    "app_descriptor": {
+      "version": "a0b7c72-dirty",
+      "project": "pcb_v1_minimal_display_smoke_te",
+      "time": "",
+      "date": "",
+      "idf": "v5.5.4"
+    },
+    "header": {
+      "chip": "ESP32-S3",
+      "flash_mode": "DOUT",
+      "flash_frequency": "80m",
+      "flash_size": "16MB",
+      "secure_version": 0,
+      "mmu_page_size": "64 KB"
+    },
+    "segments_detail": [
+      {
+        "index": 0,
+        "length": "0x0CB48",
+        "load_address": "0x3C020020",
+        "file_offset": "0x00000018",
+        "memory": "DROM"
+      },
+      {
+        "index": 1,
+        "length": "0x034A8",
+        "load_address": "0x3FC95000",
+        "file_offset": "0x0000CB68",
+        "memory": "DRAM"
+      },
+      {
+        "index": 2,
+        "length": "0x17780",
+        "load_address": "0x42000020",
+        "file_offset": "0x00010018",
+        "memory": "IROM"
+      },
+      {
+        "index": 3,
+        "length": "0x0008C",
+        "load_address": "0x3FC984A8",
+        "file_offset": "0x000277A0",
+        "memory": "DRAM"
+      },
+      {
+        "index": 4,
+        "length": "0x10F34",
+        "load_address": "0x40374000",
+        "file_offset": "0x00027834",
+        "memory": "IRAM"
+      },
+      {
+        "index": 5,
+        "length": "0x00020",
+        "load_address": "0x50000000",
+        "file_offset": "0x00038770",
+        "memory": "RTC_DATA"
+      }
+    ]
+  },
+  "size_evidence": {
+    "used_static_iram_bytes": 16384,
+    "remaining_static_iram_bytes": 0,
+    "used_static_diram_bytes": 69439,
+    "remaining_static_diram_bytes": 272321,
+    "used_flash_bytes": 148166,
+    "effective_image_bytes": 231213,
+    "main_task_stack_bytes": 3584,
+    "stack_margin": "not measured on hardware; host build and bounded fixed-size path introduce no large stack framebuffer"
+  },
+  "partition_evidence": {
+    "generated_host_build_layout": {
+      "app_name": "factory",
+      "app_start": "0x00010000",
+      "app_end": "0x00110000",
+      "app_capacity": "0x00100000",
+      "artifact_contained": true,
+      "device_write_use": "REJECTED_LAYOUT_INCOMPATIBLE_WITH_PRESERVED_ORIGINAL"
+    },
+    "preserved_original_layout": {
+      "app_name": "ota_0",
+      "app_start": "0x00020000",
+      "app_end": "0x00410000",
+      "app_capacity": "0x003F0000",
+      "artifact_contained": true,
+      "geometric_margin": "0x003B7840"
+    }
+  },
+  "candidate_range_model": {
+    "status": "HOST_ONLY_NON_EXECUTABLE_MODEL",
+    "semantic": {
+      "start": "0x00020000",
+      "end_exclusive": "0x000587C0",
+      "size": "0x000387C0"
+    },
+    "rom_no_stub_transport": {
+      "block_size_bytes": 1024,
+      "block_count": 226,
+      "final_semantic_bytes": 960,
+      "start": "0x00020000",
+      "end_exclusive": "0x00058800",
+      "transport_size": "0x00038800",
+      "padding_start": "0x000587C0",
+      "padding_end_exclusive": "0x00058800",
+      "padding_bytes": 64,
+      "padding_value": "0xFF"
+    },
+    "erase_envelope": {
+      "sector_size_bytes": 4096,
+      "sector_count": 57,
+      "start": "0x00020000",
+      "end_exclusive": "0x00059000"
+    },
+    "untouched_regions": [
+      "bootloader [0x00000000,0x00008000)",
+      "partition table [0x00008000,0x00009000)",
+      "nvs [0x00009000,0x0000D000)",
+      "otadata [0x0000D000,0x0000F000)",
+      "phy_init [0x0000F000,0x00010000)",
+      "reserved gap [0x00010000,0x00020000)",
+      "remaining ota_0 [0x00059000,0x00410000)",
+      "ota_1 [0x00410000,0x00800000)",
+      "assets [0x00800000,0x01000000)",
+      "upper flash [0x01000000,0x02000000)"
+    ]
+  },
+  "recovery": {
+    "level_1": "complete original ota_0 restore; separate future review required",
+    "level_1_image_bytes": 4128768,
+    "level_1_image_sha256": "C8A2FE4AB0F9B7C823F1DCFDFC926682C9DBF1B079056461DC6F18A93A345D0E",
+    "level_1_copies_rehashed_during_planning": 2,
+    "level_2": "complete 32 MiB restore; independent escalation gate required",
+    "full_image_bytes": 33554432,
+    "full_image_sha256": "72421C6AF04F181D25400D75B34F7B0844CD55924F1C02B1B22A7410A5184001",
+    "full_copies_rehashed_during_planning": 4,
+    "hash_match": true,
+    "future_device_gate_rehash_required": true
+  },
+  "authorization": {
+    "contains_device_command": false,
+    "creates_device_authorization": false,
+    "consumes_prior_authorization": false,
+    "device_access_performed": false,
+    "creates_successor_change": false,
+    "archive": false
+  }
+}

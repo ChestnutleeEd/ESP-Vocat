@@ -16,12 +16,13 @@ void app_main(void)
     puts("Host-built candidate");
     puts("Device execution not yet authorized");
     puts("PSRAM intentionally disabled");
-    puts("Artifact policy: backlight=hard-disabled visual=UNVERIFIED "
-         "not-for-visual-validation device-execution=NOT_AUTHORIZED");
+    puts("Artifact policy: visual-validation-candidate visual=UNVERIFIED "
+         "backlight=LOW_FIXED_TEST_ONLY device-execution=NOT_AUTHORIZED");
 
     const pcb_v1_display_result_t result = pcb_v1_display_run_once();
     if (result.terminal_state == PCB_V1_DISPLAY_STATE_READY) {
-        puts("LCD_TEST_RESULT READY visual=UNVERIFIED backlight=DISABLED_NOT_AUTHORIZED");
+        puts("LCD_TEST_RESULT READY visual=UNVERIFIED "
+             "backlight=LOW_FIXED_TEST_ONLY");
     } else {
         printf("LCD_TEST_RESULT FAIL state=%s err=%s\n",
                pcb_v1_display_state_name(result.failed_state),

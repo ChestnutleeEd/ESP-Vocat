@@ -25,7 +25,7 @@ ARTIFACT_MANIFEST = (
     REPOSITORY
     / "tests"
     / "build"
-    / "pcb-v1-minimal-display-smoke-test-artifact-manifest.json"
+    / "pcb-v1-display-backlight-validation-artifact-manifest.json"
 )
 ARTIFACT_VERIFIER = (
     REPOSITORY
@@ -43,7 +43,8 @@ EXPECTED_STATES = [
     "PANEL_INIT",
     "DISPLAY_ON",
     "TEST_PATTERN_DRAW",
-    "BACKLIGHT_POLICY_GATE",
+    "BACKLIGHT_PWM_PREPARE",
+    "BACKLIGHT_LOW_ENABLE",
     "READY",
     "FAIL_SAFE",
 ]
@@ -194,23 +195,23 @@ class DisplaySourceAuditTests(unittest.TestCase):
         actual = re.findall(r"PCB_V1_DISPLAY_STATE_([A-Z0-9_]+)", sequence)
         self.assertEqual(actual, EXPECTED_SEQUENCE)
 
-    def test_no_reachable_backlight_enable_state(self) -> None:
-        firmware_source = "\n".join(
-            read(path) for path in MAIN.glob("*") if path.is_file()
-        )
-        self.assertNotIn("BACKLIGHT_LOW_ENABLE", firmware_source)
-
-    def test_exact_policy_and_ready_markers(self) -> None:
+    def test_exact_backlight_markers(self) -> None:
         self.assertEqual(
             self.display.count(
-                'puts("DISPLAY_BACKLIGHT_POLICY: DISABLED_NOT_AUTHORIZED")'
+                'puts("DISPLAY_BACKLIGHT_CONFIG gpio=44 polarity=ACTIVE_HIGH "'
+            ),
+            1,
+        )
+        self.assertEqual(
+            self.display.count(
+                'puts("DISPLAY_BACKLIGHT_ENABLED raw_duty=10 max_duty=1023 "'
             ),
             1,
         )
         self.assertEqual(
             self.display.count(
                 'puts("LCD_SM_READY visual=UNVERIFIED '
-                'backlight=DISABLED_NOT_AUTHORIZED")'
+                'backlight=LOW_FIXED_TEST_ONLY")'
             ),
             1,
         )
@@ -233,10 +234,10 @@ class DisplaySourceAuditTests(unittest.TestCase):
         self.assertEqual(identifiers[0], "FP_NONE")
         self.assertEqual(identifiers[-1], "FP_COUNT")
         actual_points = identifiers[1:-1]
-        self.assertEqual(len(actual_points), 41)
-        self.assertEqual(len(set(actual_points)), 41)
-        self.assertIn("failable_count == 36", self.harness)
-        self.assertIn("cases=36 passed=36 uncovered=0", self.harness)
+        self.assertEqual(len(actual_points), 51)
+        self.assertEqual(len(set(actual_points)), 51)
+        self.assertIn("failable_count == 46", self.harness)
+        self.assertIn("cases=46 passed=46 uncovered=0", self.harness)
 
     def test_gpio44_only_has_low_writes(self) -> None:
         calls = re.findall(
@@ -246,18 +247,55 @@ class DisplaySourceAuditTests(unittest.TestCase):
         self.assertGreaterEqual(len(calls), 1)
         self.assertEqual({call.strip() for call in calls}, {"0"})
 
-    def test_no_ledc_or_brightness_path(self) -> None:
+    def test_exact_fixed_ledc_contract(self) -> None:
+        expected = (
+            "LCD_BACKLIGHT_PWM_FREQUENCY_HZ = 2000",
+            "LCD_BACKLIGHT_INITIAL_DUTY = 0",
+            "LCD_BACKLIGHT_VALIDATION_DUTY = 10",
+            "LCD_BACKLIGHT_MAX_DUTY = 1023",
+            "LCD_BACKLIGHT_HPOINT = 0",
+            ".speed_mode = LEDC_LOW_SPEED_MODE",
+            ".duty_resolution = LEDC_TIMER_10_BIT",
+            ".timer_num = LEDC_TIMER_0",
+            ".channel = LEDC_CHANNEL_0",
+            ".clk_cfg = LEDC_USE_APB_CLK",
+            ".output_invert = 0",
+            "esp_driver_ledc",
+        )
+        combined = "\n".join([self.display, self.cmake])
+        for required in expected:
+            self.assertIn(required, combined)
+        self.assertEqual(self.display.count("ledc_timer_config("), 1)
+        self.assertEqual(self.display.count("ledc_channel_config("), 1)
+        self.assertEqual(self.display.count("ledc_get_duty("), 2)
+        self.assertEqual(self.display.count("ledc_stop("), 1)
+        self.assertNotIn("LEDC_HIGH_SPEED_MODE", combined)
+        self.assertNotIn("output_invert = 1", combined)
+
+    def test_backlight_duty_is_fixed_and_non_dynamic(self) -> None:
         combined = "\n".join([self.display, self.pattern, self.main, self.cmake])
-        for forbidden in (
-            "ledc_",
-            "brightness",
-            "fade",
-            "duty",
-            "CONFIG_LED",
-            "backlight_enable",
-            "BACKLIGHT_ENABLE",
-        ):
-            self.assertNotIn(forbidden, combined)
+        self.assertEqual(
+            self.display.count("LCD_BACKLIGHT_VALIDATION_DUTY"),
+            3,
+        )
+        self.assertNotIn("ledc_fade", combined)
+        self.assertNotIn("brightness", combined.lower())
+        self.assertNotIn("nvs_", combined.lower())
+        self.assertNotIn("ledc_set_duty(", combined)
+
+    def test_ledc_preparation_occurs_after_pattern_completion(self) -> None:
+        pattern_free = self.display.index("free(context->strip)")
+        timer_call = self.display.index("ledc_timer_config(")
+        zero_update = self.display.index(
+            "ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE"
+        )
+        enable_function = self.display.index("static esp_err_t enable_low_backlight")
+        enable_update = self.display.index(
+            "ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE", enable_function
+        )
+        self.assertLess(pattern_free, timer_call)
+        self.assertLess(timer_call, zero_update)
+        self.assertLess(zero_update, enable_update)
 
     def test_exact_gpio_allowlist_and_no_v12_gpio(self) -> None:
         gpio_literals = {
@@ -358,8 +396,8 @@ class DisplaySourceAuditTests(unittest.TestCase):
         self.assertEqual(self.main.count("pcb_v1_display_run_once()"), 1)
         self.assertIn("vTaskDelay(pdMS_TO_TICKS(1000))", self.main)
         self.assertIn("visual=UNVERIFIED", self.main)
-        self.assertIn("backlight=hard-disabled", self.main)
-        self.assertIn("not-for-visual-validation", self.main)
+        self.assertIn("visual-validation-candidate", self.main)
+        self.assertIn("backlight=LOW_FIXED_TEST_ONLY", self.main)
         self.assertIn("device-execution=NOT_AUTHORIZED", self.main)
 
 
@@ -420,21 +458,22 @@ class DisplayCompiledHostHarnessTests(unittest.TestCase):
         self.assertRegex(run_result.stdout, r"HOST_C_TEST PASS assertions=\d+")
         self.assertIn(
             "FAULT_MATRIX_C_TEST PASS "
-            "points=41 failable=36 cases=36 passed=36 uncovered=0",
+            "points=51 failable=46 cases=46 passed=46 uncovered=0",
             run_result.stdout,
         )
         self.assertIn(
             "CLEANUP_C_TEST PASS "
-            "order_cases=5 fault_cases=4 priority_cases=1",
+            "order_cases=5 fault_cases=10 priority_cases=1",
             run_result.stdout,
         )
         self.assertIn(
-            "DISPLAY_BACKLIGHT_POLICY: DISABLED_NOT_AUTHORIZED",
+            "DISPLAY_BACKLIGHT_CONFIG gpio=44 polarity=ACTIVE_HIGH "
+            "frequency_hz=2000 resolution_bits=10 initial_duty=0",
             run_result.stdout,
         )
         self.assertIn(
             "LCD_SM_READY visual=UNVERIFIED "
-            "backlight=DISABLED_NOT_AUTHORIZED",
+            "backlight=LOW_FIXED_TEST_ONLY",
             run_result.stdout,
         )
         self.assertIn(

@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "driver/gpio.h"
+#include "driver/ledc.h"
 #include "driver/spi_master.h"
 #include "esp_heap_caps.h"
 #include "esp_lcd_panel_io.h"
@@ -35,6 +36,11 @@ enum {
     LCD_PIXEL_CLOCK_HZ = 40000000,
     LCD_TRANSFER_QUEUE_DEPTH = 1,
     LCD_TRANSFER_TIMEOUT_MS = 1000,
+    LCD_BACKLIGHT_PWM_FREQUENCY_HZ = 2000,
+    LCD_BACKLIGHT_INITIAL_DUTY = 0,
+    LCD_BACKLIGHT_VALIDATION_DUTY = 10,
+    LCD_BACKLIGHT_MAX_DUTY = 1023,
+    LCD_BACKLIGHT_HPOINT = 0,
 };
 
 static const bool LCD_MIRROR_X = false;
@@ -246,6 +252,8 @@ typedef struct {
     SemaphoreHandle_t transfer_done;
     uint8_t *strip;
     volatile bool transfer_in_flight;
+    bool ledc_timer_configured;
+    bool ledc_channel_configured;
 } display_context_t;
 
 static const pcb_v1_display_state_t s_state_sequence[] = {
@@ -257,7 +265,8 @@ static const pcb_v1_display_state_t s_state_sequence[] = {
     PCB_V1_DISPLAY_STATE_PANEL_INIT,
     PCB_V1_DISPLAY_STATE_DISPLAY_ON,
     PCB_V1_DISPLAY_STATE_TEST_PATTERN_DRAW,
-    PCB_V1_DISPLAY_STATE_BACKLIGHT_POLICY_GATE,
+    PCB_V1_DISPLAY_STATE_BACKLIGHT_PWM_PREPARE,
+    PCB_V1_DISPLAY_STATE_BACKLIGHT_LOW_ENABLE,
     PCB_V1_DISPLAY_STATE_READY,
 };
 
@@ -280,7 +289,10 @@ const char *pcb_v1_display_state_name(pcb_v1_display_state_t state)
         [PCB_V1_DISPLAY_STATE_PANEL_INIT] = "PANEL_INIT",
         [PCB_V1_DISPLAY_STATE_DISPLAY_ON] = "DISPLAY_ON",
         [PCB_V1_DISPLAY_STATE_TEST_PATTERN_DRAW] = "TEST_PATTERN_DRAW",
-        [PCB_V1_DISPLAY_STATE_BACKLIGHT_POLICY_GATE] = "BACKLIGHT_POLICY_GATE",
+        [PCB_V1_DISPLAY_STATE_BACKLIGHT_PWM_PREPARE] =
+            "BACKLIGHT_PWM_PREPARE",
+        [PCB_V1_DISPLAY_STATE_BACKLIGHT_LOW_ENABLE] =
+            "BACKLIGHT_LOW_ENABLE",
         [PCB_V1_DISPLAY_STATE_READY] = "READY",
         [PCB_V1_DISPLAY_STATE_FAIL_SAFE] = "FAIL_SAFE",
     };
@@ -511,11 +523,137 @@ static esp_err_t retain_first_error(esp_err_t current_error,
     return current_error;
 }
 
+static esp_err_t prepare_backlight_pwm(display_context_t *context)
+{
+    const ledc_timer_config_t timer_configuration = {
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .duty_resolution = LEDC_TIMER_10_BIT,
+        .timer_num = LEDC_TIMER_0,
+        .freq_hz = LCD_BACKLIGHT_PWM_FREQUENCY_HZ,
+        .clk_cfg = LEDC_USE_APB_CLK,
+        .deconfigure = false,
+    };
+    HOST_FAULT_POINT(FP_LEDC_TIMER_CONFIG);
+    esp_err_t error = ledc_timer_config(&timer_configuration);
+    if (error != ESP_OK) {
+        return error;
+    }
+    context->ledc_timer_configured = true;
+
+    const ledc_channel_config_t channel_configuration = {
+        .gpio_num = LCD_GPIO_BACKLIGHT,
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .channel = LEDC_CHANNEL_0,
+        .intr_type = LEDC_INTR_DISABLE,
+        .timer_sel = LEDC_TIMER_0,
+        .duty = LCD_BACKLIGHT_INITIAL_DUTY,
+        .hpoint = LCD_BACKLIGHT_HPOINT,
+        .sleep_mode = LEDC_SLEEP_MODE_NO_ALIVE_NO_PD,
+        .flags = {
+            .output_invert = 0,
+        },
+    };
+    HOST_FAULT_POINT(FP_LEDC_CHANNEL_CONFIG);
+    error = ledc_channel_config(&channel_configuration);
+    if (error != ESP_OK) {
+        return error;
+    }
+    context->ledc_channel_configured = true;
+
+    HOST_FAULT_POINT(FP_LEDC_ZERO_UPDATE);
+    error = ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE,
+                                     LEDC_CHANNEL_0,
+                                     LCD_BACKLIGHT_INITIAL_DUTY,
+                                     LCD_BACKLIGHT_HPOINT);
+    if (error != ESP_OK) {
+        return error;
+    }
+    HOST_FAULT_POINT(FP_LEDC_ZERO_VERIFY);
+    if (ledc_get_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0) !=
+        LCD_BACKLIGHT_INITIAL_DUTY) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    puts("DISPLAY_BACKLIGHT_CONFIG gpio=44 polarity=ACTIVE_HIGH "
+         "frequency_hz=2000 resolution_bits=10 initial_duty=0");
+    return ESP_OK;
+}
+
+static esp_err_t enable_low_backlight(void)
+{
+    HOST_FAULT_POINT(FP_LEDC_ENABLE_UPDATE);
+    esp_err_t error = ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE,
+                                               LEDC_CHANNEL_0,
+                                               LCD_BACKLIGHT_VALIDATION_DUTY,
+                                               LCD_BACKLIGHT_HPOINT);
+    if (error != ESP_OK) {
+        return error;
+    }
+    HOST_FAULT_POINT(FP_LEDC_ENABLE_VERIFY);
+    if (ledc_get_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0) !=
+        LCD_BACKLIGHT_VALIDATION_DUTY) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    puts("DISPLAY_BACKLIGHT_ENABLED raw_duty=10 max_duty=1023 "
+         "percent=0.98 visual=UNVERIFIED");
+    return ESP_OK;
+}
+
+static esp_err_t best_effort_shutdown_backlight(display_context_t *context,
+                                                esp_err_t primary_error)
+{
+    esp_err_t result = primary_error;
+
+    if (context->ledc_channel_configured) {
+        HOST_FAULT_POINT(FP_LEDC_CLEANUP_ZERO_UPDATE);
+        result = retain_first_error(
+            result,
+            ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE,
+                                     LEDC_CHANNEL_0,
+                                     LCD_BACKLIGHT_INITIAL_DUTY,
+                                     LCD_BACKLIGHT_HPOINT));
+
+        HOST_FAULT_POINT(FP_LEDC_STOP);
+        result = retain_first_error(
+            result,
+            ledc_stop(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 0));
+        context->ledc_channel_configured = false;
+    }
+    context->ledc_timer_configured = false;
+
+    HOST_FAULT_POINT(FP_GPIO_CLEANUP_PRELOAD_LOW);
+    result = retain_first_error(
+        result,
+        gpio_set_level(LCD_GPIO_BACKLIGHT, 0));
+
+    const gpio_config_t configuration = {
+        .pin_bit_mask = 1ULL << LCD_GPIO_BACKLIGHT,
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_ENABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
+    HOST_FAULT_POINT(FP_GPIO_CLEANUP_CONFIG_OUTPUT);
+    result = retain_first_error(result, gpio_config(&configuration));
+
+    HOST_FAULT_POINT(FP_GPIO_CLEANUP_REASSERT_LOW);
+    result = retain_first_error(
+        result,
+        gpio_set_level(LCD_GPIO_BACKLIGHT, 0));
+
+    HOST_FAULT_POINT(FP_GPIO_CLEANUP_READBACK_LOW);
+    if (gpio_get_level(LCD_GPIO_BACKLIGHT) != 0) {
+        result = retain_first_error(result, ESP_ERR_INVALID_STATE);
+    }
+    return result;
+}
+
 static esp_err_t cleanup_failed_run(display_context_t *context,
                                     esp_err_t primary_error)
 {
-    esp_err_t result = primary_error;
-    best_effort_hold_backlight_low();
+    esp_err_t result =
+        best_effort_shutdown_backlight(context, primary_error);
     if (context->transfer_in_flight) {
         best_effort_hold_backlight_low();
         return result;
@@ -582,19 +720,12 @@ static esp_err_t execute_state(pcb_v1_display_state_t state,
         return esp_lcd_panel_disp_on_off(context->panel, true);
     case PCB_V1_DISPLAY_STATE_TEST_PATTERN_DRAW:
         return draw_test_pattern(context);
-    case PCB_V1_DISPLAY_STATE_BACKLIGHT_POLICY_GATE:
-        HOST_FAULT_POINT(FP_GPIO_POLICY_GUARD);
-        if (gpio_get_level(LCD_GPIO_BACKLIGHT) != 0) {
-            return ESP_ERR_INVALID_STATE;
-        }
-        puts("DISPLAY_BACKLIGHT_POLICY: DISABLED_NOT_AUTHORIZED");
-        return ESP_OK;
+    case PCB_V1_DISPLAY_STATE_BACKLIGHT_PWM_PREPARE:
+        return prepare_backlight_pwm(context);
+    case PCB_V1_DISPLAY_STATE_BACKLIGHT_LOW_ENABLE:
+        return enable_low_backlight();
     case PCB_V1_DISPLAY_STATE_READY:
-        HOST_FAULT_POINT(FP_GPIO_READY_GUARD);
-        if (gpio_get_level(LCD_GPIO_BACKLIGHT) != 0) {
-            return ESP_ERR_INVALID_STATE;
-        }
-        puts("LCD_SM_READY visual=UNVERIFIED backlight=DISABLED_NOT_AUTHORIZED");
+        puts("LCD_SM_READY visual=UNVERIFIED backlight=LOW_FIXED_TEST_ONLY");
         return ESP_OK;
     case PCB_V1_DISPLAY_STATE_FAIL_SAFE:
     default:

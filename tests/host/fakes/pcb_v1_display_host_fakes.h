@@ -51,8 +51,18 @@ typedef enum {
     FP_STRIP_FREE_SUCCESS,
     FP_SEMAPHORE_DELETE_SUCCESS,
     FP_PANEL_DISPLAY_ON,
-    FP_GPIO_POLICY_GUARD,
-    FP_GPIO_READY_GUARD,
+    FP_LEDC_TIMER_CONFIG,
+    FP_LEDC_CHANNEL_CONFIG,
+    FP_LEDC_ZERO_UPDATE,
+    FP_LEDC_ZERO_VERIFY,
+    FP_LEDC_ENABLE_UPDATE,
+    FP_LEDC_ENABLE_VERIFY,
+    FP_LEDC_CLEANUP_ZERO_UPDATE,
+    FP_LEDC_STOP,
+    FP_GPIO_CLEANUP_PRELOAD_LOW,
+    FP_GPIO_CLEANUP_CONFIG_OUTPUT,
+    FP_GPIO_CLEANUP_REASSERT_LOW,
+    FP_GPIO_CLEANUP_READBACK_LOW,
     FP_STRIP_FREE_CLEANUP,
     FP_PANEL_DELETE,
     FP_PANEL_IO_DELETE,
@@ -94,6 +104,60 @@ typedef struct {
 esp_err_t gpio_set_level(gpio_num_t gpio, uint32_t level);
 esp_err_t gpio_config(const gpio_config_t *configuration);
 int gpio_get_level(gpio_num_t gpio);
+
+typedef int ledc_mode_t;
+typedef int ledc_timer_t;
+typedef int ledc_channel_t;
+typedef int ledc_intr_type_t;
+typedef int ledc_timer_bit_t;
+typedef int ledc_clk_cfg_t;
+typedef int ledc_sleep_mode_t;
+
+enum {
+    LEDC_LOW_SPEED_MODE = 0,
+    LEDC_TIMER_0 = 0,
+    LEDC_CHANNEL_0 = 0,
+    LEDC_INTR_DISABLE = 0,
+    LEDC_TIMER_10_BIT = 10,
+    LEDC_USE_APB_CLK = 1,
+    LEDC_SLEEP_MODE_NO_ALIVE_NO_PD = 0,
+};
+
+typedef struct {
+    int gpio_num;
+    ledc_mode_t speed_mode;
+    ledc_channel_t channel;
+    ledc_intr_type_t intr_type;
+    ledc_timer_t timer_sel;
+    uint32_t duty;
+    int hpoint;
+    ledc_sleep_mode_t sleep_mode;
+    struct {
+        unsigned int output_invert : 1;
+    } flags;
+} ledc_channel_config_t;
+
+typedef struct {
+    ledc_mode_t speed_mode;
+    ledc_timer_bit_t duty_resolution;
+    ledc_timer_t timer_num;
+    uint32_t freq_hz;
+    ledc_clk_cfg_t clk_cfg;
+    bool deconfigure;
+} ledc_timer_config_t;
+
+#define LEDC_ERR_DUTY UINT32_MAX
+
+esp_err_t ledc_timer_config(const ledc_timer_config_t *configuration);
+esp_err_t ledc_channel_config(const ledc_channel_config_t *configuration);
+esp_err_t ledc_set_duty_and_update(ledc_mode_t speed_mode,
+                                   ledc_channel_t channel,
+                                   uint32_t duty,
+                                   uint32_t hpoint);
+uint32_t ledc_get_duty(ledc_mode_t speed_mode, ledc_channel_t channel);
+esp_err_t ledc_stop(ledc_mode_t speed_mode,
+                    ledc_channel_t channel,
+                    uint32_t idle_level);
 
 typedef struct {
     int sclk_io_num;

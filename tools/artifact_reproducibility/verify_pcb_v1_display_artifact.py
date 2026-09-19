@@ -16,6 +16,8 @@ DEFAULT_MANIFEST = (
     / "pcb-v1-minimal-display-smoke-test-artifact-manifest.json"
 )
 APP_BASENAME = "pcb_v1_minimal_display_smoke_test"
+PREDECESSOR_ROLE = "pcb-v1-minimal-display-smoke-test"
+SUCCESSOR_ROLE = "pcb-v1-display-backlight-validation"
 SOURCE_INPUTS = (
     "firmware/CMakeLists.txt",
     "firmware/sdkconfig.defaults",
@@ -80,6 +82,17 @@ def git_output(*arguments: str) -> str:
     return result.stdout.strip()
 
 
+def git_is_ancestor(ancestor: str, descendant: str) -> bool:
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", ancestor, descendant],
+        cwd=REPOSITORY,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
 def load_manifest(path: Path) -> dict[str, object]:
     require(path.is_file(), f"manifest is missing: {path}")
     return json.loads(path.read_text(encoding="utf-8"))
@@ -87,13 +100,26 @@ def load_manifest(path: Path) -> dict[str, object]:
 
 def verify_manifest_only(manifest: dict[str, object]) -> dict[str, object]:
     require(manifest.get("schema_version") == 2, "manifest schema must be 2")
+    role = manifest.get("artifact_role")
+    require(
+        role in (PREDECESSOR_ROLE, SUCCESSOR_ROLE),
+        "unsupported artifact role",
+    )
 
     source = manifest["source"]
-    require(source["head"] == git_output("rev-parse", "HEAD"), "HEAD mismatch")
-    require(
-        source["app_version"] == git_output("describe", "--always", "--tags", "--dirty"),
-        "app version mismatch",
-    )
+    current_head = git_output("rev-parse", "HEAD")
+    if role == PREDECESSOR_ROLE:
+        require(source["head"] == current_head, "HEAD mismatch")
+        require(
+            source["app_version"]
+            == git_output("describe", "--always", "--tags", "--dirty"),
+            "app version mismatch",
+        )
+    else:
+        require(
+            git_is_ancestor(source["head"], current_head),
+            "recorded build baseline is not an ancestor of HEAD",
+        )
     actual_inputs = source_inventory()
     require(source["source_inputs"] == actual_inputs, "source-input evidence is stale")
 
@@ -123,7 +149,14 @@ def verify_manifest_only(manifest: dict[str, object]) -> dict[str, object]:
     require(len(builds) == 2, "exactly two clean builds must be recorded")
     require(builds[0]["build_dir"] != builds[1]["build_dir"], "build dirs must differ")
     require(builds[0]["sdkconfig"] != builds[1]["sdkconfig"], "sdkconfigs must differ")
-    for output in ("app_bin", "app_elf", "app_map", "bootloader_bin"):
+    for output in (
+        "app_bin",
+        "app_elf",
+        "app_map",
+        "bootloader_bin",
+        "partition_table_bin",
+        "resolved_sdkconfig",
+    ):
         require(
             builds[0]["outputs"][output] == builds[1]["outputs"][output],
             f"recorded {output} identities differ",
@@ -146,13 +179,57 @@ def verify_manifest_only(manifest: dict[str, object]) -> dict[str, object]:
     )
 
     safety = manifest["safety"]
-    require(safety["backlight"] == "hard-disabled", "backlight policy changed")
     require(safety["visual"] == "UNVERIFIED", "visual status changed")
-    require(safety["usage"] == "not-for-visual-validation", "usage changed")
     require(safety["device-execution"] == "NOT_AUTHORIZED", "device execution changed")
-    require(not safety["gpio44_high_path"], "GPIO44-high path recorded")
-    require(not safety["ledc"], "LEDC recorded")
-    require(not safety["nonzero_backlight_duty"], "non-zero duty recorded")
+    if role == PREDECESSOR_ROLE:
+        require(safety["backlight"] == "hard-disabled", "backlight policy changed")
+        require(safety["usage"] == "not-for-visual-validation", "usage changed")
+        require(not safety["gpio44_high_path"], "GPIO44-high path recorded")
+        require(not safety["ledc"], "LEDC recorded")
+        require(not safety["nonzero_backlight_duty"], "non-zero duty recorded")
+    else:
+        require(
+            safety["backlight"] == "low-fixed-test-only",
+            "successor backlight policy mismatch",
+        )
+        require(
+            safety["usage"] == "visual-validation-candidate",
+            "successor usage mismatch",
+        )
+        require(
+            safety["gpio44_high_path"] == "controlled-pwm-only",
+            "GPIO44 high path must be controlled PWM only",
+        )
+        require(safety["ledc"] is True, "LEDC contract is missing")
+        require(
+            safety["nonzero_backlight_duty"] == 10,
+            "successor duty must be exactly 10",
+        )
+        contract = manifest["backlight_contract"]
+        require(contract["gpio"] == 44, "backlight GPIO mismatch")
+        require(contract["polarity"] == "active-high", "backlight polarity mismatch")
+        require(contract["speed_mode"] == "LEDC_LOW_SPEED_MODE", "speed mode mismatch")
+        require(contract["clock"] == "LEDC_USE_APB_CLK", "clock mismatch")
+        require(contract["frequency_hz"] == 2000, "frequency mismatch")
+        require(contract["resolution_bits"] == 10, "resolution mismatch")
+        require(contract["timer"] == 0, "timer mismatch")
+        require(contract["channel"] == 0, "channel mismatch")
+        require(contract["initial_duty"] == 0, "initial duty mismatch")
+        require(contract["validation_duty"] == 10, "validation duty mismatch")
+        require(contract["max_duty"] == 1023, "maximum duty mismatch")
+        require(contract["hpoint"] == 0, "h-point mismatch")
+        require(contract["output_invert"] is False, "output inversion recorded")
+        require(contract["fade"] is False, "fade path recorded")
+        require(contract["dynamic_brightness"] is False, "dynamic brightness recorded")
+        require(
+            manifest["predecessor_artifact"]["sha256"]
+            == "4E66B7EDCD38B5225B00E1DB790CA7DD9C842E765961E8929228105F9C10A05D",
+            "predecessor artifact identity mismatch",
+        )
+        require(
+            canonical["sha256"] != manifest["predecessor_artifact"]["sha256"],
+            "successor artifact matches predecessor hash",
+        )
 
     authorization = manifest["authorization"]
     require(not authorization["contains_device_command"], "device command recorded")
@@ -234,7 +311,14 @@ def verify_build_pair(
     identity_a = build_identity(build_a)
     identity_b = build_identity(build_b)
 
-    for output in ("app_bin", "app_elf", "app_map", "bootloader_bin"):
+    for output in (
+        "app_bin",
+        "app_elf",
+        "app_map",
+        "bootloader_bin",
+        "partition_table_bin",
+        "resolved_sdkconfig",
+    ):
         require(
             identity_a["outputs"][output] == identity_b["outputs"][output],
             f"fresh build {output} identities differ",
@@ -251,6 +335,10 @@ def verify_build_pair(
         "fresh BIN size differs from canonical manifest",
     )
     require(identity_a["descriptor"] == identity_b["descriptor"], "descriptors differ")
+    require(
+        identity_a["descriptor"] == canonical["app_descriptor"],
+        "fresh app descriptor differs from manifest",
+    )
 
     return {
         **static_result,
