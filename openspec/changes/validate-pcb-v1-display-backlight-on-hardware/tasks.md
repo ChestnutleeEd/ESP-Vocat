@@ -53,12 +53,12 @@
 - [x] 5.4 Prove the new hash differs from the predecessor hard-disabled hash and that the predecessor remains `not-for-visual-validation`.
 - [x] 5.5 Independently calculate candidate semantic range, ROM no-stub transport blocks/final `0xFF` padding, and sector erase envelope; verify preserved `ota_0` containment and list every untouched region.
 - [x] 5.6 Reverify exact dependency, lock/source hashes, 184-command table/365-token audit, GPIO allowlist/denylist, pattern/buffer contract, and unrelated-feature absence.
-- [ ] 5.7 Rehash all recovery assets again immediately before future device-gate review and stop on any path/size/hash/same-device discrepancy.
+- [x] 5.7 Rehash all recovery assets again immediately before future device-gate review and stop on any path/size/hash/same-device discrepancy.
 - [x] 5.8 Complete a final host diff/status/generated-file audit and record `READY FOR DEVICE-GATE REVIEW` only if every host/artifact task passes; do not claim physical validation.
 
 ## 6. Manual recovery-entry and operation planning gates
 
-- [ ] 6.1 Locate authoritative PCB V1.0 documentation for the exact manual BOOT/RESET sequence into ROM download mode, including button order/timing, expected USB enumeration, success judgment, and stop conditions.
+- [x] 6.1 Locate authoritative PCB V1.0 documentation for the exact manual BOOT/RESET sequence into ROM download mode, including button order/timing, expected USB enumeration, success judgment, and stop conditions.
 - [x] 6.2 Cross-check the manual procedure against GPIO0 BOOT evidence, USB Serial/JTAG, enabled download mode, and prohibited eFuse/security/voltage changes; keep the physical write gate closed if any step remains uncertain.
 - [x] 6.3 Prepare a non-executable device-gate packet binding current branch/HEAD, exact visual artifact/hash/geometry, expected chip/PCB/interface, recovery hashes, same-device scope, tool/mode, and one-attempt behavior.
 - [x] 6.4 Review the single-attempt mechanism against the new candidate's exact transport and erase geometry, including all ROM padding; prohibit automatic retry, stub substitution, compression drift, alternate-port selection, and implicit reset/monitor.
@@ -67,8 +67,8 @@
 
 ## 7. Future device identity and Flash gate — NOT AUTHORIZED
 
-- [ ] 7.1 `READ-ONLY` — After separate explicit authorization, confirm the exact current endpoint and minimum ESP32-S3 / PCB V1.0 / USB Serial-JTAG identity needed for the packet; retain no private identifier and do not assume COM7.
-- [ ] 7.2 `READ-ONLY` — Compare the sanitized fresh identity/endpoint result with the reviewed packet and stop on any mismatch; perform no Flash, readback, reset beyond reviewed connection effects, or extra query.
+- [x] 7.1 `READ-ONLY` — After separate explicit authorization, confirm the exact current endpoint and minimum ESP32-S3 / PCB V1.0 / USB Serial-JTAG identity needed for the packet; retain no private identifier and do not assume COM7.
+- [x] 7.2 `READ-ONLY` — Compare the sanitized fresh identity/endpoint result with the reviewed packet and stop on any mismatch; perform no Flash, readback, reset beyond reviewed connection effects, or extra query.
 - [ ] 7.3 `WRITE` — Present the exact candidate, hash, port, chip, PCB revision, offset, semantic/transport/erase ranges, padding, partition layout, recovery evidence, risks, stop rules, and command for fresh user authorization; an unchecked task or Change readiness grants no authority.
 - [ ] 7.4 `WRITE` — Only after the exact authorization in 7.3, execute at most one exact App-only attempt with all enforced attempt counts equal to one, preserve sanitized actual output/geometry, and stop immediately on the result.
 - [ ] 7.5 Record that no `ERASE` or `IRREVERSIBLE` operation, independent erase, eFuse/security/voltage change, automatic retry, monitor, readback, rollback, or restore occurred.

@@ -1,7 +1,8 @@
 ﻿# ESP-VoCat PCB V1.0 Hardware Profile
 - Document status: Active
-- Version: 1.0
+- Version: 1.2
 - Established: 2026-07-11
+- Updated: 2026-09-20
 - Target device: ESP-VoCat
 - Confirmed PCB version: V1.0
 This document records confirmed hardware facts, strongly supported reference information and unresolved assumptions.
@@ -34,7 +35,7 @@ Unverified information must not be used for potentially unsafe hardware control.
 | Crystal | 40 MHz | CONFIRMED |
 | Flash capacity | 32 MiB | CONFIRMED |
 | Flash interface | Octal / 8 data lines | CONFIRMED |
-| Flash voltage | 1.8 V | CONFIRMED |
+| Flash voltage | Forced 1.8 V LDO eFuse configuration (`FORCE=1`, `XPD=1`, `TIEH=0`); physical rail not instrument-measured | CONFIRMED configuration; physical measurement UNVERIFIED |
 | Embedded PSRAM | 16 MiB | CONFIRMED |
 | USB interface | USB Serial/JTAG | CONFIRMED |
 | Current observed serial port | COM7 | CONFIRMED, not permanent |
@@ -299,6 +300,34 @@ When a hardware fact is verified:
 5. add the decision or test record under `docs/decisions` or `tests`;
 6. do not silently overwrite previous uncertainty.
 
+## 15.1 Official PCB V1.0 recovery-entry documentation
+
+Espressif's official ESP-VoCat v1.0 user guide documents the following
+board-specific facts:
+
+- the BaseBoard has a dedicated `RST Button`, used to reset the main board;
+- the BaseBoard has a dedicated `BOOT Button`;
+- the documented download-mode procedure is: hold the `BOOT Button` while
+  powering on;
+- the Type-C (USB-C) interface is used for power, programming download, and
+  debugging, and application-development setup requires a USB data cable;
+- the main-controller table identifies `ESP32-S3-WROOM-2-N32R16V` with
+  32 MB Flash and 16 MB PSRAM;
+- `LCD_BLK` is GPIO44.
+
+Authoritative source:
+
+`https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp-vocat/user_guide_v1.0.html`
+
+Evidence distinction:
+
+- `DOCUMENTED PROCEDURE`: **CONFIRMED by the official PCB V1.0 guide**;
+- `PHYSICALLY CONFIRMED ON THIS UNIT`: **NO** until the procedure is actually
+  performed and the expected ROM download-mode identity is observed;
+- no invented `BOOT+RST` combination is required by the board-specific guide;
+- this documentation does not authorize a reset, Flash write, erase, or any
+  other device operation.
+
 ## 16. First Flash attempt state
 
 On 2026-07-26 one explicitly authorized App-only write invocation was
@@ -455,3 +484,72 @@ valid for the entire 60-second window; and no destructive USB re-enumeration
 was observed. The eight expected lines appeared once and in order, and the
 ready marker appeared once no later than approximately 0.201 seconds after
 reset release.
+
+## 19. 2026-09-20 pre-write physical identity gate
+
+A freshly enumerated Windows endpoint identified one Espressif composite USB
+device at sanitized `VID_303A/PID_1001`: MI_00 was `COM7`, and MI_02 was
+`USB JTAG/serial debug unit`. One authorized esptool 4.12.dev3 ROM-loader
+`flash_id` interrogation used exact `COM7`, `esp32s3`, `--no-stub`, and one
+connection attempt. The automatic handshake performed one transient reset and
+the command ended in ROM bootloader. No application monitor followed.
+
+Fresh matching observations:
+
+- ESP32-S3, QFN56, revision v0.2;
+- Wi-Fi, BLE, embedded 16 MB PSRAM (`AP_1v8`);
+- 40 MHz crystal and USB Serial/JTAG;
+- Flash manufacturer ID `0xC2`, device ID `0x8039`;
+- detected Flash size 32 MB;
+- Flash type eFuse: octal / 8 data lines.
+
+Fresh conflicting observation:
+
+- esptool reported `Flash voltage set by eFuse to 3.3V`;
+- the documented ESP-VoCat v1.0 controller is
+  `ESP32-S3-WROOM-2-N32R16V`, and Espressif documentation identifies the
+  `ESP32-S3R16V` / N32R16V configuration as 1.8 V SPI voltage;
+- the installed esptool source confirms that this line is derived from the
+  ESP32-S3 VDD_SPI eFuse fields, not from the candidate image header.
+
+At the gate's close, this was treated as a material unresolved
+identity/configuration contradiction and a stop condition. It did not
+authorize changing VDD_SPI, eFuses, strapping, or any voltage setting. No
+second interrogation, write, erase, readback, application reset, monitor,
+rollback, or restore followed. Exact module suffix remains documented board
+evidence, not software-proven identity. The controlling sanitized record is
+`tests/hardware/pcb-v1-pre-write-physical-identity-gate-2026-09-20.md`.
+
+### 19.1 Subsequent voltage-resolution audit
+
+The original gate failure above remains preserved as the correct fail-closed
+decision at that time. A later host-only audit recovered the exact historical
+`flash_id` invocation and the already-recorded minimum eFuse summary from the
+same established PCB V1.0 evidence chain. The raw logical fields are:
+
+```text
+VDD_SPI_FORCE = 1
+VDD_SPI_XPD   = 1
+VDD_SPI_TIEH  = 0
+```
+
+ESP32-S3 definitions map this to a forced, enabled 1.8 V LDO; GPIO45 is ignored
+for voltage selection. Installed esptool.py `v4.12.dev3` incorrectly returned
+3.3 V because its first branch treated any nonzero bit in the combined
+FORCE/XPD/TIEH mask as 3.3 V, making its narrower 1.8 V branch unreachable.
+Current upstream source uses the correct FORCE/XPD/TIEH decision order.
+
+Macronix's authoritative datasheet maps live RDID `C2 80 39` exactly to
+MX25UM25645G: 256 Mbit / 32 MiB Octal SPI NOR with a 1.65-2.0 V supply. This is
+consistent with the documented ESP32-S3-WROOM-2-N32R16V configuration and the
+live embedded 16 MB `AP_1v8` PSRAM label. Exact module SKU is still not proven
+by software-only evidence, and the physical rail was not measured.
+
+No new COM7 access, reset, eFuse read, Flash read/write/erase, stub upload,
+GPIO45 manipulation, or persistent change occurred during the resolution
+audit. The controlling successor record is
+`tests/hardware/pcb-v1-vdd-spi-contradiction-resolution-2026-09-20.md`.
+
+Voltage conclusion:
+
+`RESOLVED — DEVICE CONFIGURATION CONSISTENT WITH 1.8 V MEMORY`

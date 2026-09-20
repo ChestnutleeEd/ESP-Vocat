@@ -25,7 +25,8 @@ The historical First Flash remains `STOPPED / INCONCLUSIVE — RANGE-SCOPE DEVIA
   - actual board population and continuity of Q2/R4/R5/display flex;
   - reset/power-on GPIO44 gate waveform and any visible transient;
   - actual PWM waveform, peak/average LED current, brightness linearity, minimum visible duty, flicker, display health, color, orientation, refresh, and thermal behavior;
-  - the exact manual BOOT/RESET button procedure if automatic USB Serial/JTAG ROM entry fails.
+  - execution of the documented BOOT-during-power-on procedure on this exact
+    unit and the resulting ROM download-mode enumeration.
 
 ### Assumptions
 
@@ -286,7 +287,10 @@ Rollback is not automatic and is not part of implementation. Level 1 and Level 2
 
 ## Open Questions
 
-- What authoritative board procedure should be recorded for manual BOOT/RESET entry into ROM download mode if automatic USB Serial/JTAG connection fails? This blocks the future device write gate, not host implementation.
+- The authoritative board procedure is now documented: hold the dedicated
+  BOOT button while powering on to enter download mode; RST is the reset
+  button, and USB-C is the programming/debugging connection. Physical
+  execution on this exact unit remains unverified until observed.
 - Is raw duty 10 visibly sufficient on the physical unit? Only a bounded authorized observation can answer; an inconclusive result does not authorize a higher value.
 - What reset-time GPIO44/MOSFET waveform occurs on this unit? The external pull-down supports OFF, but only measurement or bounded observation can confirm the absence of a flash.
 - Does the physical panel show the expected RGB order/orientation and stable refresh? It remains `UNVERIFIED` until observation.
@@ -313,15 +317,57 @@ The detailed evidence is recorded in
 `tests/build/pcb-v1-display-backlight-validation-artifact-manifest.json` and
 `tests/build/pcb-v1-display-backlight-validation-host-build-and-artifact-review.md`.
 
-Official Espressif documentation confirms generic ESP32-S3 ROM download-mode
-strapping, but it does not establish the exact ESP-VoCat PCB V1.0 button
-labels/wiring/press-release sequence or expected board-specific enumeration:
+Official Espressif ESP-VoCat v1.0 documentation now establishes the
+board-specific control and connection facts: a dedicated RST button, a
+dedicated BOOT button, BOOT held while powering on to enter download mode,
+and USB-C for programming download and debugging. It also identifies
+ESP32-S3-WROOM-2-N32R16V, 32 MB Flash, 16 MB PSRAM, and LCD_BLK on GPIO44:
 
-- https://docs.espressif.com/projects/esptool/en/latest/esp32s3/advanced-topics/boot-mode-selection.html
-- https://docs.espressif.com/projects/esp-hardware-design-guidelines/en/latest/esp32s3/schematic-checklist.html
-- https://docs.espressif.com/projects/esp-hardware-design-guidelines/en/latest/esp32s3/download-guidelines.html
+- https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp-vocat/user_guide_v1.0.html
 
-Therefore task 6.1 remains an explicit future device-gate blocker. Recovery
-assets must also be rehashed again immediately before that future review.
-No device was accessed, and physical display/backlight behavior remains
+This closes the documentation gap in task 6.1. The procedure is
+`DOCUMENTED PROCEDURE`, not `PHYSICALLY CONFIRMED ON THIS UNIT`; no physical
+BOOT attempt is inferred. Recovery assets were rehashed immediately before
+the later device-gate interrogation. Physical display/backlight behavior remains
 `UNVERIFIED`.
+
+## Pre-write physical identity gate outcome (2026-09-20)
+
+Repository, candidate, recovery, official-procedure, and endpoint gates passed.
+One authorized no-stub esptool 4.12.dev3 `flash_id` interrogation on the
+uniquely enumerated `COM7` endpoint confirmed ESP32-S3 QFN56 revision v0.2,
+16 MB embedded PSRAM, USB Serial/JTAG, JEDEC `C2:8039`, 32 MB Flash, and octal
+Flash mode. It also reported `Flash voltage set by eFuse to 3.3V`.
+
+That voltage report conflicts with the documented
+`ESP32-S3-WROOM-2-N32R16V` / `ESP32-S3R16V` 1.8 V expectation and with the
+prior hardware profile. Local esptool source confirms that the report is read
+from the ESP32-S3 VDD_SPI eFuse fields. The identity gate therefore failed
+closed. No second interrogation or device operation followed, and no future
+write command was generated. VDD_SPI/eFuse changes remain absolutely
+prohibited. Physical display/backlight status remains `UNVERIFIED`.
+
+### Subsequent VDD_SPI reconciliation
+
+The original identity-gate failure remains preserved. The repository's earlier
+sanitized minimum eFuse summary already recorded `VDD_SPI_FORCE=1`,
+`VDD_SPI_XPD=1`, and `VDD_SPI_TIEH=0`, all readable and then reported
+writeable. ESP32-S3 definitions map those fields to a forced, enabled 1.8 V
+LDO, with GPIO45 ignored.
+
+Installed esptool.py `v4.12.dev3` returned 3.3 V because its inherited helper
+tested whether any bit in the combined FORCE/XPD/TIEH mask was nonzero before
+testing the narrower 1.8 V combination. Current upstream code tests FORCE,
+then XPD, then TIEH and returns 1.8 V for this exact combination. The old text
+is therefore a tool-logic defect, not a conflicting device configuration.
+
+Macronix's official datasheet maps live RDID `C2 80 39` exactly to the
+MX25UM25645G 256-Mbit / 32-MiB Octal device with a 1.65-2.0 V supply. Together
+with 16 MB embedded `AP_1v8` PSRAM and the WROOM-2 N32R16V documentation, the
+reviewed live evidence is consistent with a 1.8 V memory arrangement. Exact
+module SKU and the physical rail remain unverified by software-only evidence.
+
+No new device query was needed or performed. The voltage blocker is cleared;
+task 7.3 remains open and may resume only as a separate exact write-packet
+review. This conclusion does not authorize a Flash write. See
+`tests/hardware/pcb-v1-vdd-spi-contradiction-resolution-2026-09-20.md`.

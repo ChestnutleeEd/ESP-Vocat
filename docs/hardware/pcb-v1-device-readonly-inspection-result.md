@@ -2,10 +2,11 @@
 
 - Inspection date: 2026-07-25
 - Evidence-audit date: 2026-07-25
+- Successor reconciliation date: 2026-09-20
 - Device: user-confirmed ESP-VoCat PCB V1.0
 - Reviewed port for these two completed operations: `COM7`
 - Tool: esptool.py `v4.12.dev3`
-- Result status: **COMPLETED WITH AN UNRESOLVED FLASH-VOLTAGE CONFLICT**
+- Result status: **COMPLETED; FLASH-VOLTAGE TEXT LATER RESOLVED BY THE RECORDED BIT-LEVEL SUMMARY**
 - Firmware Implementation Gate: **OPEN FOR HOST-ONLY IMPLEMENTATION**
 - First Flash: **NO-GO**
 
@@ -237,3 +238,16 @@ Conflict resolution:
 - Therefore the earlier 3.3 V line is not a competing eFuse state. The current bit-level evidence supports a forced 1.8 V eFuse configuration.
 - The historical 3.3 V interpretation conflicts with the independent bit-level eFuse result and cannot establish a final physical-voltage conclusion.
 - The 1.8 V result remains configuration evidence, not a direct electrical measurement of the PCB rail. No voltage adjustment, eFuse write, or trial Flash is permitted.
+
+## 14. 2026-09-20 successor reconciliation
+
+The later pre-write identity gate repeated `flash_id` and correctly stopped on
+the same historical `3.3V` helper output. A host-only reconciliation then
+recovered the exact invocation and compared it with Section 13's already
+preserved raw fields. No new eFuse query was required.
+
+The final interpretation is unchanged from Section 13 and is now applied to
+the successor gate: `FORCE=1`, `XPD=1`, `TIEH=0` is a forced, enabled 1.8 V
+LDO configuration. The old 3.3 V text is an installed esptool.py `v4.12.dev3`
+early-branch defect. The complete successor record is
+`tests/hardware/pcb-v1-vdd-spi-contradiction-resolution-2026-09-20.md`.

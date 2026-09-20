@@ -234,30 +234,34 @@ SHA-256
 `C8A2FE4AB0F9B7C823F1DCFDFC926682C9DBF1B079056461DC6F18A93A345D0E`.
 No recovery asset was modified.
 
-These results are not a substitute for the required immediate pre-device-gate
-rehash. Any missing path, size/hash mismatch, or same-device uncertainty is a
-stop condition. Level 1 complete original `ota_0` restoration and Level 2
-complete 32 MiB restoration remain distinct future `WRITE` operations under
-separate Changes and explicit authorizations.
+The immediate pre-device-gate rehash was performed again on 2026-09-20. All
+four full images and both complete original `ota_0` staging copies matched the
+paths, sizes, and SHA-256 values above. Any later missing path, size/hash
+mismatch, or same-device uncertainty remains a stop condition. Level 1
+complete original `ota_0` restoration and Level 2 complete 32 MiB restoration
+remain distinct future `WRITE` operations under separate Changes and explicit
+authorizations.
 
 ## 11. Manual recovery-entry evidence
 
-Official Espressif documentation establishes only the generic ESP32-S3 facts:
-GPIO0 low during reset selects the ROM serial bootloader; GPIO46 must be low or
-floating; strapping levels are sampled around reset; and Espressif development
-boards commonly use BOOT(GPIO0) plus EN/reset. Sources reviewed:
+Espressif's official ESP-VoCat v1.0 guide establishes the board-specific facts:
 
-- https://docs.espressif.com/projects/esptool/en/latest/esp32s3/advanced-topics/boot-mode-selection.html
-- https://docs.espressif.com/projects/esp-hardware-design-guidelines/en/latest/esp32s3/schematic-checklist.html
-- https://docs.espressif.com/projects/esp-hardware-design-guidelines/en/latest/esp32s3/download-guidelines.html
-- https://docs.espressif.com/projects/esptool/en/latest/esp32s3/advanced-topics/serial-protocol.html
+- dedicated `RST Button`: resets the main board;
+- dedicated `BOOT Button`: hold it while powering on to enter download mode;
+- Type-C (USB-C): power, programming download, and debugging; use a USB data
+  cable for application development;
+- controller: `ESP32-S3-WROOM-2-N32R16V`, 32 MB Flash, 16 MB PSRAM;
+- `LCD_BLK`: GPIO44.
 
-No authoritative source found establishes the exact ESP-VoCat PCB V1.0 button
-labels, wiring, press/release order, timing, USB enumeration result, or safe
-failure handling. Therefore OpenSpec task 6.1 remains open. The generic facts
-are consistent with recorded GPIO0 and USB Serial/JTAG evidence, but they do
-not close the board-specific recovery-entry gate. No eFuse, security,
-Flash-voltage, boot-mode, or USB setting may be changed to work around it.
+Source reviewed:
+
+- https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s3/esp-vocat/user_guide_v1.0.html
+
+This closes OpenSpec task 6.1 as `DOCUMENTED PROCEDURE`. It does not establish
+`PHYSICALLY CONFIRMED ON THIS UNIT`; no physical BOOT attempt has yet been
+inferred or performed by this evidence update. The guide does not require an
+invented BOOT+RST combination. No eFuse, security, Flash-voltage, boot-mode,
+or USB setting may be changed to work around a failed connection.
 
 ## 12. Non-executable future device-gate packet
 
@@ -321,12 +325,41 @@ file, or generated firmware binary is modified or included.
 ## 15. Host gate disposition
 
 Host implementation, tests, static checks, clean builds, byte identity, image
-inspection, dependency/table/pattern audits, range calculation, and manifest
-verification all pass. The status is:
+inspection, dependency/table/pattern audits, range calculation, manifest
+verification, immediate recovery-asset rehash, and authoritative PCB V1.0
+manual recovery-entry documentation all pass. The status is:
 
 `READY FOR DEVICE-GATE REVIEW`
 
 This status is deliberately narrower than device-ready or physically verified.
-The immediate recovery-asset rehash, exact PCB V1.0 manual BOOT/RESET procedure,
-fresh device identity/endpoint, exact command review, and fresh authorizations
-remain open. Hardware status remains `UNVERIFIED`.
+Fresh device identity/endpoint review has since completed, and the later
+voltage reconciliation below clears its original blocker. Exact write-packet
+review and fresh write authorization remain open. The documented
+BOOT-during-power-on procedure is not yet physically confirmed on this unit.
+Hardware status remains `UNVERIFIED`.
+
+## 16. Later pre-write identity-gate result (2026-09-20)
+
+The later authorized identity gate passed repository, artifact, recovery,
+official-procedure, and unique-endpoint checks. One no-stub esptool
+`flash_id` interrogation confirmed the expected ESP32-S3/32 MB/16 MB
+PSRAM/USB Serial-JTAG identity surface but reported VDD_SPI eFuse voltage
+`3.3V`, conflicting with the documented N32R16V 1.8 V configuration.
+
+The gate stopped immediately. No exact future write command was generated and
+no write, erase, readback, monitor, rollback, or restore occurred. See
+`tests/hardware/pcb-v1-pre-write-physical-identity-gate-2026-09-20.md`.
+
+### 16.1 Later voltage-resolution audit
+
+The original fail-closed identity-gate result remains historical evidence. A
+later host-only audit reconciled it with the repository's existing minimum
+eFuse summary: `VDD_SPI_FORCE=1`, `VDD_SPI_XPD=1`, and `VDD_SPI_TIEH=0` select
+a forced 1.8 V LDO. The 3.3 V line was caused by installed esptool.py
+`v4.12.dev3` testing a broad combined-bit mask before its narrower branches.
+
+Live RDID `C2 80 39` also maps exactly to Macronix MX25UM25645G, a 256-Mbit /
+32-MiB Octal SPI NOR device specified for 1.65-2.0 V. No new device access was
+required. The voltage blocker is resolved, while physical display/backlight
+status remains `UNVERIFIED` and no Flash write is authorized. See
+`tests/hardware/pcb-v1-vdd-spi-contradiction-resolution-2026-09-20.md`.
