@@ -70,8 +70,18 @@
 - [x] 7.1 `READ-ONLY` — After separate explicit authorization, confirm the exact current endpoint and minimum ESP32-S3 / PCB V1.0 / USB Serial-JTAG identity needed for the packet; retain no private identifier and do not assume COM7.
 - [x] 7.2 `READ-ONLY` — Compare the sanitized fresh identity/endpoint result with the reviewed packet and stop on any mismatch; perform no Flash, readback, reset beyond reviewed connection effects, or extra query.
 - [x] 7.3 `WRITE` — Present the exact candidate, hash, port, chip, PCB revision, offset, semantic/transport/erase ranges, padding, partition layout, recovery evidence, risks, stop rules, and command for fresh user authorization; an unchecked task or Change readiness grants no authority. Completed as a reviewed, non-executed packet in `docs/hardware/pcb-v1-display-first-write-review-packet.md`; device execution remains `NOT AUTHORIZED`.
-- [ ] 7.4 `WRITE` — Only after the exact authorization in 7.3, execute at most one exact App-only attempt with all enforced attempt counts equal to one, preserve sanitized actual output/geometry, and stop immediately on the result.
-- [ ] 7.5 Record that no `ERASE` or `IRREVERSIBLE` operation, independent erase, eFuse/security/voltage change, automatic retry, monitor, readback, rollback, or restore occurred.
+- [x] 7.4 `WRITE` — Only after the exact authorization in 7.3, execute at most one exact App-only attempt with all enforced attempt counts equal to one, preserve sanitized actual output/geometry, and stop immediately on the result.
+  Completed 2026-09-20 as exactly one guarded invocation on `COM7`: the
+  reviewed erase envelope `[0x00020000,0x00059000)` was used, 231424 transport
+  bytes were written at `0x00020000`, ROM plaintext MD5 verification passed,
+  and `--after no_reset` left the device staying in the ROM bootloader. See
+  `tests/hardware/pcb-v1-display-first-write-attempt-2026-09-20.md`.
+- [x] 7.5 Record that no `ERASE` or `IRREVERSIBLE` operation, independent erase, eFuse/security/voltage change, automatic retry, monitor, readback, rollback, or restore occurred.
+  The write's bounded sector erase was the only erase effect. Additional write
+  attempts, independent erase/`erase_flash`, eFuse/security/voltage changes,
+  application startup, serial monitor, visual observation, readback, rollback,
+  and restore were all zero. The Flash authorization is consumed and cannot
+  authorize any startup or observation task.
 
 ## 8. Future bounded startup and visual observation — SEPARATE AUTHORIZATION
 
