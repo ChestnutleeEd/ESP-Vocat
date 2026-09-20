@@ -105,6 +105,15 @@
   observation session occurred, but no serial line or READY marker was captured
   before the 15-second deadline. The required marker/stability verification was
   not achieved, so this task remains unchecked. No retry is permitted.
+  A later offline-only audit decoded the immutable partition/OTA state, inspected
+  both original slots and the exact candidate, and compared the observer with
+  installed esptool/IDF Monitor source. `ota_0` was the selected slot, the
+  candidate console is USB Serial/JTAG, and no offline boot incompatibility was
+  found. The observer's raw Win32 RTS calls omitted the `usbser.sys` DTR refresh
+  used after every RTS transition by both Espressif implementations. This is the
+  primary explanation for remaining in the already-recorded ROM bootloader, but
+  it requires one separately reviewed corrected-reset gate for live confirmation.
+  See `tests/hardware/pcb-v1-display-startup-offline-diagnosis-2026-09-20.md`.
 - [ ] 8.5 Observe and record whether there is an early/full-brightness flash, whether the backlight stays at a visibly low stable level, and whether flicker, pulsing, odor, heat, noise, or another abnormal symptom occurs.
 - [ ] 8.6 Observe and record the fixed black/RGB/white-border/`ESP-VoCat LCD TEST` pattern, plausible colors/orientation, and refresh stability without claiming measured electrical values.
 - [x] 8.7 Stop without retry, duty increase, second reset, second open, or automatic rollback on any defined stop condition or inconclusive visual result.
@@ -116,8 +125,9 @@
   `tests/hardware/pcb-v1-display-startup-observation-2026-09-20.md`. Only the
   one-open/one-reset/zero-write observation behavior and absence of captured
   serial lines are established; application startup, display/LEDC execution,
-  reset reason, and all physical visual behavior remain `UNVERIFIED` pending
-  the user's current-state observation.
+  reset reason, and all physical visual behavior remain `UNVERIFIED`. The
+  successor offline diagnosis narrows the primary cause to the non-equivalent
+  Windows USB Serial/JTAG reset primitive but does not supply live proof.
 
 ## 9. Recovery boundary and closeout
 

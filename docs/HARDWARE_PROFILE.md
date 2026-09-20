@@ -553,3 +553,41 @@ audit. The controlling successor record is
 Voltage conclusion:
 
 `RESOLVED — DEVICE CONFIGURATION CONSISTENT WITH 1.8 V MEMORY`
+
+## 20. Display-candidate startup failure and offline diagnosis
+
+On 2026-09-20 the exact low-duty display-validation candidate was written once
+to `ota_0` at `0x00020000`. ROM plaintext hash verification passed and the
+operation explicitly ended with the device staying in the ROM bootloader. A
+separately authorized one-reset observation then captured zero serial lines,
+no READY marker, and a user-reported completely black/unlit display. It stopped
+at the 15-second deadline without retry.
+
+A later offline-only audit revalidated the immutable 32 MiB backup and decoded
+the actual partition table and OTA state. The saved sole valid OTA entry has
+sequence 1 / `VALID` / valid CRC and selects `ota_0`; `ota_1` is entirely
+erased. The write did not touch `otadata`, and the candidate contains no OTA
+mutation path. Its exact resolved console is primary USB Serial/JTAG, with the
+first seven fixed `puts`/`printf` lines occurring before display initialization.
+No image-format, revision, secure-version, hash, Flash-header, alignment, size,
+or preserved-bootloader compatibility blocker was found offline.
+
+The startup observer's direct Win32 sequence used `CLR_DTR`, `SET_RTS`, and
+`CLR_RTS`. Installed esptool.py and IDF Monitor source perform an additional
+`setDTR(current_dtr)` after every RTS transition so Windows `usbser.sys` sends
+the combined native USB Serial/JTAG control-line state. The observer omitted
+that propagation step and is not equivalent to the reviewed Espressif hard
+reset. Because the prior known device state was ROM bootloader, a missed reset
+explains zero serial output, no READY marker, and a dark backlight together.
+
+This is the primary offline diagnosis, not live proof. The same shorter
+observer sequence succeeded once on 2026-07-27, so the exact physical state of
+the failed run remains unconfirmed. The next eligible physical diagnostic is
+one separately reviewed, explicitly authorized, corrected native USB
+Serial/JTAG normal-start reset with no retry. It has not been authorized or
+performed.
+
+The controlling audit is
+`tests/hardware/pcb-v1-display-startup-offline-diagnosis-2026-09-20.md`.
+
+Hardware display/backlight status remains `UNVERIFIED`.
