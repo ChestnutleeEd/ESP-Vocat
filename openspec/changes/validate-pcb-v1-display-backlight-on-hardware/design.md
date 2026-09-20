@@ -371,3 +371,25 @@ No new device query was needed or performed. The voltage blocker is cleared;
 task 7.3 remains open and may resume only as a separate exact write-packet
 review. This conclusion does not authorize a Flash write. See
 `tests/hardware/pcb-v1-vdd-spi-contradiction-resolution-2026-09-20.md`.
+
+## Exact first-write packet review outcome (2026-09-20)
+
+OpenSpec task 7.3 is complete as a host-only packet review. The exact
+candidate, `COM7`, ESP32-S3/PCB V1.0 identity, semantic/transport/erase
+geometry, 64-byte ROM padding, preserved partition layout, six recovery
+assets, esptool v4.12.dev3 source behavior, security boundary, stop rules, and
+one visible future command are recorded in
+`docs/hardware/pcb-v1-display-first-write-review-packet.md`.
+
+Stock esptool CLI was not accepted by itself because its whole-operation,
+block, sync, and reset retry defaults cannot all be set to one publicly. A
+candidate-specific fail-closed entry point now requires the complete reviewed
+`write_flash` argument vector, fresh external human authorization, synchronized
+Git identity, exact candidate/recovery hashes, and the previously audited
+process-local one-attempt overrides. Its offline audit and five packet tests
+pass without enumerating or opening a serial port.
+
+No write, erase, readback, reset, monitor, startup, observation, rollback,
+restore, or eFuse operation occurred. Task 7.4 and every physical observation
+or recovery task remain open. Hardware/display status is `UNVERIFIED`, and
+device execution is `NOT AUTHORIZED`.

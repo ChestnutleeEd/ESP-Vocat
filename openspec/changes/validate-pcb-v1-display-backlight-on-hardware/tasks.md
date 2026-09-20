@@ -69,7 +69,7 @@
 
 - [x] 7.1 `READ-ONLY` — After separate explicit authorization, confirm the exact current endpoint and minimum ESP32-S3 / PCB V1.0 / USB Serial-JTAG identity needed for the packet; retain no private identifier and do not assume COM7.
 - [x] 7.2 `READ-ONLY` — Compare the sanitized fresh identity/endpoint result with the reviewed packet and stop on any mismatch; perform no Flash, readback, reset beyond reviewed connection effects, or extra query.
-- [ ] 7.3 `WRITE` — Present the exact candidate, hash, port, chip, PCB revision, offset, semantic/transport/erase ranges, padding, partition layout, recovery evidence, risks, stop rules, and command for fresh user authorization; an unchecked task or Change readiness grants no authority.
+- [x] 7.3 `WRITE` — Present the exact candidate, hash, port, chip, PCB revision, offset, semantic/transport/erase ranges, padding, partition layout, recovery evidence, risks, stop rules, and command for fresh user authorization; an unchecked task or Change readiness grants no authority. Completed as a reviewed, non-executed packet in `docs/hardware/pcb-v1-display-first-write-review-packet.md`; device execution remains `NOT AUTHORIZED`.
 - [ ] 7.4 `WRITE` — Only after the exact authorization in 7.3, execute at most one exact App-only attempt with all enforced attempt counts equal to one, preserve sanitized actual output/geometry, and stop immediately on the result.
 - [ ] 7.5 Record that no `ERASE` or `IRREVERSIBLE` operation, independent erase, eFuse/security/voltage change, automatic retry, monitor, readback, rollback, or restore occurred.
 
