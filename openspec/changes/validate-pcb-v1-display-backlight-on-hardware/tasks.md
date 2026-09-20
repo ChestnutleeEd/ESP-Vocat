@@ -85,14 +85,39 @@
 
 ## 8. Future bounded startup and visual observation — SEPARATE AUTHORIZATION
 
-- [ ] 8.1 Review the completed write result and actual geometry independently; do not proceed if it is failed, inconclusive, range-deviating, or mismatched.
-- [ ] 8.2 `REBOOT` — Obtain separate explicit authorization for exactly one startup reset on the freshly reviewed endpoint; do not reuse the write authorization.
-- [ ] 8.3 `READ-ONLY` — Obtain separate explicit authorization for one bounded serial/display observation using the same reviewed handle, with zero serial writes, no enumeration/reopen/retry, and no automatic follow-up.
+- [x] 8.1 Review the completed write result and actual geometry independently; do not proceed if it is failed, inconclusive, range-deviating, or mismatched.
+  The committed 2026-09-20 write evidence was rechecked at exact synchronized
+  HEAD `491d750f48e1540e765abbe88fe332c5edb91dd6`: one write passed with the
+  reviewed semantic/transport/erase geometry and ROM hash verification; the
+  candidate hash remained unchanged and the write authorization remained
+  consumed and guard-rejected.
+- [x] 8.2 `REBOOT` — Obtain separate explicit authorization for exactly one startup reset on the freshly reviewed endpoint; do not reuse the write authorization.
+  A new user authorization explicitly allowed exactly one controlled startup
+  reset of the already-written display candidate on `COM7` and prohibited a
+  second reset, Flash mutation, recovery, or reuse of the write authorization.
+- [x] 8.3 `READ-ONLY` — Obtain separate explicit authorization for one bounded serial/display observation using the same reviewed handle, with zero serial writes, no enumeration/reopen/retry, and no automatic follow-up.
+  The same new authorization allowed one bounded serial observation after the
+  startup. The reviewed Win32 backend opened exact `COM7` once for read access,
+  issued zero serial writes, used no enumeration/reopen/retry, and closed on the
+  15-second READY deadline failure.
 - [ ] 8.4 Execute the separately authorized reset and observation only once; verify ordered single markers, no reset loop/panic/watchdog/allocation/security failure, and stable handle for the full bound.
+  Disposition: **EXECUTED ONCE / STARTUP EVIDENCE FAILED** — one reset and one
+  observation session occurred, but no serial line or READY marker was captured
+  before the 15-second deadline. The required marker/stability verification was
+  not achieved, so this task remains unchecked. No retry is permitted.
 - [ ] 8.5 Observe and record whether there is an early/full-brightness flash, whether the backlight stays at a visibly low stable level, and whether flicker, pulsing, odor, heat, noise, or another abnormal symptom occurs.
 - [ ] 8.6 Observe and record the fixed black/RGB/white-border/`ESP-VoCat LCD TEST` pattern, plausible colors/orientation, and refresh stability without claiming measured electrical values.
-- [ ] 8.7 Stop without retry, duty increase, second reset, second open, or automatic rollback on any defined stop condition or inconclusive visual result.
-- [ ] 8.8 Preserve actual evidence and classify only directly observed bounded facts as confirmed; retain every unobserved hardware fact as `UNVERIFIED`.
+- [x] 8.7 Stop without retry, duty increase, second reset, second open, or automatic rollback on any defined stop condition or inconclusive visual result.
+  Observation stopped at the first READY-deadline failure. Second reset/open,
+  duty change, Flash action, rollback, restore, and automatic corrective action
+  were all zero.
+- [x] 8.8 Preserve actual evidence and classify only directly observed bounded facts as confirmed; retain every unobserved hardware fact as `UNVERIFIED`.
+  The sanitized host log and exact failure are recorded in
+  `tests/hardware/pcb-v1-display-startup-observation-2026-09-20.md`. Only the
+  one-open/one-reset/zero-write observation behavior and absence of captured
+  serial lines are established; application startup, display/LEDC execution,
+  reset reason, and all physical visual behavior remain `UNVERIFIED` pending
+  the user's current-state observation.
 
 ## 9. Recovery boundary and closeout
 
